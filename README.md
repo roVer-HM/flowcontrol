@@ -1,11 +1,17 @@
-===========
-FlowControl
-===========
 
-FlowControl provides different strategies and models to control pedestrian flow in the Vadere simulator `https://gitlab.lrz.de/vadere/vadere`.
+# FlowControl
+
+FlowControl provides different strategies and models to control pedestrian flow in the pedestrian dynamics simulator [Vadere](https://gitlab.lrz.de/vadere/vadere).
 The basic idea is to reroute agents to adjust the pedestrian flow in distinct areas.
 
-Controller (controller model)
+The flow control model consists of three sub-models that define
+1. how the autonomous system needs to be intervened to achieve a certain goal (controller)
+2. how inform agents get informed about the rerouting measure (information dissemination model)
+3. how agents react to the rerouting measure (reaction model)
+
+## Sub-models
+
+### Controller (controller model)
 
 The rerouting strategy is modelled by the so-called controller. 
 The controller is a set of rules that define how to intervene the autonomous system.
@@ -13,7 +19,7 @@ If the state of the system is continously measured and considered in these rules
 Otherwise it is an open-loop controller.
 The FlowControl package provides both types of controller models.
 
-Information dissemination model
+### Information dissemination model
 
 Agents need to get informed when they should change their navigation behavior.
 The FlowControl package provides different types of information dissemination strategies.
@@ -38,7 +44,7 @@ Characteristic for the text message model is that it takes some time until agent
 * Realistic model: simulate the information dissemination with a mobile networks simulator.
 For case 2, the coupled simulator crownet can be used.
 
-Perception and reaction model
+#### Reaction model
 It depends on the perception and the mooed whether agents react to rerouting measure.
 Even if the information about the rerouting is transmitted succesfully, some agents might not react.
 
