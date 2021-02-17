@@ -1,15 +1,18 @@
-
 # FlowControl
 
-FlowControl provides different strategies and models to control pedestrian flow in the pedestrian dynamics simulator [Vadere](https://gitlab.lrz.de/vadere/vadere).
+## Introduction
+
+FlowControl provides different strategies and models to control pedestrian flow.  
 The basic idea is to reroute agents to adjust the pedestrian flow in distinct areas.
 
-The flow control model consists of three sub-models that define
-1. how the autonomous system needs to be intervened to achieve a certain goal (controller)
-2. how inform agents get informed about the rerouting measure (information dissemination model)
-3. how agents react to the rerouting measure (reaction model)
+The flow control model consists of four sub-models that define
+1. how agents move (autonoumous system) (mobility model)
+2. how the autonomous system needs to be intervened to achieve a certain goal (controller)
+3. how inform agents get informed about the rerouting measure (information dissemination model)
+4. how agents react to the rerouting measure (reaction model)
 
-## Sub-models
+### Mobility model 
+To model the pedestrian flow, we use existing locomotion models of the pedestrian dynamics simulator [Vadere](https://gitlab.lrz.de/vadere/vadere).
 
 ### Controller (controller model)
 
@@ -44,7 +47,7 @@ Characteristic for the text message model is that it takes some time until agent
 * Realistic model: simulate the information dissemination with a mobile networks simulator.
 For case 2, the coupled simulator crownet can be used.
 
-#### Reaction model
+### Reaction model
 It depends on the perception and the mooed whether agents react to rerouting measure.
 Even if the information about the rerouting is transmitted succesfully, some agents might not react.
 
@@ -52,6 +55,29 @@ We model this with a simplified model:
 * time-delay: we define a random variable for the reaction time from which we draw randomly.
 * reacitvity: we define a random variable for the reactivity from which we draw randomly.
 
+## Dependencies
+
+## Other repositories
+
+| Mobility model | Information dissemination |
+| ------ | ------ |
+| Vadere  | CrowNet²  |
+
+²ncessray if the information dissemination needs to be modelled realistically.
+
+If the simplified information dissemination model is used, it is possible to include the Vadere repository only.
+
+However, we strongly recommend to include the crownet repository. 
+CrowNet couples already contains simulators and simulation models necessary to use functionalities of FlowControl.
+
+Please clone the crowNet repository as described [here](https://sam-dev.cs.hm.edu/rover/crownet)
+
+
+## Python dependencies
+
+See requirements.txt
+
+We strongly recommend to work with a virtual environment.
 
 
 
