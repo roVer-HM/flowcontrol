@@ -32,7 +32,7 @@ from .exceptions import TraCIException, FatalTraCIError
 from .domain import _defaultDomains
 from .storage import Storage
 
-from strategies import Strategy, ControlAction
+from flowcontrol.strategy.strategies import Strategy, ControlAction
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 

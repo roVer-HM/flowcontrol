@@ -1,28 +1,37 @@
-from pythontraciwrapper.py4j_client import Py4jClient
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-
-
-from abc import ABCMeta, abstractmethod
-import pandas as pd
 
 import os
+import pandas as pd
+
+from flowcontrol.vaderecontrol.pythontraciwrapper.py4j_client import Py4jClient
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
+from abc import ABCMeta, abstractmethod
+
+from flowcontrol.config import *
+from flowcontrol.vaderecontrol.utils import create_vadere_jar_files
 
 class SimulationModel(metaclass=ABCMeta):
-    def __init__(self, VADERE_PATH, project_path, scenario_name=None, start_server=True, debug=True):
+
+    def __init__(self, project_path, scenario_name=None, start_server=True, debug=True):
 
         if scenario_name is not None:
             self.scenario_name = scenario_name
 
+        add_env_variables()
+        VADERE_PATH = os.environ["VADERE_PATH"]
+
         self.model = Py4jClient.create(
-            project_path=os.path.join(VADERE_PATH, project_path),
+            project_path=project_path,
             vadere_base_path=VADERE_PATH,
             start_server=start_server,
             debug=debug,
         )
+
         self.model.entrypoint_jar = (
             f"{VADERE_PATH}/VadereManager/target/vadere-traci-entrypoint.jar"
         )
+
+        create_vadere_jar_files()
 
         self._start_scenario()
 
@@ -64,9 +73,10 @@ class SimulationModel(metaclass=ABCMeta):
 
 
 class CorridorChoice(SimulationModel):
-    def __init__(self, VADERE_PATH, project_path, **kwargs):
+
+    def __init__(self, project_path, **kwargs):
         self.polygon = None
-        super().__init__(VADERE_PATH, project_path, **kwargs)
+        super().__init__(project_path, **kwargs)
 
     def get_objective(self, state):
 

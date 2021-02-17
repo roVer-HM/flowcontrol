@@ -1,2 +1,7 @@
 pkg-resources==0.0.0
 sumolib==1.8.0
+pandas==1.2
+shapely
+ipython==7.8.0
+py4j==0.10.8.1
+numpy >= 1.15.4

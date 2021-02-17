@@ -4,9 +4,8 @@ import numpy as np
 
 from abc import ABCMeta, abstractmethod
 
-import matplotlib.pyplot as plt
 
-from VadereModel import SimulationModel
+from flowcontrol.vaderecontrol.VadereModel import SimulationModel
 
 
 class ModelPredictiveController(metaclass=ABCMeta):
@@ -148,9 +147,6 @@ class CorridorChoiceController(ModelPredictiveController):
         i = np.argwhere(norm== norm.min())[0][0]
         optimal_control_action = samples[i][0]
 
-        plt.scatter(samples.transpose()[0],norm)
-        plt.plot( optimal_control_action, norm.min(), marker="x", markersize=10, color="green")
-        plt.show()
 
         print(f"Timestep t={t}s. Use control_actiion {optimal_control_action}.")
 

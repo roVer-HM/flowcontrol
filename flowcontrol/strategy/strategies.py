@@ -79,5 +79,3 @@ class CorridorChoice(Strategy):
 		return self.destination
 
 
-class Strategy2:
-	pass
