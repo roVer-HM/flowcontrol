@@ -72,6 +72,14 @@ CrowNet couples already contains simulators and simulation models necessary to u
 
 Please clone the crowNet repository as described [here](https://sam-dev.cs.hm.edu/rover/crownet)
 
+Make sure that the environmental variable CROWNET_HOME points to the crownet repository:
+```
+echo $CROWNET_HOME
+```
+Create a config file to make CROWNET_HOME available to FlowControl:
+```
+echo $CROWNET_HOME > ~/.flowcontrolconfig
+```
 
 ## Python dependencies
 
