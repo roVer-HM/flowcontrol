@@ -39,7 +39,7 @@ if 'SUMO_HOME' in os.environ:
 else:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ControlStrategies.strategies import Strategy
+from flowcontrol.strategy.strategies import Strategy
 
 from .domain import _defaultDomains  # noqa
 # StepListener needs to be imported for backwards compatibility

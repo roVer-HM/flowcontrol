@@ -169,6 +169,11 @@ class Domain:
             return method(*args, **kwargs)
         return tracingWrapper
 
+    def _buildGetCmd(self, varID, objectID="", format="", *values):
+        if self._connection is None:
+            raise FatalTraCIError("Not connected.")
+        r = self._connection._buildCmd(self._cmdGetID, varID, objectID, format, *values)
+
     def _getUniversal(self, varID, objectID="", format="", *values):
         if self._deprecatedFor:
             warnings.warn("The domain %s is deprecated, use %s instead." % (self._name, self._deprecatedFor))
