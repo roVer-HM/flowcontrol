@@ -36,13 +36,15 @@ from flowcontrol.strategy.strategies import Strategy, ControlAction
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 
+
 def _readState(result):
     # compound size and type
-    assert(result.read("!i")[0] == 3)
+    assert (result.read("!i")[0] == 3)
     agent_position = result.read2DPositionList()
     target_list = result.readStringList()
     is_informed = result.readIntegerList()
     return CrowNetState(agent_position, target_list, is_informed)
+
 
 class CrowNetState:
 
@@ -52,10 +54,7 @@ class CrowNetState:
         self._is_informed = is_informed
 
 
-
-
 class Connection(object):
-
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, host, port, process):
@@ -120,10 +119,6 @@ class Connection(object):
         self._queue = []
         return result
 
-
-
-
-
     def _pack(self, format, *values):
         packed = bytes()
         for f, v in zip(format, values):
@@ -140,7 +135,7 @@ class Connection(object):
             elif f == "B":
                 packed += struct.pack("!BB", tc.TYPE_UBYTE, int(v))
             elif (
-                f == "u"
+                    f == "u"
             ):  # raw unsigned byte needed for distance command and subscribe
                 packed += struct.pack("!B", int(v))
             elif f == "s":
@@ -189,11 +184,8 @@ class Connection(object):
                 packed += struct.pack("!dB", v[1], v[2])
         return packed
 
-    def _sendCmd(self, cmdID, varID, objID, format="", *values):
-
-        # struct.pack(fmt, *values) -> fmt = "!BB" what does this mean? see https://docs.python.org/3/library/struct.html#format-characters
-
-        self._queue.append(cmdID)
+    def _buildCmd(self, cmdID, varID, objID, format="", *values):
+        _cmd_string = bytes()
         packed = self._pack(format, *values)
         length = len(packed) + 1 + 1  # length and command
         if varID is not None:
@@ -202,21 +194,30 @@ class Connection(object):
             else:
                 length += 1 + 4 + len(objID)
         if length <= 255:
-            self._string += struct.pack("!BB", length, cmdID)
+            _cmd_string += struct.pack("!BB", length, cmdID)
             # "!BB" means:
             # ! represents the network byte
             # B: unsigned char
         else:
-            self._string += struct.pack("!BiB", 0, length + 4, cmdID)
+            _cmd_string += struct.pack("!BiB", 0, length + 4, cmdID)
             # BiB : i -> integer
         if varID is not None:
             if isinstance(varID, tuple):
-                self._string += struct.pack("!dd", *varID)
+                _cmd_string += struct.pack("!dd", *varID)
                 # d -> double
             else:
-                self._string += struct.pack("!B", varID)
+                _cmd_string += struct.pack("!B", varID)
                 # B -> unsigned char
-            self._string += struct.pack("!i", len(objID)) + objID.encode("latin1")
+            _cmd_string += struct.pack("!i", len(objID)) + objID.encode("latin1")
+        _cmd_string += packed
+        return _cmd_string
+
+    def _sendCmd(self, cmdID, varID, objID, format="", *values):
+
+        # struct.pack(fmt, *values) -> fmt = "!BB" what does this mean? see https://docs.python.org/3/library/struct.html#format-characters
+
+        self._queue.append(cmdID)
+        packed = self._buildCmd(cmdID, varID, objID, format, *values)
 
         self._string += packed
         return self._sendExact()
@@ -255,7 +256,7 @@ class Connection(object):
 
 class Server(Connection):
 
-    def __init__(self, strategy : Strategy , host="127.0.0.1", port=9997, process=None):
+    def __init__(self, strategy: Strategy, host="127.0.0.1", port=9997, process=None):
 
         self._host = host
         self._port = port
@@ -275,13 +276,12 @@ class Server(Connection):
         self._strategy = strategy
         self._ready = True
 
-
         print("Server is waiting for omnetpp-client")
         # add try counter -> ... if necssary
 
         # while self._ready:
 
-        (conn, addr) = self._server_socket.accept() # TIMEOUT
+        (conn, addr) = self._server_socket.accept()  # TIMEOUT
         self._socket = conn
         print("Client connected")
 
@@ -291,13 +291,10 @@ class Server(Connection):
         self._server_socket.close()
         self._socket.close()
 
-
-
     def get_control_action(self, state: dict):
         # dict that contains the vadere state and the omnet state
         control_action = self._strategy.compute_control_action(state)
         return control_action
-
 
     def _get_state_from_traci_msg(self):
 
@@ -329,42 +326,37 @@ class Server(Connection):
 
 class ClientHandler:
 
-    def __init__(self, conn: Server, strategy : Strategy):
+    def __init__(self, conn: Server, strategy: Strategy):
         self.running = True
         self.conn = conn
         self._strategy = strategy
 
-
     def run(self):
-
         while True:
-
             state = self.conn._get_state_from_traci_msg()
             control_action = self._strategy.get_control_action(state)
             self.conn._send_control_action(control_action)
 
 
-
-
 class Client(Connection):
-
     """Contains the socket, the composed message string
     together with a list of TraCI commands which are inside.
     """
 
-    def __init__(self, host="127.0.0.1", port=9997, process = None):
+    def __init__(self, host="127.0.0.1", port=9997, default_domains=None, process=None):
         super().__init__(host, port, process=process)
         self._string = bytes()
-        self._queue = []
+        self._queue = []  # backlog of commands waiting response
         self._subscriptionMapping = {}
         self._stepListeners = {}
         self._nextStepListenerID = 0
-        for domain in _defaultDomains:
+        if default_domains is None:
+            default_domains = _defaultDomains
+        for domain in default_domains:
             domain._register(self, self._subscriptionMapping)
 
         self._socket.connect((self._host, self._port))
         print("Client connected.")
-
 
     def simulationStep(self, step=0.0):
         """
@@ -443,12 +435,12 @@ class Client(Connection):
         result.readLength()
         response = result.read("!B")[0]
         isVariableSubscription = (
-            response >= tc.RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE
-            and response <= tc.RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE
-        ) or (
-            response >= tc.RESPONSE_SUBSCRIBE_PARKINGAREA_VARIABLE
-            and response <= tc.RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE
-        )
+                                         response >= tc.RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE
+                                         and response <= tc.RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE
+                                 ) or (
+                                         response >= tc.RESPONSE_SUBSCRIBE_PARKINGAREA_VARIABLE
+                                         and response <= tc.RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE
+                                 )
         objectID = result.readString()
         if not isVariableSubscription:
             domain = result.read("!B")[0]
@@ -523,7 +515,7 @@ class Client(Connection):
         return self._subscriptionMapping[cmdID]
 
     def _subscribeContext(
-        self, cmdID, begin, end, objID, domain, dist, varIDs, parameters=None
+            self, cmdID, begin, end, objID, domain, dist, varIDs, parameters=None
     ):
         result = self._sendCmd(
             cmdID,
@@ -545,19 +537,19 @@ class Client(Connection):
 
     def _addSubscriptionFilter(self, filterType, params=None):
         if filterType in (
-            tc.FILTER_TYPE_NONE,
-            tc.FILTER_TYPE_NOOPPOSITE,
-            tc.FILTER_TYPE_TURN,
-            tc.FILTER_TYPE_LEAD_FOLLOW,
+                tc.FILTER_TYPE_NONE,
+                tc.FILTER_TYPE_NOOPPOSITE,
+                tc.FILTER_TYPE_TURN,
+                tc.FILTER_TYPE_LEAD_FOLLOW,
         ):
             # filter without parameter
             assert params is None
             self._sendCmd(tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "u", filterType)
         elif filterType in (
-            tc.FILTER_TYPE_DOWNSTREAM_DIST,
-            tc.FILTER_TYPE_UPSTREAM_DIST,
-            tc.FILTER_TYPE_FIELD_OF_VISION,
-            tc.FILTER_TYPE_LATERAL_DIST,
+                tc.FILTER_TYPE_DOWNSTREAM_DIST,
+                tc.FILTER_TYPE_UPSTREAM_DIST,
+                tc.FILTER_TYPE_FIELD_OF_VISION,
+                tc.FILTER_TYPE_LATERAL_DIST,
         ):
             # filter with float parameter
             self._sendCmd(
@@ -617,4 +609,3 @@ class StepListener(object):
 
     def getID(self):
         return self._ID
-
