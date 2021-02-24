@@ -1597,7 +1597,7 @@ class VehicleDomain(Domain):
         noOpposite specifies whether vehicles on opposite direction lanes shall be returned
         downstreamDist and upstreamDist specify the range of the search for surrounding vehicles along the road net.
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_LANES, lanes)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_LANES, lanes)
         if noOpposite:
             self.addSubscriptionFilterNoOpposite()
         if downstreamDist is not None:
@@ -1611,7 +1611,7 @@ class VehicleDomain(Domain):
         Omits vehicles on other edges than the ego's for the last modified vehicle context subscription
         (call it just after subscribing).
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_NOOPPOSITE)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_NOOPPOSITE)
 
     def addSubscriptionFilterDownstreamDistance(self, dist):
         """addSubscriptionFilterDownstreamDist(float) -> None
@@ -1619,7 +1619,7 @@ class VehicleDomain(Domain):
         Sets the downstream distance along the network for vehicles to be returned by the last modified
         vehicle context subscription (call it just after subscribing).
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_DOWNSTREAM_DIST, dist)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_DOWNSTREAM_DIST, dist)
 
     def addSubscriptionFilterUpstreamDistance(self, dist):
         """addSubscriptionFilterUpstreamDist(float) -> None
@@ -1627,7 +1627,7 @@ class VehicleDomain(Domain):
         Sets the upstream distance along the network for vehicles to be returned by the last modified
         vehicle context subscription (call it just after subscribing).
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_UPSTREAM_DIST, dist)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_UPSTREAM_DIST, dist)
 
     def addSubscriptionFilterCFManeuver(self, downstreamDist=None, upstreamDist=None):
         """addSubscriptionFilterCFManeuver() -> None
@@ -1675,15 +1675,15 @@ class VehicleDomain(Domain):
         and follower of the ego.
         Combine with: lanes-filter to restrict to one direction; distance filters; vClass/vType filter.
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_LEAD_FOLLOW)
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_LANES, lanes)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_LEAD_FOLLOW)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_LANES, lanes)
 
     def addSubscriptionFilterTurn(self, downstreamDist=None, upstreamDist=None):
         """addSubscriptionFilterTurn() -> None
 
         Restricts vehicles returned by the last modified vehicle context subscription to foes on an upcoming junction
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_TURN)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_TURN)
         if downstreamDist is not None:
             self.addSubscriptionFilterDownstreamDistance(downstreamDist)
         if upstreamDist is not None:
@@ -1694,14 +1694,14 @@ class VehicleDomain(Domain):
 
         Restricts vehicles returned by the last modified vehicle context subscription to vehicles of the given classes
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_VCLASS, vClasses)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_VCLASS, vClasses)
 
     def addSubscriptionFilterVType(self, vTypes):
         """addSubscriptionFilterVType(list(String)) -> None
 
         Restricts vehicles returned by the last modified vehicle context subscription to vehicles of the given types
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_VTYPE, vTypes)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_VTYPE, vTypes)
 
     def addSubscriptionFilterFieldOfVision(self, openingAngle):
         """addSubscriptionFilterFieldOfVision(float) -> None
@@ -1709,7 +1709,7 @@ class VehicleDomain(Domain):
         Restricts vehicles returned by the last modified vehicle context subscription
         to vehicles within field of vision with given opening angle
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_FIELD_OF_VISION, openingAngle)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_FIELD_OF_VISION, openingAngle)
 
     def addSubscriptionFilterLateralDistance(self, lateralDist, downstreamDist=None, upstreamDist=None):
         """addSubscriptionFilterLateralDist(double, double, double) -> None
@@ -1719,7 +1719,7 @@ class VehicleDomain(Domain):
         downstreamDist and upstreamDist specify the longitudinal range of the search
         for surrounding vehicles along the ego vehicle's route.
         """
-        self._connection._addSubscriptionFilter(tc.FILTER_TYPE_LATERAL_DIST, lateralDist)
+        self._connection._add_subscription_filter(tc.FILTER_TYPE_LATERAL_DIST, lateralDist)
         if downstreamDist is not None:
             self.addSubscriptionFilterDownstreamDistance(downstreamDist)
         if upstreamDist is not None:

@@ -235,7 +235,7 @@ class Domain:
         It is not possible to retrieve older subscription results than the ones
         from the last time step.
         """
-        return self._connection._getSubscriptionResults(self._subscribeResponseID).get(objectID)
+        return self._connection._get_subscription_results(self._subscribeResponseID).get(objectID)
 
     def getAllSubscriptionResults(self):
         """getAllSubscriptionResults() -> dict(string: dict(integer: <value_type>))
@@ -244,7 +244,7 @@ class Domain:
         It is not possible to retrieve older subscription results than the ones
         from the last time step.
         """
-        return self._connection._getSubscriptionResults(self._subscribeResponseID).get(None)
+        return self._connection._get_subscription_results(self._subscribeResponseID).get(None)
 
     def subscribeContext(self, objectID, domain, dist, varIDs=None,
                          begin=tc.INVALID_DOUBLE_VALUE, end=tc.INVALID_DOUBLE_VALUE, parameters=None):
@@ -255,17 +255,17 @@ class Domain:
         """
         if varIDs is None:
             varIDs = self._subscriptionDefault
-        self._connection._subscribeContext(
+        self._connection._subscribe_context(
             self._contextID, begin, end, objectID, domain, dist, varIDs, parameters)
 
     def unsubscribeContext(self, objectID, domain, dist):
         self.subscribeContext(objectID, domain, dist, [])
 
     def getContextSubscriptionResults(self, objectID):
-        return self._connection._getSubscriptionResults(self._contextResponseID).getContext(objectID)
+        return self._connection._get_subscription_results(self._contextResponseID).getContext(objectID)
 
     def getAllContextSubscriptionResults(self):
-        return self._connection._getSubscriptionResults(self._contextResponseID).getContext(None)
+        return self._connection._get_subscription_results(self._contextResponseID).getContext(None)
 
     def getParameter(self, objID, param):
         """getParameter(string, string) -> string

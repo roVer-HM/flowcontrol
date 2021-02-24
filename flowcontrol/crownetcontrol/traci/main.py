@@ -234,7 +234,7 @@ def simulationStep(step=0):
         # cannot wrap because the method is import from __init__
         args = "" if step == 0 else str(step)
         _traceFile[_currentLabel[0]].write("traci.simulationStep(%s)\n" % args)
-    return _connections[""].simulationStep(step)
+    return _connections[""].simulation_step(step)
 
 
 def addStepListener(listener):
@@ -246,7 +246,7 @@ def addStepListener(listener):
     """
     if "" not in _connections:
         raise FatalTraCIError("Not connected.")
-    return _connections[""].addStepListener(listener)
+    return _connections[""].add_step_listener(listener)
 
 
 def removeStepListener(listenerID):
@@ -257,7 +257,7 @@ def removeStepListener(listenerID):
     """
     if "" not in _connections:
         raise FatalTraCIError("Not connected.")
-    return _connections[""].removeStepListener(listenerID)
+    return _connections[""].remove_step_listener(listenerID)
 
 
 def getVersion():

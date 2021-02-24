@@ -141,7 +141,7 @@ class SimulationDomain(Domain):
         """
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        return self._connection.simulationStep(time)
+        return self._connection.simulation_step(time)
 
     def getCurrentTime(self):
         """getCurrentTime() -> integer

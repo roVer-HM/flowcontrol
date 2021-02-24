@@ -10,7 +10,7 @@ def main():
     client = Client(port=9999, default_domains=[p, p2])
     p = client.v_person
     ret = p.get_target_list("1")
-    ret = client.simulationStep(5.0)
+    ret = client.simulation_step(5.0)
     print("hi")
 
 
