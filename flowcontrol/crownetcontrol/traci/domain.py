@@ -110,9 +110,6 @@ class SubscriptionResults:
         return "<%s, %s>" % (self._results, self._contextResults)
 
 
-
-
-
 class Domain:
 
     def __init__(self, name, cmdGetID, cmdSetID,

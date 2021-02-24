@@ -21,9 +21,12 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+
+import logging
 import socket
 import struct
 import sys
+import threading
 import warnings
 import abc
 
@@ -57,19 +60,8 @@ class CrowNetState:
 class Connection(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, host, port, process):
-        self._host = host
-        self._port = port
-
-        if sys.platform.startswith("java"):
-            # working around jython 2.7.0 bug #2273
-            self._socket = socket.socket(
-                socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-            )
-        else:
-            self._socket = socket.socket()
-        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self._process = process
+    def __init__(self):
+        self._socket = None
 
     def _recvExact(self):
         try:
@@ -247,104 +239,36 @@ class Connection(object):
             self._sendCmd(tc.CMD_CLOSE, None, None)
             self._socket.close()
             self._socket = None
-        if wait and self._process is not None:
-            self._process.wait()
 
     def start(self):
         raise NotImplemented
 
 
-class Server(Connection):
+class Controller:
+    def __init__(self, host="127.0.0.1", port=9997, mode="Standalone"):
 
-    def __init__(self, strategy: Strategy, host="127.0.0.1", port=9997, process=None):
-
-        self._host = host
-        self._port = port
-
-        # TODO rm this after check
-        if sys.platform.startswith("java"):
-            # working around jython 2.7.0 bug #2273
-            self._server_socket = socket.socket(
-                socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-            )
+        if mode == "Standalone":
+            self.connection = Client(host=host, port=port, default_domains=_defaultDomains)
         else:
-            self._server_socket = socket.socket()
-        self._server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self._server_socket.bind((self._host, self._port))
-        self._server_socket.listen(0)
+            self.connection = ServerModeConnection(self, host, port)
 
-        self._strategy = strategy
-        self._ready = True
+    def start_controller(self):
+        self.connection.start()
 
-        print("Server is waiting for omnetpp-client")
-        # add try counter -> ... if necssary
-
-        # while self._ready:
-
-        (conn, addr) = self._server_socket.accept()  # TIMEOUT
-        self._socket = conn
-        print("Client connected")
-
-        handler = ClientHandler(conn)
-
-    def close(self, wait=True):
-        self._server_socket.close()
-        self._socket.close()
-
-    def get_control_action(self, state: dict):
-        # dict that contains the vadere state and the omnet state
-        control_action = self._strategy.compute_control_action(state)
+    def handle_sim_step(self, sim_time, sim_state, traci_client):
+        control_action = {}
         return control_action
 
-    def _get_state_from_traci_msg(self):
-
-        msg = self._recvExact()
-        msg.read("!B")  # Type
-        state = []
-        for _ in range(msg.readInt()):
-            msg.read("!B")  # Type
-            state.append(_readState(msg))
-        return tuple(state)
-
-    def _send_control_action(self, control_action: ControlAction):
-
-        simulator = self._strategy.get_simulator_destination()
-
-        if simulator == "vadere":
-            cmdGetID = tc.CMD_VADERE
-        elif simulator == "omnetpp":
-            cmdGetID = tc.CMD_OMNETPP
-        else:
-            raise ValueError("Simulator must be vadere or omnetpp.")
-
-        for act in control_action.get_actions():
-            if act == "target_list":
-                self._sendCmd(cmdGetID, tc.VAR_TARGET_LIST, control_action)
-            if act == "velocities":
-                self._sendCmd(cmdGetID, tc.VELOCITIES, control_action)
+    def handle_init(self, traci_client):
+        pass
 
 
-class ClientHandler:
+class BaseClient(Connection):
 
-    def __init__(self, conn: Server, strategy: Strategy):
-        self.running = True
-        self.conn = conn
-        self._strategy = strategy
+    def __init__(self, _socket, default_domains=None):
+        super().__init__()
+        self._socket = _socket
 
-    def run(self):
-        while True:
-            state = self.conn._get_state_from_traci_msg()
-            control_action = self._strategy.get_control_action(state)
-            self.conn._send_control_action(control_action)
-
-
-class Client(Connection):
-    """Contains the socket, the composed message string
-    together with a list of TraCI commands which are inside.
-    """
-
-    def __init__(self, host="127.0.0.1", port=9997, default_domains=None, process=None):
-        super().__init__(host, port, process=process)
         self._string = bytes()
         self._queue = []  # backlog of commands waiting response
         self._subscriptionMapping = {}
@@ -355,79 +279,7 @@ class Client(Connection):
         for domain in default_domains:
             domain._register(self, self._subscriptionMapping)
 
-        self._socket.connect((self._host, self._port))
         print("Client connected.")
-
-    def simulationStep(self, step=0.0):
-        """
-        Make a simulation step and simulate up to the given second in sim time.
-        If the given value is 0 or absent, exactly one step is performed.
-        Values smaller than or equal to the current sim time result in no action.
-        """
-        if type(step) is int and step >= 1000:
-            warnings.warn(
-                "API change now handles step as floating point seconds", stacklevel=2
-            )
-        result = self._sendCmd(tc.CMD_SIMSTEP, None, None, "D", step)
-        for subscriptionResults in self._subscriptionMapping.values():
-            subscriptionResults.reset()
-        numSubs = result.readInt()
-        responses = []
-        while numSubs > 0:
-            responses.append(self._readSubscription(result))
-            numSubs -= 1
-        self._manageStepListeners(step)
-        return responses
-
-    def removeStepListener(self, listenerID):
-        """removeStepListener(traci.StepListener) -> bool
-
-        Remove the step listener from traci's step listener container.
-        Returns True if the listener was removed successfully, False if it wasn't registered.
-        """
-        # print ("traci: removeStepListener %s\nlisteners: %s"%(listenerID, _stepListeners))
-        if listenerID in self._stepListeners:
-            self._stepListeners[listenerID].cleanUp()
-            del self._stepListeners[listenerID]
-            # print ("traci: Removed stepListener %s"%(listenerID))
-            return True
-        warnings.warn(
-            "Cannot remove unknown listener %s.\nlisteners:%s"
-            % (listenerID, self._stepListeners)
-        )
-        return False
-
-    def _manageStepListeners(self, step):
-        listenersToRemove = []
-        for (listenerID, listener) in self._stepListeners.items():
-            keep = listener.step(step)
-            if not keep:
-                listenersToRemove.append(listenerID)
-        for listenerID in listenersToRemove:
-            self.removeStepListener(listenerID)
-
-    def addStepListener(self, listener):
-        """addStepListener(traci.StepListener) -> int
-
-        Append the step listener (its step function is called at the end of every call to traci.simulationStep())
-        Returns the ID assigned to the listener if it was added successfully, None otherwise.
-        """
-        if issubclass(type(listener), StepListener):
-            listener.setID(self._nextStepListenerID)
-            self._stepListeners[self._nextStepListenerID] = listener
-            self._nextStepListenerID += 1
-            # print ("traci: Added stepListener %s\nlisteners: %s"%(_nextStepListenerID - 1, _stepListeners))
-            return self._nextStepListenerID - 1
-        warnings.warn(
-            "Proposed listener's type must inherit from traci.StepListener. Not adding object of type '%s'"
-            % type(listener)
-        )
-        return None
-
-    def close(self, wait=True):
-        for listenerID in list(self._stepListeners.keys()):
-            self.removeStepListener(listenerID)
-        super().close(wait=wait)
 
     def _readSubscription(self, result):
         # to enable this you also need to set _DEBUG to True in storage.py
@@ -582,6 +434,238 @@ class Client(Connection):
                 len(lanes),
                 *lanes
             )
+
+
+class Client(BaseClient):
+    """Contains the socket, the composed message string
+    together with a list of TraCI commands which are inside.
+    """
+
+    def __init__(self, host="127.0.0.1", port=9997, default_domains=None, process=None):
+        self._host = host
+        self._port = port
+        self._process = process
+        if sys.platform.startswith("java"):
+            # working around jython 2.7.0 bug #2273
+            _socket = socket.socket(
+                socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
+            )
+        else:
+            _socket = socket.socket()
+        _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+
+        super().__init__(_socket, default_domains)
+        self._socket.connect((self._host, self._port))
+        self._stepListeners = {}
+
+    def simulationStep(self, step=0.0):
+        """
+        Make a simulation step and simulate up to the given second in sim time.
+        If the given value is 0 or absent, exactly one step is performed.
+        Values smaller than or equal to the current sim time result in no action.
+        """
+        if type(step) is int and step >= 1000:
+            warnings.warn(
+                "API change now handles step as floating point seconds", stacklevel=2
+            )
+        result = self._sendCmd(tc.CMD_SIMSTEP, None, None, "D", step)
+        for subscriptionResults in self._subscriptionMapping.values():
+            subscriptionResults.reset()
+        numSubs = result.readInt()
+        responses = []
+        while numSubs > 0:
+            responses.append(self._readSubscription(result))
+            numSubs -= 1
+        self._manageStepListeners(step)
+        return responses
+
+    def removeStepListener(self, listenerID):
+        """removeStepListener(traci.StepListener) -> bool
+
+        Remove the step listener from traci's step listener container.
+        Returns True if the listener was removed successfully, False if it wasn't registered.
+        """
+        # print ("traci: removeStepListener %s\nlisteners: %s"%(listenerID, _stepListeners))
+        if listenerID in self._stepListeners:
+            self._stepListeners[listenerID].cleanUp()
+            del self._stepListeners[listenerID]
+            # print ("traci: Removed stepListener %s"%(listenerID))
+            return True
+        warnings.warn(
+            "Cannot remove unknown listener %s.\nlisteners:%s"
+            % (listenerID, self._stepListeners)
+        )
+        return False
+
+    def _manageStepListeners(self, step):
+        listenersToRemove = []
+        for (listenerID, listener) in self._stepListeners.items():
+            keep = listener.step(step)
+            if not keep:
+                listenersToRemove.append(listenerID)
+        for listenerID in listenersToRemove:
+            self.removeStepListener(listenerID)
+
+    def addStepListener(self, listener):
+        """addStepListener(traci.StepListener) -> int
+
+        Append the step listener (its step function is called at the end of every call to traci.simulationStep())
+        Returns the ID assigned to the listener if it was added successfully, None otherwise.
+        """
+        if issubclass(type(listener), StepListener):
+            listener.setID(self._nextStepListenerID)
+            self._stepListeners[self._nextStepListenerID] = listener
+            self._nextStepListenerID += 1
+            # print ("traci: Added stepListener %s\nlisteners: %s"%(_nextStepListenerID - 1, _stepListeners))
+            return self._nextStepListenerID - 1
+        warnings.warn(
+            "Proposed listener's type must inherit from traci.StepListener. Not adding object of type '%s'"
+            % type(listener)
+        )
+        return None
+
+    def close(self, wait=True):
+        for listenerID in list(self._stepListeners.keys()):
+            self.removeStepListener(listenerID)
+        super().close(wait=wait)
+        if wait and self._process is not None:
+            self._process.wait()
+
+
+class ClientModeConnection(Client):
+
+    def __init__(self, control_handler, host="127.0.0.1", port=9997, default_domains=None, process=None):
+        super().__init__(host, port, default_domains, process)
+        self._control_handler = control_handler
+        self._running = False
+        self._sim_until = -1
+
+    def start(self):
+        # init vadere
+        self._control_handler.handle_init(self)
+
+        while self._running:
+            simstep_response = self.simulationStep(self._sim_until)
+            response = self.handle_simstep(simstep_response)
+            length = struct.pack("!i", len(response) + 4)
+            self._socket.send(length + response)
+            # clear state
+            self._string = bytes()
+            self._queue = []
+
+    def set_step(self, step):
+        # todo allow controller to set next update time manually. Currently not settable
+        pass
+
+    def handle_init(self):
+        # handle INIT
+        # 1. send file
+        # 2. make subscription command's
+        # 3. callback of controller for specific setup
+        self._control_handler.handle_init(self)
+
+    def handle_simstep(self, subscription_result):
+        # read subscription and update missing subs.
+        newSubResponse = self._sendCmd("subCmdID", "varId", "obj")
+        # update simstep_response with new subscription from newSubResponse
+        # ...
+        # build control state object
+        sim_state = {}
+        sim_time = 12.0
+        control_action = self._control_handler.handle_sim_step(sim_time, sim_state, self)
+        return self.control_action_to_traci(control_action)
+
+    def control_action_to_traci(self, control_action):
+        """just forward to socket we are the client """
+        return b"traci packet containing control action plain (Vadere)"
+
+
+class ServerModeConnection(Connection):
+
+    def __init__(self, control_handler: Controller, host="127.0.0.1", port=9997, default_domains=None):
+        super().__init__()
+        self._host = host
+        self._port = port
+        self._default_domains = default_domains
+        self._running = False
+        self._control_handler = control_handler
+        self._base_client = None
+
+    def wait_for_cmd(self):
+        while self._running:
+            # wait for command
+            cmd = self._recvExact()
+            if not cmd:
+                self._running = False
+                break
+
+            cmd_length = cmd.read_cmdLength()
+            cmd_id, var_id = cmd.read_cmd_var()
+
+            if cmd_id == "INI":
+                # response: simple act
+                response = self.handle_init()
+            elif cmd_id == "timeStepResponse":
+                # todo parse subscription result
+                subscription_result = self.parse_subscription_result(cmd)
+                # response: contains control action
+                response = self.handle_simstep(subscription_result)
+            else:
+                raise TraCIException("unknown command")
+
+            if response is not None:
+                # send response for INIT or timeStepResponse and wait for next timeStepResponse
+                length = struct.pack("!i", len(response) + 4)
+                self._socket.send(length + response)
+
+            # clear state
+            self._base_client._string = bytes()
+            self._base_client._queue = []
+
+        self._socket.close()
+        del self._socket
+        logging.info("connection closed.")
+
+    def start(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind((self._host, self._port))
+        s.listen(0)  # only one client
+        logging.info(f"FlowControl (Server-Mode) listening on port {self._port} ...")
+        conn, addr = s.accept()
+        self._socket = conn
+        self._server_port = addr[1]
+        logging.info(f"Client connected start FlowControl logic...")
+        self._running = True
+        self._base_client = BaseClient(_socket=self._socket, default_domains=self._default_domains)
+
+        self.wait_for_cmd()
+
+    def handle_init(self):
+        # make subscription command's
+
+        self._control_handler.handle_init(self._base_client)
+
+        return b"init_OK"
+
+    def parse_subscription_result(self, simstep_response: Storage):
+        # todo see result of Client.simulationStep
+        return []
+
+    def handle_simstep(self, simstep_response):
+        # read subscription and update missing subs.
+        newSubResponse = self._sendCmd("subCmdID", "varId", "obj")
+        # update simstep_response with new subscription from newSubResponse
+        # ...
+        # build control state object
+        sim_state = {}
+        sim_time = 12.0
+        controll_action = self._control_handler.handle_sim_step(sim_time, sim_state, self._base_client)
+        return self.control_action_to_traci(controll_action)
+
+    def control_action_to_traci(self, control_action):
+        """must be wrapped for server (controll packet) """
+        return b"traci packet containing controll action (wrapped  for OMNeT |  Vadere)"
 
 
 class StepListener(object):

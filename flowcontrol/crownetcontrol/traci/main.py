@@ -43,7 +43,7 @@ from flowcontrol.strategy.strategies import Strategy
 
 from .domain import _defaultDomains  # noqa
 # StepListener needs to be imported for backwards compatibility
-from .connection import Client, Server  # noqa
+from .connection import Client, ServerModeConnection  # noqa
 from .exceptions import FatalTraCIError, TraCIException  # noqa
 from . import _inductionloop, _lanearea, _multientryexit, _trafficlight  # noqa
 from . import _variablespeedsign, _meandata  # noqa
@@ -177,7 +177,7 @@ def start_server(strategy : Strategy, port=None, host= "127.0.0.1", label="defau
     if log:
         _startlogging()
 
-    _connections[label] = Server(strategy = strategy, port  = port, host = host)
+    _connections[label] = ServerModeConnection(strategy = strategy, port  = port, host = host)
 
 
 def _startTracing(traceFile, cmd, port, label, traceGetters):
