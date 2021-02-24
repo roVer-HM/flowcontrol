@@ -23,8 +23,6 @@ from __future__ import print_function
 from __future__ import absolute_import
 import struct
 
-from . import constants as tc, FatalTraCIError
-
 _DEBUG = False
 
 
@@ -36,7 +34,7 @@ class Storage:
 
     def check_number_bytes(self, length):
         if (self._pos + length) < len(self._content):
-            raise FatalTraCIError(f"expected command with length {length} but only {len(self._content) - self._pos} bytes left.")
+            raise RuntimeError(f"expected command with length {length} but only {len(self._content) - self._pos} bytes left.")
         return True
         
     def read_cmdLength(self):

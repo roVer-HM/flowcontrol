@@ -263,13 +263,13 @@ def removeStepListener(listenerID):
 def getVersion():
     if "" not in _connections:
         raise FatalTraCIError("Not connected.")
-    return _connections[""].getVersion()
+    return _connections[""].get_version()
 
 
 def setOrder(order):
     if "" not in _connections:
         raise FatalTraCIError("Not connected.")
-    return _connections[""].setOrder(order)
+    return _connections[""].set_order(order)
 
 
 def close(wait=True):

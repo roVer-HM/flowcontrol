@@ -31,6 +31,9 @@ import warnings
 import abc
 
 from . import constants as tc
+from .VaderePersonAPI import VaderePersonAPI
+from .VadereMiscAPI import VadereMiscAPI
+from .VadereSimulationAPI import VadereSimulationAPI
 from .exceptions import TraCIException, FatalTraCIError
 from .domain import _defaultDomains
 from .storage import Storage
@@ -40,30 +43,34 @@ from flowcontrol.strategy.strategies import Strategy, ControlAction
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 
 
-def _readState(result):
-    # compound size and type
-    assert (result.read("!i")[0] == 3)
-    agent_position = result.read2DPositionList()
-    target_list = result.readStringList()
-    is_informed = result.readIntegerList()
-    return CrowNetState(agent_position, target_list, is_informed)
+def _create_client_socket():
+    if sys.platform.startswith("java"):
+        # working around jython 2.7.0 bug #2273
+        _socket = socket.socket(
+            socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
+        )
+    else:
+        _socket = socket.socket()
+    _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+    return _socket
 
-
-class CrowNetState:
-
-    def __init__(self, agent_position, target_list, is_informed):
-        self.agent_position = agent_position
-        self.target_list = target_list
-        self._is_informed = is_informed
+def _create_accept_server_socket(host, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((host, port))
+    s.listen(0)  # only one client
+    logging.info(f"listening on port {port} ...")
+    _socket, addr = s.accept()
+    return s, _socket, addr[0], addr[1]
 
 
 class Connection(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self):
-        self._socket = None
+    def __init__(self, _socket=None):
+        self._socket = _socket
 
-    def _recvExact(self):
+    def recv_exact(self):
         try:
             result = bytes()
             while len(result) < 4:
@@ -82,13 +89,16 @@ class Connection(object):
         except socket.error:
             return None
 
-    def _sendExact(self):
+    def send_traci_msg(self, data):
+        length = struct.pack("!i", len(self._string) + 4)
+        self._socket.send(length + data)
+
+    def send_exact(self):
         if self._socket is None:
             raise FatalTraCIError("Connection already closed.")
-        length = struct.pack("!i", len(self._string) + 4)
         # print("python_sendExact: '%s'" % ' '.join(map(lambda x : "%X" % ord(x), self._string)))
-        self._socket.send(length + self._string)
-        result = self._recvExact()
+        self.send_traci_msg(self._string)
+        result = self.recv_exact()
         if not result:
             self._socket.close()
             del self._socket
@@ -111,7 +121,7 @@ class Connection(object):
         self._queue = []
         return result
 
-    def _pack(self, format, *values):
+    def pack(self, format, *values):
         packed = bytes()
         for f, v in zip(format, values):
             if f == "i":
@@ -176,9 +186,9 @@ class Connection(object):
                 packed += struct.pack("!dB", v[1], v[2])
         return packed
 
-    def _buildCmd(self, cmdID, varID, objID, format="", *values):
+    def build_cmd(self, cmdID, varID, objID, format="", *values):
         _cmd_string = bytes()
-        packed = self._pack(format, *values)
+        packed = self.pack(format, *values)
         length = len(packed) + 1 + 1  # length and command
         if varID is not None:
             if isinstance(varID, tuple):  # begin and end of a subscription
@@ -204,25 +214,23 @@ class Connection(object):
         _cmd_string += packed
         return _cmd_string
 
-    def _sendCmd(self, cmdID, varID, objID, format="", *values):
-
-        # struct.pack(fmt, *values) -> fmt = "!BB" what does this mean? see https://docs.python.org/3/library/struct.html#format-characters
+    def send_cmd(self, cmdID, varID, objID, format="", *values):
 
         self._queue.append(cmdID)
-        packed = self._buildCmd(cmdID, varID, objID, format, *values)
+        packed = self.build_cmd(cmdID, varID, objID, format, *values)
 
         self._string += packed
-        return self._sendExact()
+        return self.send_exact()
 
     def load(self, args):
         """
         Load a simulation from the given arguments.
         """
-        self._sendCmd(tc.CMD_LOAD, None, None, "l", args)
+        self.send_cmd(tc.CMD_LOAD, None, None, "l", args)
 
-    def getVersion(self):
+    def get_version(self):
         command = tc.CMD_GETVERSION
-        result = self._sendCmd(command, None, None)
+        result = self.send_cmd(command, None, None)
         result.readLength()
         response = result.read("!B")[0]
         if response != command:
@@ -231,12 +239,12 @@ class Connection(object):
             )
         return result.readInt(), result.readString()
 
-    def setOrder(self, order):
-        self._sendCmd(tc.CMD_SETORDER, None, None, "I", order)
+    def set_order(self, order):
+        self.send_cmd(tc.CMD_SETORDER, None, None, "I", order)
 
     def close(self, wait=True):
         if self._socket is not None:
-            self._sendCmd(tc.CMD_CLOSE, None, None)
+            self.send_cmd(tc.CMD_CLOSE, None, None)
             self._socket.close()
             self._socket = None
 
@@ -245,47 +253,75 @@ class Connection(object):
 
 
 class Controller:
-    def __init__(self, host="127.0.0.1", port=9997, mode="Standalone"):
 
-        if mode == "Standalone":
-            self.connection = Client(host=host, port=port, default_domains=_defaultDomains)
-        else:
-            self.connection = ServerModeConnection(self, host, port)
+    @classmethod
+    def build_server_mode(cls, host="localhost", port=9997):
+        ctr = cls()
+        connection = ServerModeConnection(control_handler=ctr, host=host, port=port)
+        ctr.connection = connection
+        return ctr
+
+    @classmethod
+    def build_client_mode(cls, host="localhost", port=9999):
+        ctr = cls()
+        connection = ClientModeConnection(control_handler=ctr, host=host, port=port)
+        ctr.connection = connection
+        return ctr
+
+    def __init__(self):
+        self.connection = None
 
     def start_controller(self):
+        if self.connection is None:
+            raise RuntimeError("Controller has not working connection")
         self.connection.start()
 
     def handle_sim_step(self, sim_time, sim_state, traci_client):
-        control_action = {}
-        return control_action
+        print("handle_sim_step")
+        # use traci_client to set control action manually!
+        return None
 
     def handle_init(self, traci_client):
+        print("handle_init")
+        # use traci_client as needed!
         pass
 
 
-class BaseClient(Connection):
+class BaseTraCIConnection(Connection):
 
     def __init__(self, _socket, default_domains=None):
         super().__init__()
+
         self._socket = _socket
 
         self._string = bytes()
         self._queue = []  # backlog of commands waiting response
-        self._subscriptionMapping = {}
-        self._stepListeners = {}
-        self._nextStepListenerID = 0
-        if default_domains is None:
-            default_domains = _defaultDomains
-        for domain in default_domains:
-            domain._register(self, self._subscriptionMapping)
+        self.subscriptionMapping = {}
 
-        print("Client connected.")
+        if default_domains is not None:
+            for domain in default_domains:
+                domain.register(self, self.subscriptionMapping)
+
+    def clear(self):
+        self._string = bytes()
+        self._queue = []
+
+    def parse_subscription_result(self, result):
+        for subscriptionResults in self.subscriptionMapping.values():
+            subscriptionResults.reset()
+        numSubs = result.readInt()
+        responses = []
+        while numSubs > 0:
+            responses.append(self._readSubscription(result))
+            numSubs -= 1
+        return responses
 
     def _readSubscription(self, result):
         # to enable this you also need to set _DEBUG to True in storage.py
         # result.printDebug()
         result.readLength()
         response = result.read("!B")[0]
+        # todo better comparison!
         isVariableSubscription = (
                                          response >= tc.RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE
                                          and response <= tc.RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE
@@ -302,8 +338,8 @@ class BaseClient(Connection):
                 varID, status = result.read("!BB")
                 if status:
                     print("Error!", result.readTypedString())
-                elif response in self._subscriptionMapping:
-                    self._subscriptionMapping[response].add(objectID, varID, result)
+                elif response in self.subscriptionMapping:
+                    self.subscriptionMapping[response].add(objectID, varID, result)
                 else:
                     raise FatalTraCIError(
                         "Cannot handle subscription response %02x for %s."
@@ -315,17 +351,17 @@ class BaseClient(Connection):
             for _ in range(objectNo):
                 oid = result.readString()
                 if numVars == 0:
-                    self._subscriptionMapping[response].addContext(
-                        objectID, self._subscriptionMapping[domain], oid
+                    self.subscriptionMapping[response].addContext(
+                        objectID, self.subscriptionMapping[domain], oid
                     )
                 for __ in range(numVars):
                     varID, status = result.read("!BB")
                     if status:
                         print("Error!", result.readTypedString())
-                    elif response in self._subscriptionMapping:
-                        self._subscriptionMapping[response].addContext(
+                    elif response in self.subscriptionMapping:
+                        self.subscriptionMapping[response].addContext(
                             objectID,
-                            self._subscriptionMapping[domain],
+                            self.subscriptionMapping[domain],
                             oid,
                             varID,
                             result,
@@ -354,7 +390,7 @@ class BaseClient(Connection):
                     f, a = "s", parameters[v]
                 format += f
                 args.append(a)
-        result = self._sendCmd(cmdID, (begin, end), objID, format, *args)
+        result = self.send_cmd(cmdID, (begin, end), objID, format, *args)
         if varIDs:
             objectID, response = self._readSubscription(result)
             if response - cmdID != 16 or objectID != objID:
@@ -364,12 +400,12 @@ class BaseClient(Connection):
                 )
 
     def _getSubscriptionResults(self, cmdID):
-        return self._subscriptionMapping[cmdID]
+        return self.subscriptionMapping[cmdID]
 
     def _subscribeContext(
             self, cmdID, begin, end, objID, domain, dist, varIDs, parameters=None
     ):
-        result = self._sendCmd(
+        result = self.send_cmd(
             cmdID,
             (begin, end),
             objID,
@@ -396,7 +432,7 @@ class BaseClient(Connection):
         ):
             # filter without parameter
             assert params is None
-            self._sendCmd(tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "u", filterType)
+            self.send_cmd(tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "u", filterType)
         elif filterType in (
                 tc.FILTER_TYPE_DOWNSTREAM_DIST,
                 tc.FILTER_TYPE_UPSTREAM_DIST,
@@ -404,12 +440,12 @@ class BaseClient(Connection):
                 tc.FILTER_TYPE_LATERAL_DIST,
         ):
             # filter with float parameter
-            self._sendCmd(
+            self.send_cmd(
                 tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "ud", filterType, params
             )
         elif filterType in (tc.FILTER_TYPE_VCLASS, tc.FILTER_TYPE_VTYPE):
             # filter with list(string) parameter
-            self._sendCmd(
+            self.send_cmd(
                 tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "ul", filterType, params
             )
         elif filterType == tc.FILTER_TYPE_LANES:
@@ -425,7 +461,7 @@ class BaseClient(Connection):
                 warnings.warn(
                     "Ignoring duplicate lane specification for subscription filter."
                 )
-            self._sendCmd(
+            self.send_cmd(
                 tc.CMD_ADD_SUBSCRIPTION_FILTER,
                 None,
                 None,
@@ -436,7 +472,7 @@ class BaseClient(Connection):
             )
 
 
-class Client(BaseClient):
+class Client(BaseTraCIConnection):
     """Contains the socket, the composed message string
     together with a list of TraCI commands which are inside.
     """
@@ -445,14 +481,9 @@ class Client(BaseClient):
         self._host = host
         self._port = port
         self._process = process
-        if sys.platform.startswith("java"):
-            # working around jython 2.7.0 bug #2273
-            _socket = socket.socket(
-                socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-            )
-        else:
-            _socket = socket.socket()
-        _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        _socket = _create_client_socket()
+        self.stepListeners = {}
+        self.nextStepListenerID = 0
 
         super().__init__(_socket, default_domains)
         self._socket.connect((self._host, self._port))
@@ -468,8 +499,8 @@ class Client(BaseClient):
             warnings.warn(
                 "API change now handles step as floating point seconds", stacklevel=2
             )
-        result = self._sendCmd(tc.CMD_SIMSTEP, None, None, "D", step)
-        for subscriptionResults in self._subscriptionMapping.values():
+        result = self.send_cmd(tc.CMD_SIMSTEP, None, None, "D", step)
+        for subscriptionResults in self.subscriptionMapping.values():
             subscriptionResults.reset()
         numSubs = result.readInt()
         responses = []
@@ -513,11 +544,11 @@ class Client(BaseClient):
         Returns the ID assigned to the listener if it was added successfully, None otherwise.
         """
         if issubclass(type(listener), StepListener):
-            listener.setID(self._nextStepListenerID)
-            self._stepListeners[self._nextStepListenerID] = listener
-            self._nextStepListenerID += 1
+            listener.setID(self.nextStepListenerID)
+            self._stepListeners[self.nextStepListenerID] = listener
+            self.nextStepListenerID += 1
             # print ("traci: Added stepListener %s\nlisteners: %s"%(_nextStepListenerID - 1, _stepListeners))
-            return self._nextStepListenerID - 1
+            return self.nextStepListenerID - 1
         warnings.warn(
             "Proposed listener's type must inherit from traci.StepListener. Not adding object of type '%s'"
             % type(listener)
@@ -532,91 +563,156 @@ class Client(BaseClient):
             self._process.wait()
 
 
-class ClientModeConnection(Client):
+class DomainHandler:
 
-    def __init__(self, control_handler, host="127.0.0.1", port=9997, default_domains=None, process=None):
-        super().__init__(host, port, default_domains, process)
-        self._control_handler = control_handler
+    def __init__(self):
+        self.v_person = VaderePersonAPI()
+        self.v_misc = VadereMiscAPI()
+        self.v_sim = VadereSimulationAPI()
+        self._registered = False
+
+    def register(self, connection: BaseTraCIConnection):
+        if not self._registered:
+            self.v_person.register(connection, connection.subscriptionMapping, copy_domain=False)
+            self.v_misc.register(connection, connection.subscriptionMapping, copy_domain=False)
+            self.v_sim.register(connection, connection.subscriptionMapping, copy_domain=False)
+            self._registered = True
+
+    @property
+    def registered(self):
+        return self.registered
+
+
+class TraCiManager:
+
+    def __init__(self, host, port, control_handler):
+        self.host = host
+        self.port = port
         self._running = False
-        self._sim_until = -1
+        self._control_hdl: Controller = control_handler
+        self.domains: DomainHandler = DomainHandler()
+
+    def _set_connection(self, connection):
+        self._con = connection
+
+    def _set_base_client(self, client):
+        self._base_client: BaseTraCIConnection = client
+        self.domains.register(self._base_client)
+
+    def _initialize(self, *arg, **kwargs):
+        pass
+
+    def _parse_subscription_result(self, result):
+        return 42.0, {}
+
+    def _handle_sim_step(self, subscription_result):
+        """ implement """
+        # todo: update subscription
+        time_step, state = self._parse_subscription_result(subscription_result)
+        result = self._control_hdl.handle_sim_step(time_step, state, self._base_client)
+        return result
+
+    def _send_response(self, data):
+        self._con.send_traci_msg(data)
+
+    def _run(self):
+        pass
+
+    def _cleanup(self):
+        pass
 
     def start(self):
-        # init vadere
-        self._control_handler.handle_init(self)
+        try:
+            self._initialize()
+            self._run()
+        except NotImplementedError as e:
+            print(e)
+        finally:
+            self._cleanup()
 
+
+class ClientModeConnection(TraCiManager):
+
+    def __init__(self, control_handler, host="127.0.0.1", port=9999):
+        super().__init__(host, port, control_handler)
+        self._set_connection(BaseTraCIConnection(_create_client_socket()))
+        self._set_base_client(self._con)
+        self._con._socket.connect(host, port)
+
+        self._sim_until = -1
+
+    def _simulationStep(self, step=0.0):
+        """
+        Make a simulation step and simulate up to the given second in sim time.
+        If the given value is 0 or absent, exactly one step is performed.
+        Values smaller than or equal to the current sim time result in no action.
+        """
+        if type(step) is int and step >= 1000:
+            warnings.warn(
+                "API change now handles step as floating point seconds", stacklevel=2
+            )
+        result = self._con.send_cmd(tc.CMD_SIMSTEP, None, None, "D", step)
+        return self._parse_subscription_result(result)
+
+    def _initialize(self, *arg, **kwargs):
+        # init
+        # send file
+
+        # default subscriptions
+
+        # call controller callback
+        self._control_hdl.handle_init(self._base_client)
+
+    def _run(self):
         while self._running:
-            simstep_response = self.simulationStep(self._sim_until)
-            response = self.handle_simstep(simstep_response)
-            length = struct.pack("!i", len(response) + 4)
-            self._socket.send(length + response)
-            # clear state
-            self._string = bytes()
-            self._queue = []
+            simstep_response = self._simulationStep(self._sim_until)
+            # no response required for ClientModeConnection
+            self._handle_sim_step(simstep_response)
+            # clear conection state (for ClientModeConnection _con == _base_client)
+            self._con.clear()
 
     def set_step(self, step):
         # todo allow controller to set next update time manually. Currently not settable
         pass
 
-    def handle_init(self):
-        # handle INIT
-        # 1. send file
-        # 2. make subscription command's
-        # 3. callback of controller for specific setup
-        self._control_handler.handle_init(self)
 
-    def handle_simstep(self, subscription_result):
-        # read subscription and update missing subs.
-        newSubResponse = self._sendCmd("subCmdID", "varId", "obj")
-        # update simstep_response with new subscription from newSubResponse
-        # ...
-        # build control state object
-        sim_state = {}
-        sim_time = 12.0
-        control_action = self._control_handler.handle_sim_step(sim_time, sim_state, self)
-        return self.control_action_to_traci(control_action)
+class ServerModeConnection(TraCiManager):
 
-    def control_action_to_traci(self, control_action):
-        """just forward to socket we are the client """
-        return b"traci packet containing control action plain (Vadere)"
+    def __init__(self, control_handler: Controller, host="127.0.0.1", port=9997):
+        super().__init__(host, port, control_handler)
+        self.server_port = -1
 
+    def _initialize(self, *arg, **kwargs):
+        cmd = kwargs["cmd"]
+        self._control_hdl.handle_init(self._base_client)
+        return b"ACK/NACK"
 
-class ServerModeConnection(Connection):
-
-    def __init__(self, control_handler: Controller, host="127.0.0.1", port=9997, default_domains=None):
-        super().__init__()
-        self._host = host
-        self._port = port
-        self._default_domains = default_domains
-        self._running = False
-        self._control_handler = control_handler
-        self._base_client = None
-
-    def wait_for_cmd(self):
+    def _run(self):
         while self._running:
             # wait for command
-            cmd = self._recvExact()
+            cmd = self._con.recv_exact()
             if not cmd:
                 self._running = False
                 break
 
-            cmd_length = cmd.read_cmdLength()
+            cmd.read_cmdLength()
             cmd_id, var_id = cmd.read_cmd_var()
 
             if cmd_id == "INI":
                 # response: simple act
-                response = self.handle_init()
+                response = self._initialize(cmd=cmd)
             elif cmd_id == "timeStepResponse":
                 # todo parse subscription result
-                subscription_result = self.parse_subscription_result(cmd)
-                # response: contains control action
-                response = self.handle_simstep(subscription_result)
+                subscription_result = self._base_client.parse_subscription_result(cmd)
+                # response: None
+                self._handle_sim_step(subscription_result)
+                response = b"ACK/NACK"
             else:
                 raise TraCIException("unknown command")
 
             if response is not None:
                 # send response for INIT or timeStepResponse and wait for next timeStepResponse
-                length = struct.pack("!i", len(response) + 4)
-                self._socket.send(length + response)
+                self._con.send_traci_msg(response)
 
             # clear state
             self._base_client._string = bytes()
@@ -627,26 +723,21 @@ class ServerModeConnection(Connection):
         logging.info("connection closed.")
 
     def start(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((self._host, self._port))
-        s.listen(0)  # only one client
-        logging.info(f"FlowControl (Server-Mode) listening on port {self._port} ...")
-        conn, addr = s.accept()
-        self._socket = conn
-        self._server_port = addr[1]
-        logging.info(f"Client connected start FlowControl logic...")
-        self._running = True
-        self._base_client = BaseClient(_socket=self._socket, default_domains=self._default_domains)
+        try:
+            # Connection is controlled by OMNeT++ move _initialize() into _run()
+            _, _socket, _, _server_port = _create_accept_server_socket(self.host, self.port)
+            self._set_connection(Connection(_socket))
+            self.server_port = _server_port
 
-        self.wait_for_cmd()
+            # todo: replace BaseTraCIConnection(_socket) with 'Wrapped' connection
+            self._set_base_client(BaseTraCIConnection(_socket))
 
-    def handle_init(self):
-        # make subscription command's
-
-        self._control_handler.handle_init(self._base_client)
-
-        return b"init_OK"
+            self._running = True
+            self._run()
+        except NotImplementedError as e:
+            print(e)
+        finally:
+            self._cleanup()
 
     def parse_subscription_result(self, simstep_response: Storage):
         # todo see result of Client.simulationStep
@@ -654,7 +745,7 @@ class ServerModeConnection(Connection):
 
     def handle_simstep(self, simstep_response):
         # read subscription and update missing subs.
-        newSubResponse = self._sendCmd("subCmdID", "varId", "obj")
+        newSubResponse = self.send_cmd("subCmdID", "varId", "obj")
         # update simstep_response with new subscription from newSubResponse
         # ...
         # build control state object

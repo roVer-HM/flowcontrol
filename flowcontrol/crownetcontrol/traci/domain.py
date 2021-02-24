@@ -38,7 +38,6 @@ def _readParameterWithKey(result):
     return key, val
 
 
-
 def _parse(valueFunc, varID, data):
     varType = data.read("!B")[0]
     if varID in valueFunc:
@@ -74,7 +73,10 @@ def _parse(valueFunc, varID, data):
 
 class SubscriptionResults:
 
-    def __init__(self, valueFunc):
+    def __init__(self, valueFunc: dict):
+        """
+        :valueFunc: dictionary of function to parse given command(key)
+        """
         self._results = {}
         self._contextResults = {}
         self._valueFunc = valueFunc
@@ -133,8 +135,8 @@ class Domain:
         self._traceFile = None
         _defaultDomains.append(self)
 
-    def _register(self, connection, mapping):
-        dom = copy.copy(self)
+    def register(self, connection, mapping, copy_domain=True):
+        dom = copy.copy(self) if copy_domain else self
         dom._connection = connection
         subscriptionResults = SubscriptionResults(self._retValFunc)
         mapping[self._subscribeResponseID] = subscriptionResults
@@ -169,7 +171,7 @@ class Domain:
     def _buildGetCmd(self, varID, objectID="", format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        r = self._connection._buildCmd(self._cmdGetID, varID, objectID, format, *values)
+        r = self._connection.build_cmd(self._cmdGetID, varID, objectID, format, *values)
 
     def _getUniversal(self, varID, objectID="", format="", *values):
         if self._deprecatedFor:
@@ -179,7 +181,7 @@ class Domain:
     def _getCmd(self, varID, objID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        r = self._connection._sendCmd(self._cmdGetID, varID, objID, format, *values)
+        r = self._connection.send_cmd(self._cmdGetID, varID, objID, format, *values)
         r.readLength()
         response, retVarID = r.read("!BB")
         objectID = r.readString()
@@ -191,7 +193,7 @@ class Domain:
     def _setCmd(self, varID, objectID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        self._connection._sendCmd(self._cmdSetID, varID, objectID, format, *values)
+        self._connection.send_cmd(self._cmdSetID, varID, objectID, format, *values)
 
     def getIDList(self):
         """getIDList() -> list(string)
