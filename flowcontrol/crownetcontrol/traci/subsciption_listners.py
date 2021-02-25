@@ -22,10 +22,11 @@ class SubscriptionListener(object):
     GLOBAL_OBJECT_ID = "-1"
     ALL_OBJECTS = "*"  # all objects ids exept "-1"
 
-    def __init__(self, name, handle_dict: dict):
+    def __init__(self, name, handle_dict: dict, init_sub=False):
         self.name = name
         self.handle_dict = handle_dict
         self._data = {}
+        self._init_sub = init_sub
 
         # prepare cmd map
         self.f_map: dict = {}
@@ -51,6 +52,17 @@ class SubscriptionListener(object):
                 # call decorated method
                 self.f_map[cmd](result)
 
+    def subscribe(self, dom_handler):
+        if not self._init_sub:
+            return
+        for cmd_id, subscription_map in self.handle_dict.items():
+            if dom_handler.has_domain_for(cmd_id):
+                dom = dom_handler.dom_for_cmd(cmd_id)
+                for object_id, var_list in subscription_map.items():
+                    if object_id != self.ALL_OBJECTS:
+                        # only subscribe to GLOBAL_OBJECT_ID or 'real' ids (--> skip ALL_OBJECTS flag)
+                        dom.subscribe(objectID=object_id, varIDs=var_list)
+
     @abc.abstractmethod
     def rest_data(self):
         pass
@@ -63,11 +75,12 @@ class SubscriptionListener(object):
 class VaderePersonListener(SubscriptionListener):
 
     @classmethod
-    def with_vars(cls, name, var_list: dict):
+    def with_vars(cls, name, var_list: dict, **kwargs):
         _handle = {
             tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE:
-                {cls.GLOBAL_OBJECT_ID: [tc.VAR_ID_LIST],
-                 cls.ALL_OBJECTS: var_list,
+                {
+                    cls.GLOBAL_OBJECT_ID: [tc.VAR_ID_LIST],
+                    cls.ALL_OBJECTS: var_list,
                  },
             tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE:
                 {
@@ -75,10 +88,10 @@ class VaderePersonListener(SubscriptionListener):
                                            tc.VAR_ARRIVED_PEDESTRIAN_PEDESTRIAN_IDS]
                 },
         }
-        return cls(name, _handle)
+        return cls(name, _handle, **kwargs)
 
-    def __init__(self, name, handle_dict):
-        super().__init__(name, handle_dict)
+    def __init__(self, name, handle_dict, **kwargs):
+        super().__init__(name, handle_dict, **kwargs)
         self.rest_data()
 
     def rest_data(self):

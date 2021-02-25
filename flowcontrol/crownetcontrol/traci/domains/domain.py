@@ -124,7 +124,7 @@ class Domain:
                  contextID, contextResponseID,
                  retValFunc=None, deprecatedFor=None,
                  subscriptionDefault=(tc.TRACI_ID_LIST,)):
-        self._name = name
+        self.name = name
         self._cmdGetID = cmdGetID
         self._cmdSetID = cmdSetID
         self._subscribeID = subscribeID
@@ -150,7 +150,7 @@ class Domain:
         mapping[self._subscribeResponseID] = subscriptionResults
         mapping[self._contextResponseID] = subscriptionResults
         mapping[self._cmdGetID] = subscriptionResults
-        setattr(connection, self._name, dom)
+        setattr(connection, self.name, dom)
 
     def _setConnection(self, connection):
         self._connection = connection
@@ -170,7 +170,7 @@ class Domain:
         @wraps(method)
         def tracingWrapper(*args, **kwargs):
             self._traceFile.write("traci.%s.%s(%s)\n" % (
-                self._name,
+                self.name,
                 method.__name__,
                 ', '.join(list(map(repr, args)) + ["%s=%s" % (n, repr(v)) for n, v in kwargs.items()])))
             return method(*args, **kwargs)
@@ -183,7 +183,7 @@ class Domain:
 
     def _getUniversal(self, varID, objectID="", format="", *values):
         if self._deprecatedFor:
-            warnings.warn("The domain %s is deprecated, use %s instead." % (self._name, self._deprecatedFor))
+            warnings.warn("The domain %s is deprecated, use %s instead." % (self.name, self._deprecatedFor))
         return _parse(self._retValFunc, varID, self._getCmd(varID, objectID, format, *values))
 
     def _getCmd(self, varID, objID, format="", *values):
