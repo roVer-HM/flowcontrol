@@ -1,5 +1,4 @@
 setuptools
-pkg-resources
 numpy>=1.15.4
 shapely
 sumolib==1.8.0
