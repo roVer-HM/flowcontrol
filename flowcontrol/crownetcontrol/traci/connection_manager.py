@@ -5,7 +5,7 @@ from typing import Union
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import _create_accept_server_socket, WrappedTraCIConnection, \
     DomainHandler, BaseTraCIConnection, _create_client_socket
-from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
+from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError, TraCISimulationEnd
 from flowcontrol.crownetcontrol.traci.subsciption_listners import SubscriptionListener, VaderePersonListener
 
 
@@ -84,6 +84,8 @@ class TraCiManager:
             self._run()
         except NotImplementedError as e:
             print(e)
+        except TraCISimulationEnd as sim_end:
+            print("Simulation end reached.")
         finally:
             self._cleanup()
 

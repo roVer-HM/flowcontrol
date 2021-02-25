@@ -34,7 +34,7 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.domains.VaderePersonAPI import VaderePersonAPI
 from flowcontrol.crownetcontrol.traci.domains.VadereMiscAPI import VadereMiscAPI
 from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import VadereSimulationAPI
-from .exceptions import TraCIException, FatalTraCIError
+from .exceptions import TraCIException, FatalTraCIError, TraCISimulationEnd
 from .storage import Storage
 from .subsciption_listners import SubscriptionListener, VaderePersonListener
 
@@ -98,7 +98,10 @@ class Connection(object):
             if status["result"] or status["err"]:
                 self._string = bytes()
                 self._queue = []
-                raise TraCIException(status["err"], status["cmd"], _RESULTS[status["result"]])
+                if status["err"] == "Simulation end reached.":
+                    raise TraCISimulationEnd(status["err"], status["cmd"], _RESULTS[status["result"]])
+                else:
+                    raise TraCIException(status["err"], status["cmd"], _RESULTS[status["result"]])
             elif status["cmd"] != command:
                 raise FatalTraCIError(
                     "Received answer %s for command %s." % (status["cmd"], command)
