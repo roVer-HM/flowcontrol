@@ -1,7 +1,5 @@
-from flowcontrol.crownetcontrol.traci.connection import Client, Controller, ClientModeConnection
-from flowcontrol.crownetcontrol.traci.VadereMiscAPI import VadereMiscAPI
-from flowcontrol.crownetcontrol.traci.VaderePersonAPI import VaderePersonAPI
-from flowcontrol.crownetcontrol.traci import VadereConstants as tc
+from flowcontrol.crownetcontrol.traci.connection import Controller, ClientModeConnection
+from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
 

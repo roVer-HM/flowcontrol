@@ -22,7 +22,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import struct
-from flowcontrol.crownetcontrol.traci import VadereConstants as tc
+from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 _DEBUG = False
 

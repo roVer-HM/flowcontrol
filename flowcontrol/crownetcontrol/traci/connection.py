@@ -26,19 +26,15 @@ import logging
 import socket
 import struct
 import sys
-import threading
 import warnings
 import abc
 
-from flowcontrol.crownetcontrol.traci import VadereConstants as tc
-from .VaderePersonAPI import VaderePersonAPI
-from .VadereMiscAPI import VadereMiscAPI
-from .VadereSimulationAPI import VadereSimulationAPI
+from flowcontrol.crownetcontrol.traci import constants_vadere as tc
+from flowcontrol.crownetcontrol.traci.domains.VaderePersonAPI import VaderePersonAPI
+from flowcontrol.crownetcontrol.traci.domains.VadereMiscAPI import VadereMiscAPI
+from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import VadereSimulationAPI
 from .exceptions import TraCIException, FatalTraCIError
-from .domain import _defaultDomains
 from .storage import Storage
-
-from flowcontrol.strategy.strategies import Strategy, ControlAction
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 

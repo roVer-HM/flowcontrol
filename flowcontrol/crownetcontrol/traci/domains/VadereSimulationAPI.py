@@ -1,8 +1,8 @@
 #
 # Generated source file. DO NOT CHANGE!
 
-from .domain import Domain
-from . import VadereConstants as tc
+from flowcontrol.crownetcontrol.traci.domains.domain import Domain
+from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 
 class VadereSimulationAPI(Domain):

@@ -25,8 +25,8 @@ import copy
 import warnings
 from functools import wraps
 
-from . import constants as tc
-from .exceptions import FatalTraCIError
+from flowcontrol.crownetcontrol.traci import constants as tc
+from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
 
 _defaultDomains = []
 

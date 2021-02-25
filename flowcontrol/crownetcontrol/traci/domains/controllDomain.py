@@ -1,4 +1,4 @@
-from flowcontrol.crownetcontrol.traci.domain import Domain
+from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 
 
 class CtlDomain(Domain):
