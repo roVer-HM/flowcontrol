@@ -43,7 +43,7 @@ def _parse(valueFunc, varID, data):
     if varID in valueFunc:
         return valueFunc[varID](data)
     if varType in (tc.POSITION_2D, tc.POSITION_LON_LAT):
-        return
+        return data.read("!dd")
     if varType in (tc.POSITION_3D, tc.POSITION_LON_LAT_ALT):
         return data.read("!ddd")
     if varType == tc.TYPE_POLYGON:
@@ -73,13 +73,18 @@ def _parse(valueFunc, varID, data):
 
 class SubscriptionResults:
 
-    def __init__(self, valueFunc: dict):
+    def __init__(self, valueFunc: dict, sub_id, ctx_id, get_id):
         """
         :valueFunc: dictionary of function to parse given command(key)
         """
         self._results = {}
         self._contextResults = {}
         self._valueFunc = valueFunc
+        self.managed_domain_cmds = [sub_id, ctx_id, get_id]
+
+    @property
+    def data(self):
+        return self._results
 
     def reset(self):
         self._results.clear()
@@ -138,7 +143,10 @@ class Domain:
     def register(self, connection, mapping, copy_domain=True):
         dom = copy.copy(self) if copy_domain else self
         dom._connection = connection
-        subscriptionResults = SubscriptionResults(self._retValFunc)
+        subscriptionResults = SubscriptionResults(self._retValFunc,
+                                                  self._subscribeResponseID,
+                                                  self._contextResponseID,
+                                                  self._cmdGetID)
         mapping[self._subscribeResponseID] = subscriptionResults
         mapping[self._contextResponseID] = subscriptionResults
         mapping[self._cmdGetID] = subscriptionResults

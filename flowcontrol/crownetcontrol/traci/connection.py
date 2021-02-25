@@ -28,6 +28,7 @@ import struct
 import sys
 import warnings
 import abc
+from typing import List
 
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.domains.VaderePersonAPI import VaderePersonAPI
@@ -35,6 +36,7 @@ from flowcontrol.crownetcontrol.traci.domains.VadereMiscAPI import VadereMiscAPI
 from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import VadereSimulationAPI
 from .exceptions import TraCIException, FatalTraCIError
 from .storage import Storage
+from .subsciption_listners import SubscriptionListener
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 
@@ -295,10 +297,18 @@ class BaseTraCIConnection(Connection):
         self._string = bytes()
         self._queue = []  # backlog of commands waiting response
         self.subscriptionMapping = {}
+        self.subscriptionListener: List[SubscriptionListener] = []
 
         if default_domains is not None:
             for domain in default_domains:
                 domain.register(self, self.subscriptionMapping)
+
+    def add_sub_listener(self, listener: SubscriptionListener):
+        self.subscriptionListener.append(listener)
+
+    def notify_subscription_listener(self):
+        for listener in self.subscriptionListener:
+            listener.handle_subscription_result(self.subscriptionMapping)
 
     def clear(self):
         self._string = bytes()
@@ -781,6 +791,7 @@ class ServerModeConnection(TraCiManager):
             print(e)
         finally:
             self._cleanup()
+
 
 
 class StepListener(object):
