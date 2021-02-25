@@ -3,3 +3,7 @@ vadere-server-output/
 .idea
 .venv
 /.directory
+build
+dist
+flowcontrol.egg-info
+*.pyc
