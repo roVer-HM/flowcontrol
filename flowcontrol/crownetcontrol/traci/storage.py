@@ -22,6 +22,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import struct
+from flowcontrol.crownetcontrol.traci import VadereConstants as tc
 
 _DEBUG = False
 
@@ -37,15 +38,24 @@ class Storage:
             raise RuntimeError(f"expected command with length {length} but only {len(self._content) - self._pos} bytes left.")
         return True
         
-    def read_cmdLength(self):
-        cmd_id = self.read("!B")
+    def read_cmd_length(self):
+        cmd_id = self.read("!B")[0]
         if cmd_id > 0:
             return cmd_id
         else:
-            return self.readInt()
+            return self.readInt()[0]
 
     def read_cmd_var(self):
         return self.read("!BB")
+
+    def read_status(self):
+        status_dict = {
+            "length": self.read_cmd_length(),
+            "cmd": self.read("!B")[0],
+            "result": self.read("!B")[0],
+            "err": self.readString()
+        }
+        return status_dict
 
     def read(self, format):
         oldPos = self._pos

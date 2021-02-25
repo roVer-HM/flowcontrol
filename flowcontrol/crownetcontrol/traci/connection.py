@@ -30,7 +30,7 @@ import threading
 import warnings
 import abc
 
-from . import constants as tc
+from flowcontrol.crownetcontrol.traci import VadereConstants as tc
 from .VaderePersonAPI import VaderePersonAPI
 from .VadereMiscAPI import VadereMiscAPI
 from .VadereSimulationAPI import VadereSimulationAPI
@@ -70,7 +70,7 @@ class Connection(object):
     def __init__(self, _socket=None):
         self._socket = _socket
 
-    def recv_exact(self):
+    def _recv_exact(self):
         try:
             result = bytes()
             while len(result) < 4:
@@ -89,42 +89,46 @@ class Connection(object):
         except socket.error:
             return None
 
-    def send_traci_msg(self, data):
-        length = struct.pack("!i", len(self._string) + 4)
-        self._socket.send(length + data)
 
-    def send_exact(self):
-        if self._socket is None:
-            raise FatalTraCIError("Connection already closed.")
-        # print("python_sendExact: '%s'" % ' '.join(map(lambda x : "%X" % ord(x), self._string)))
-        self.send_traci_msg(self._string)
-        result = self.recv_exact()
+    def _parse_received(self, result):
         if not result:
             self._socket.close()
             del self._socket
             raise FatalTraCIError("connection closed by SUMO")
         for command in self._queue:
-            prefix = result.read("!BBB")
-            err = result.readString()
-            if prefix[2] or err:
+            status = result.read_status()
+            if status["result"] or status["err"]:
                 self._string = bytes()
                 self._queue = []
-                raise TraCIException(err, prefix[1], _RESULTS[prefix[2]])
-            elif prefix[1] != command:
+                raise TraCIException(status["err"], status["cmd"], _RESULTS[status["result"]])
+            elif status["cmd"] != command:
                 raise FatalTraCIError(
-                    "Received answer %s for command %s." % (prefix[1], command)
+                    "Received answer %s for command %s." % (status["cmd"], command)
                 )
-            elif prefix[1] == tc.CMD_STOP:
+            elif status["cmd"] == tc.CMD_STOP:
                 length = result.read("!B")[0] - 1
                 result.read("!%sx" % length)
         self._string = bytes()
         self._queue = []
         return result
 
+    def _send_exact(self):
+        if self._socket is None:
+            raise FatalTraCIError("Connection already closed.")
+        # print("python_sendExact: '%s'" % ' '.join(map(lambda x : "%X" % ord(x), self._string)))
+        length = struct.pack("!i", len(self._string) + 4)
+        self._socket.send(length + self._string)
+        result = self._recv_exact()
+
+        return self._parse_received(result)
+
     @staticmethod
-    def pack(format, *values):
+    def pack(_format, *values):
+        if _format == "packet":
+            assert type(values) == bytes
+            return values
         packed = bytes()
-        for f, v in zip(format, values):
+        for f, v in zip(_format, values):
             if f == "i":
                 packed += struct.pack("!Bi", tc.TYPE_INTEGER, int(v))
             elif f == "I":  # raw int for setOrder
@@ -198,9 +202,6 @@ class Connection(object):
                 length += 1 + 4 + len(obj_id)
         if length <= 255:
             _cmd_string += struct.pack("!BB", length, cmd_id)
-            # "!BB" means:
-            # ! represents the network byte
-            # B: unsigned char
         else:
             _cmd_string += struct.pack("!BiB", 0, length + 4, cmd_id)
             # BiB : i -> integer
@@ -221,7 +222,7 @@ class Connection(object):
         packed = self.build_cmd(cmd_id, var_id, obj_id, _format, *values)
 
         self._string += packed
-        return self.send_exact()
+        return self._send_exact()
 
     def load(self, args):
         """
@@ -471,6 +472,68 @@ class BaseTraCIConnection(Connection):
             )
 
 
+class WrappedTraCIConnection(BaseTraCIConnection):
+
+    VADERE = "V"
+    OPP = "O"
+
+    def __init__(self, _socket, default_domains=None):
+        super().__init__(_socket, default_domains)
+
+    def _simulator_prefix(self, cmd_id):
+        if cmd_id > 0:
+            return self.VADERE
+        else:
+            return self.OPP
+
+    def _wrap(self, cmd_id):
+        return tc.CMD_CONTROLLER, tc.VAR_REDIRECT, self._simulator_prefix(cmd_id)
+
+    def build_cmd(self, cmd_id, var_id, obj_id, _format="", *values):
+        """
+        wrap command based on cmd_id as payload in a VAR_REDIRECT command
+        """
+        payload = super().build_cmd(cmd_id, var_id, obj_id, *values)
+
+        w_cmd_od, w_var_id, w_obj_id = self._wrap(cmd_id)
+        wrapped_cmd = super().build_cmd(w_cmd_od, w_var_id, w_obj_id, "packet", payload)
+        return wrapped_cmd
+
+    def send_traci_msg(self, data):
+        length = struct.pack("!i", len(self._string) + 4)
+        self._socket.send(length + data)
+
+    def _parse_server_received(self, result):
+        if not result:
+            self._socket.close()
+            del self._socket
+            raise FatalTraCIError("connection closed by partner")
+        # we are waiting as server thus there should be no queued command
+        assert len(self._queue) == 0
+        self._string = bytes()
+        self._queue = []
+        # read status and use 'cmd' to decide what to do
+        status = result.read_status()
+        if status["result"] or status["err"]:
+            raise TraCIException(status["err"], status["cmd"], _RESULTS[status["result"]])
+        if status["cmd"] != tc.CMD_CONTROLLER:
+            raise FatalTraCIError(f"expected control command but got {status['cmd']}")
+
+        # some control command to unpack
+        action = "init"  # or sim_step
+        data = {"scenario": {}, "opp": {} }
+
+        return action, data
+
+    def recv_control(self):
+        """unpack CONTROL commands to their respective standard commands"""
+        result = self._recv_exact()
+        return self._parse_server_received(result)
+
+    def send_control_response(self, foo, bar):
+        pass
+
+
 class Client(BaseTraCIConnection):
     """Contains the socket, the composed message string
     together with a list of TraCI commands which are inside.
@@ -593,9 +656,7 @@ class TraCiManager:
 
     def _set_connection(self, connection):
         self._con = connection
-
-    def _set_base_client(self, client):
-        self._base_client: BaseTraCIConnection = client
+        self._base_client: BaseTraCIConnection = self._con
         self.domains.register(self._base_client)
 
     def _initialize(self, *arg, **kwargs):
@@ -610,9 +671,6 @@ class TraCiManager:
         time_step, state = self._parse_subscription_result(subscription_result)
         result = self._control_hdl.handle_sim_step(time_step, state, self._base_client)
         return result
-
-    def _send_response(self, data):
-        self._con.send_traci_msg(data)
 
     def _run(self):
         pass
@@ -635,8 +693,7 @@ class ClientModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9999):
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(_create_client_socket()))
-        self._set_base_client(self._con)
-        self._con._socket.connect(host, port)
+        self._con._socket.connect((host, port))
 
         self._sim_until = -1
 
@@ -667,7 +724,7 @@ class ClientModeConnection(TraCiManager):
             simstep_response = self._simulation_step(self._sim_until)
             # no response required for ClientModeConnection
             self._handle_sim_step(simstep_response)
-            # clear conection state (for ClientModeConnection _con == _base_client)
+            # clear connection state (for ClientModeConnection _con == _base_client)
             self._con.clear()
 
     def set_step(self, step):
@@ -682,36 +739,31 @@ class ServerModeConnection(TraCiManager):
         self.server_port = -1
 
     def _initialize(self, *arg, **kwargs):
-        cmd = kwargs["cmd"]
+        data = kwargs["data"]
         self._control_hdl.handle_init(self._base_client)
         return b"ACK/NACK"
 
     def _run(self):
         while self._running:
             # wait for command
-            cmd = self._con.recv_exact()
-            if not cmd:
-                self._running = False
-                break
+            action, data = self._con.recv_control()
 
-            cmd.read_cmdLength()
-            cmd_id, var_id = cmd.read_cmd_var()
-
-            if cmd_id == "INI":
+            if action == "init":
                 # response: simple act
-                response = self._initialize(cmd=cmd)
-            elif cmd_id == "timeStepResponse":
-                # todo parse subscription result
-                subscription_result = self._base_client.parse_subscription_result(cmd)
+                # data contains scenario files and omnetpp init.
+                response = self._initialize(data=data)
+            elif action == "sim_step":
+                # data contains subscription result
+                subscription_result = self._base_client.parse_subscription_result(data)
                 # response: None
                 self._handle_sim_step(subscription_result)
                 response = b"ACK/NACK"
             else:
-                raise TraCIException("unknown command")
+                raise FatalTraCIError("unknown command")
 
             if response is not None:
-                # send response for INIT or timeStepResponse and wait for next timeStepResponse
-                self._con.send_traci_msg(response)
+                # todo
+                self._con.send_control_response(response, "bar")
 
             # clear state
             self._base_client._string = bytes()
@@ -724,11 +776,8 @@ class ServerModeConnection(TraCiManager):
         try:
             # Connection is controlled by OMNeT++ move _initialize() into _run()
             _, _socket, _, _server_port = _create_accept_server_socket(self.host, self.port)
-            self._set_connection(Connection(_socket))
+            self._set_connection(WrappedTraCIConnection(_socket))
             self.server_port = _server_port
-
-            # todo: replace BaseTraCIConnection(_socket) with 'Wrapped' connection
-            self._set_base_client(BaseTraCIConnection(_socket))
 
             self._running = True
             self._run()

@@ -1,5 +1,14 @@
 from . import constants as tc
 
+
+# control commands
+# todo move to correct files
+CMD_CONTROLLER = 0x0d
+RESPONSE_CMD_CONTROLLER = 0xd
+VAR_REDIRECT = 0xff
+VAR_INIT = 0x00
+
+
 # rename variable to match vadere versions
 VAR_ID_LIST = tc.TRACI_ID_LIST
 VAR_COUNT = tc.ID_COUNT

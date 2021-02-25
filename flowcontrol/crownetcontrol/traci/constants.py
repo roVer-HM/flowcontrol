@@ -440,9 +440,6 @@ CMD_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x5b
 RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x6b
 
 
-CMD_CONTROLLER = 0xdd
-
-
 #  ****************************************
 #  POSITION REPRESENTATIONS
 #  ****************************************
