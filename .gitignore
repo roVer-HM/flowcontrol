@@ -3,3 +3,5 @@ vadere-server-output/
 .idea
 .venv
 /.directory
+*.pyc
+__pycache__
