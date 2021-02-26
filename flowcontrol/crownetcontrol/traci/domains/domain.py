@@ -25,8 +25,8 @@ import copy
 import warnings
 from functools import wraps
 
-from . import constants as tc
-from .exceptions import FatalTraCIError
+from flowcontrol.crownetcontrol.traci import constants as tc
+from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
 
 _defaultDomains = []
 
@@ -38,13 +38,12 @@ def _readParameterWithKey(result):
     return key, val
 
 
-
 def _parse(valueFunc, varID, data):
     varType = data.read("!B")[0]
     if varID in valueFunc:
         return valueFunc[varID](data)
     if varType in (tc.POSITION_2D, tc.POSITION_LON_LAT):
-        return
+        return data.read("!dd")
     if varType in (tc.POSITION_3D, tc.POSITION_LON_LAT_ALT):
         return data.read("!ddd")
     if varType == tc.TYPE_POLYGON:
@@ -74,10 +73,18 @@ def _parse(valueFunc, varID, data):
 
 class SubscriptionResults:
 
-    def __init__(self, valueFunc):
+    def __init__(self, valueFunc: dict, sub_id, ctx_id, get_id):
+        """
+        :valueFunc: dictionary of function to parse given command(key)
+        """
         self._results = {}
         self._contextResults = {}
         self._valueFunc = valueFunc
+        self.managed_domain_cmds = [sub_id, ctx_id, get_id]
+
+    @property
+    def data(self):
+        return self._results
 
     def reset(self):
         self._results.clear()
@@ -110,9 +117,6 @@ class SubscriptionResults:
         return "<%s, %s>" % (self._results, self._contextResults)
 
 
-
-
-
 class Domain:
 
     def __init__(self, name, cmdGetID, cmdSetID,
@@ -120,7 +124,7 @@ class Domain:
                  contextID, contextResponseID,
                  retValFunc=None, deprecatedFor=None,
                  subscriptionDefault=(tc.TRACI_ID_LIST,)):
-        self._name = name
+        self.name = name
         self._cmdGetID = cmdGetID
         self._cmdSetID = cmdSetID
         self._subscribeID = subscribeID
@@ -136,14 +140,17 @@ class Domain:
         self._traceFile = None
         _defaultDomains.append(self)
 
-    def _register(self, connection, mapping):
-        dom = copy.copy(self)
+    def register(self, connection, mapping, copy_domain=True):
+        dom = copy.copy(self) if copy_domain else self
         dom._connection = connection
-        subscriptionResults = SubscriptionResults(self._retValFunc)
+        subscriptionResults = SubscriptionResults(self._retValFunc,
+                                                  self._subscribeResponseID,
+                                                  self._contextResponseID,
+                                                  self._cmdGetID)
         mapping[self._subscribeResponseID] = subscriptionResults
         mapping[self._contextResponseID] = subscriptionResults
         mapping[self._cmdGetID] = subscriptionResults
-        setattr(connection, self._name, dom)
+        setattr(connection, self.name, dom)
 
     def _setConnection(self, connection):
         self._connection = connection
@@ -163,7 +170,7 @@ class Domain:
         @wraps(method)
         def tracingWrapper(*args, **kwargs):
             self._traceFile.write("traci.%s.%s(%s)\n" % (
-                self._name,
+                self.name,
                 method.__name__,
                 ', '.join(list(map(repr, args)) + ["%s=%s" % (n, repr(v)) for n, v in kwargs.items()])))
             return method(*args, **kwargs)
@@ -172,17 +179,17 @@ class Domain:
     def _buildGetCmd(self, varID, objectID="", format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        r = self._connection._buildCmd(self._cmdGetID, varID, objectID, format, *values)
+        r = self._connection.build_cmd(self._cmdGetID, varID, objectID, format, *values)
 
     def _getUniversal(self, varID, objectID="", format="", *values):
         if self._deprecatedFor:
-            warnings.warn("The domain %s is deprecated, use %s instead." % (self._name, self._deprecatedFor))
+            warnings.warn("The domain %s is deprecated, use %s instead." % (self.name, self._deprecatedFor))
         return _parse(self._retValFunc, varID, self._getCmd(varID, objectID, format, *values))
 
     def _getCmd(self, varID, objID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        r = self._connection._sendCmd(self._cmdGetID, varID, objID, format, *values)
+        r = self._connection.send_cmd(self._cmdGetID, varID, objID, format, *values)
         r.readLength()
         response, retVarID = r.read("!BB")
         objectID = r.readString()
@@ -194,7 +201,7 @@ class Domain:
     def _setCmd(self, varID, objectID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        self._connection._sendCmd(self._cmdSetID, varID, objectID, format, *values)
+        self._connection.send_cmd(self._cmdSetID, varID, objectID, format, *values)
 
     def getIDList(self):
         """getIDList() -> list(string)
@@ -236,7 +243,7 @@ class Domain:
         It is not possible to retrieve older subscription results than the ones
         from the last time step.
         """
-        return self._connection._getSubscriptionResults(self._subscribeResponseID).get(objectID)
+        return self._connection._get_subscription_results(self._subscribeResponseID).get(objectID)
 
     def getAllSubscriptionResults(self):
         """getAllSubscriptionResults() -> dict(string: dict(integer: <value_type>))
@@ -245,7 +252,7 @@ class Domain:
         It is not possible to retrieve older subscription results than the ones
         from the last time step.
         """
-        return self._connection._getSubscriptionResults(self._subscribeResponseID).get(None)
+        return self._connection._get_subscription_results(self._subscribeResponseID).get(None)
 
     def subscribeContext(self, objectID, domain, dist, varIDs=None,
                          begin=tc.INVALID_DOUBLE_VALUE, end=tc.INVALID_DOUBLE_VALUE, parameters=None):
@@ -256,17 +263,17 @@ class Domain:
         """
         if varIDs is None:
             varIDs = self._subscriptionDefault
-        self._connection._subscribeContext(
+        self._connection._subscribe_context(
             self._contextID, begin, end, objectID, domain, dist, varIDs, parameters)
 
     def unsubscribeContext(self, objectID, domain, dist):
         self.subscribeContext(objectID, domain, dist, [])
 
     def getContextSubscriptionResults(self, objectID):
-        return self._connection._getSubscriptionResults(self._contextResponseID).getContext(objectID)
+        return self._connection._get_subscription_results(self._contextResponseID).getContext(objectID)
 
     def getAllContextSubscriptionResults(self):
-        return self._connection._getSubscriptionResults(self._contextResponseID).getContext(None)
+        return self._connection._get_subscription_results(self._contextResponseID).getContext(None)
 
     def getParameter(self, objID, param):
         """getParameter(string, string) -> string

@@ -24,7 +24,6 @@ from __future__ import absolute_import
 
 
 class TraCIException(Exception):
-
     """Exception class for all TraCI errors which keep the connection intact"""
 
     def __init__(self, desc, command=None, errorType=None):
@@ -39,8 +38,12 @@ class TraCIException(Exception):
         return self._type
 
 
-class FatalTraCIError(Exception):
+class TraCISimulationEnd(TraCIException):
+    def __init__(self, desc, command=None, errorType=None):
+        super().__init__(desc, command, errorType)
 
+
+class FatalTraCIError(Exception):
     """Exception class for all TraCI errors which do not allow for continuation"""
 
     def __init__(self, desc):

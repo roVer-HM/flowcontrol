@@ -22,8 +22,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import struct
-
-from . import constants as tc
+from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 _DEBUG = False
 
@@ -33,6 +32,30 @@ class Storage:
     def __init__(self, content):
         self._content = content
         self._pos = 0
+
+    def check_number_bytes(self, length):
+        if (self._pos + length) < len(self._content):
+            raise RuntimeError(f"expected command with length {length} but only {len(self._content) - self._pos} bytes left.")
+        return True
+        
+    def read_cmd_length(self):
+        cmd_id = self.read("!B")[0]
+        if cmd_id > 0:
+            return cmd_id
+        else:
+            return self.readInt()[0]
+
+    def read_cmd_var(self):
+        return self.read("!BB")
+
+    def read_status(self):
+        status_dict = {
+            "length": self.read_cmd_length(),
+            "cmd": self.read("!B")[0],
+            "result": self.read("!B")[0],
+            "err": self.readString()
+        }
+        return status_dict
 
     def read(self, format):
         oldPos = self._pos
@@ -101,8 +124,6 @@ class Storage:
         n = self.read("!i")[0]
         return tuple([self.readInt() for i in range(n)])
 
-
-
     def readShape(self):
         length = self.readLength()
         return tuple([self.read("!dd") for i in range(length)])
@@ -122,5 +143,8 @@ class Storage:
                 print("%03i %02x %s" % (ord(char), ord(char), char))
 
 
+class SingleCommand(Storage):
 
+    def __init__(self, content):
+        super().__init__(content)
 

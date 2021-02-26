@@ -7,3 +7,5 @@ build
 dist
 flowcontrol.egg-info
 *.pyc
+*.pyc
+__pycache__
