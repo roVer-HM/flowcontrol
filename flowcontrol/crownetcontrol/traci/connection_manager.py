@@ -1,12 +1,58 @@
+import argparse
 import logging
 import warnings
 from typing import Union
+import os
 
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import _create_accept_server_socket, WrappedTraCIConnection, \
     DomainHandler, BaseTraCIConnection, _create_client_socket
 from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError, TraCISimulationEnd
 from flowcontrol.crownetcontrol.traci.subsciption_listners import SubscriptionListener, VaderePersonListener
+
+
+def parse_args_as_dict(args=None):
+    # parse arguments
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-n",
+        "--host-name",
+        dest="host_name",
+        default="vadere",  # TODO: discuss -> defaults
+        required=True,
+        help="If vadere is set, the controller is started in client-mode",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--port",
+        dest="port",
+        default=9999,
+        required=True,
+        help="Client: 9999, server: 9997?",
+        type = int,
+    )
+
+
+    parser.add_argument(
+        "--client-mode",
+        dest="is_in_client_mode",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Additional information.",  # TODO: redundant?
+    )
+
+
+    if args is None:
+        ns = vars(parser.parse_args())
+    else:
+        ns = vars(parser.parse_args(args))
+
+
+    return ns
+
 
 
 class TraCiManager:
@@ -205,3 +251,19 @@ class ServerModeConnection(TraCiManager):
             print(e)
         finally:
             self._cleanup()
+
+
+class ControlTraciWrapper:
+
+    @classmethod
+    def get_controller_from_args(cls, working_dir, args=None, controller=None):
+        ns = parse_args_as_dict(args)
+        logging.debug(ns)
+
+        if ns["host_name"] == "vadere" and ns["port"] == 9999 and ns["is_in_client_mode"]:
+            return ClientModeConnection( control_handler = controller, port = ns["port"])
+        elif ns["host_name"] == "omnet" and ns["port"] == 9997 and not ns["is_in_client_mode"]:
+            return ServerModeConnection(control_handler=controller, port=ns["port"])
+        else:
+            raise NotImplementedError("Port and host configuration not found.")
+
