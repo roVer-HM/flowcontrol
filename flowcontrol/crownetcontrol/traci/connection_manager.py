@@ -274,37 +274,36 @@ class ClientModeConnection(TraCiManager):
         return self._parse_subscription_result(result)
 
     def _start_server(self, is_start_server, is_gui_mode, scenario):
-        try:
-            vadere_path = os.environ["VADERE_PATH"]
-        except:
-            raise ValueError("Add VADERE_PATH to your enviroment variables.")
-
-        self._is_gui_mode = is_gui_mode
-        self.scenario = scenario
 
         if is_start_server:
-            logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
+            try:
+                vadere_path = os.environ["VADERE_PATH"]
+            except:
+                raise ValueError("Add VADERE_PATH to your enviroment variables.")
 
-        vadere_man = os.path.join(
-            vadere_path,
-            "VadereManager/target/vadere-server.jar",
-        )
+            self._is_gui_mode = is_gui_mode
+            self.scenario = scenario
 
-        self._check_vadere_server_jar_available(vadere_man)
+            if is_start_server:
+                logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
 
+            vadere_man = os.path.join(
+                vadere_path,
+                "VadereManager/target/vadere-server.jar",
+            )
 
+            self._check_vadere_server_jar_available(vadere_man)
 
-
-        vadere_server_cmd = [
-            "java",
-            "-jar",
-            vadere_man,
-        ]
-        vadere_server_cmd.extend(self._server_args())
-        self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server",)
-        print("Start Server Thread...")
-        self.server_thread.start()
-        sleep(0.8)
+            vadere_server_cmd = [
+                "java",
+                "-jar",
+                vadere_man,
+            ]
+            vadere_server_cmd.extend(self._server_args())
+            self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server",)
+            print("Start Server Thread...")
+            self.server_thread.start()
+            sleep(0.8)
 
     def _initialize(self, *arg, **kwargs):
 

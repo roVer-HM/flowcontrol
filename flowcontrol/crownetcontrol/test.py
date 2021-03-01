@@ -42,7 +42,7 @@ def server_test():
 
 
 def server_test_2():
-    # start vadere manager manually
+    # TODO start vadere manually, but do handle inifile
     sub = VaderePersonListener.with_vars(
         "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
     )
@@ -106,6 +106,6 @@ if __name__ == "__main__":
     # main()
     logging.getLogger().setLevel(logging.INFO)
     #server_test()
-    #server_test_2()
-    server_test_3_start_vadere()
+    server_test_2()
+    #server_test_3_start_vadere()
     print()
