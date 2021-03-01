@@ -69,6 +69,8 @@ def server_test_2():
 
 def server_test_3_start_vadere():
 
+    scenario_file = os.path.join(os.environ["VADERE_PATH"], "Scenarios/Demos/roVer/scenarios/scenario002.scenario")
+
     sub = VaderePersonListener.with_vars(
         "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
     )
@@ -82,7 +84,9 @@ def server_test_3_start_vadere():
             "vadere",
             "--client-mode",
             "--start-server",
-            "--gui-mode"
+            "--gui-mode",
+            "--scenario",
+            scenario_file
         ]
 
         traci_manager = ControlTraciWrapper.get_controller_from_args(
