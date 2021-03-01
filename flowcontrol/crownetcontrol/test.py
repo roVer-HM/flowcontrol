@@ -42,6 +42,7 @@ def server_test():
 
 
 def server_test_2():
+    # start vadere manager manually
     sub = VaderePersonListener.with_vars(
         "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
     )
@@ -66,11 +67,45 @@ def server_test_2():
     controller.initialize_connection(traci_manager)
     controller.start_controller()
 
+def server_test_3_start_vadere():
+
+    scenario_file = os.path.join(os.environ["VADERE_PATH"], "Scenarios/Demos/roVer/scenarios/scenario002.scenario")
+
+    sub = VaderePersonListener.with_vars(
+        "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
+    )
+    controller = TikTokController()
+
+    if len(sys.argv) == 1:
+        settings = [
+            "--port",
+            "9999",
+            "--host-name",
+            "vadere",
+            "--client-mode",
+            "--start-server",
+            "--gui-mode",
+            "--scenario",
+            scenario_file
+        ]
+
+        traci_manager = ControlTraciWrapper.get_controller_from_args(
+            working_dir=os.getcwd(), args=settings, controller=controller)
+    else:
+        traci_manager = ControlTraciWrapper.get_controller_from_args(
+            working_dir=os.path.dirname(os.path.abspath(__file__)),
+            controller=controller)
+
+    controller.initialize_connection(traci_manager)
+    controller.start_controller()
+
+
 
 
 if __name__ == "__main__":
     # main()
     logging.getLogger().setLevel(logging.INFO)
-    server_test()
-    server_test_2()
+    #server_test()
+    #server_test_2()
+    server_test_3_start_vadere()
     print()
