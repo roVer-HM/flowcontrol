@@ -7,7 +7,7 @@ CMD_CONTROLLER = 0x0d
 RESPONSE_CMD_CONTROLLER = 0xd
 VAR_REDIRECT = 0xff
 VAR_INIT = 0x00
-
+CMD_FILE_SEND = 0x75
 
 # rename variable to match vadere versions
 VAR_ID_LIST = tc.TRACI_ID_LIST

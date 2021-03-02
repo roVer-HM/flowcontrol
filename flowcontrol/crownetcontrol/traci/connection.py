@@ -445,6 +445,27 @@ class BaseTraCIConnection(Connection):
                 *lanes
             )
 
+    def send_raw(self, data, append_message_len=True):
+        if self._socket is None:
+            raise FatalTraCIError("Connection already closed.")
+        if append_message_len:
+            length = struct.pack("!i", len(data) + 4)
+            self._socket.send(length + data)
+        else:
+            self._socket.send(data)
+
+
+    def send_file(self, file_name, file_content):
+        _cmd = bytes()
+        _cmd += struct.pack("!B", tc.CMD_FILE_SEND)
+        _cmd += struct.pack("!i", len(file_name)) + file_name.encode("latin1")
+        _cmd += struct.pack("!i", len(file_content)) + file_content.encode("latin1")
+
+        # assume big packet
+        _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
+
+        self.send_raw(_cmd, append_message_len=True)
+
 
 class WrappedTraCIConnection(BaseTraCIConnection):
     VADERE = "V"
