@@ -454,7 +454,6 @@ class BaseTraCIConnection(Connection):
         else:
             self._socket.send(data)
 
-
     def send_file(self, file_name, file_content):
         _cmd = bytes()
         _cmd += struct.pack("!B", tc.CMD_FILE_SEND)
@@ -465,6 +464,10 @@ class BaseTraCIConnection(Connection):
         _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
 
         self.send_raw(_cmd, append_message_len=True)
+        result = self._recv_exact()
+        temp_var = result.read_status()
+        print()
+
 
 
 class WrappedTraCIConnection(BaseTraCIConnection):

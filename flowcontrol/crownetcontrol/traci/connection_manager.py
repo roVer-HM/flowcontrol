@@ -255,10 +255,17 @@ class ClientModeConnection(TraCiManager):
         is_gui_mode=False,
         scenario = None
     ):
+        self.is_start_server = is_start_server
+        self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
+
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(_create_client_socket()))
         self._con._socket.connect((host, port))
+
+        #self._start_simulation()
+
+
 
     def _simulation_step(self, step=0.0):
         """
@@ -274,6 +281,7 @@ class ClientModeConnection(TraCiManager):
         return self._parse_subscription_result(result)
 
     def _start_server(self, is_start_server, is_gui_mode, scenario):
+
 
         if is_start_server:
             try:
@@ -307,6 +315,9 @@ class ClientModeConnection(TraCiManager):
 
     def _initialize(self, *arg, **kwargs):
 
+        print(f"Send scenario file: {self.scenario}")
+        self._start_simulation()
+
         # default subscriptions
         print("register default subscriptions")
         for listener in self._con.subscriptionListener:
@@ -323,6 +334,7 @@ class ClientModeConnection(TraCiManager):
         self._control_hdl.handle_init(
             self._default_sub.time, self.sub_listener, self._base_client
         )
+
 
     def _run(self):
         while self._running:
@@ -354,14 +366,18 @@ class ClientModeConnection(TraCiManager):
         cmd = ["--single-client"]
         if self._is_gui_mode:
             cmd.extend(["--gui-mode"])
-        cmd.extend(
-            [
-                "--scenario",
-                self.scenario,
-            ]
-        )
-
         return cmd
+
+    def _start_simulation(self):
+        if self.scenario.endswith(".scenario"):
+            with open(self.scenario, 'r') as f:
+                scenario_content = f.read()
+        else:
+            raise ValueError(f"Scenario file (*.scenario) expexted. Got: {self.scenario}")
+
+        self._con.send_file(self.scenario, scenario_content)
+
+
 
     def _check_vadere_server_jar_available(self, vadere_man):
 
@@ -497,7 +513,7 @@ class ControlTraciWrapper:
             )
         elif (
             ns["host_name"] == "omnet"
-            and ns["port"] == 9997
+            and ns["port"] == 9997 #TODO check port number
             and not ns["is_in_client_mode"]
         ):
             return ServerModeConnection(control_handler=controller, port=ns["port"])

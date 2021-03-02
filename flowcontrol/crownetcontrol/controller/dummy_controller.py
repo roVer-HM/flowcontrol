@@ -37,7 +37,7 @@ class TikTokController(Controller):
         self.sub = VaderePersonListener.with_vars("persons",
                                                   {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST},
                                                   init_sub=True)
-        self.control = [(0, ["2"]), (5.0, ["3"]), (10, ["2"]), (15, ["3"]), (20, ["2"]), (25, ["3"]), (30, ["2"])]
+        self.control = [(1.0, ["2"]), (5.0, ["3"]), (10, ["2"]), (15, ["3"]), (20, ["2"]), (25, ["3"]), (30, ["2"])]
         self.count = 0
 
     def initialize_connection(self, con_manager):
