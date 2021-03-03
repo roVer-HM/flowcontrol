@@ -521,7 +521,7 @@ class ControlTraciWrapper:
                 is_start_server=ns["start_server"],
                 is_gui_mode=ns["gui_mode"],
                 scenario=ns["scenario_file"],
-                host="172.18.0.2"
+                host="vadere_rover_run"
             )
         elif (
             ns["host_name"] == "omnet"
