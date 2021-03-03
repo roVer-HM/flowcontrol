@@ -2,7 +2,7 @@ log.out
 vadere-server-output/
 .idea
 .venv
-/
+venv
 .directory
 
 # Byte-compiled / optimized / DLL files
