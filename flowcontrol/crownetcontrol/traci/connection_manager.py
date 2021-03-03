@@ -262,8 +262,11 @@ class ClientModeConnection(TraCiManager):
         self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
 
+
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(_create_client_socket()))
+
+        print((host, port))
         self._con._socket.connect((host, port))
 
         #self._start_simulation()
@@ -513,7 +516,8 @@ class ControlTraciWrapper:
                 port=ns["port"],
                 is_start_server=ns["start_server"],
                 is_gui_mode=ns["gui_mode"],
-                scenario=ns["scenario_file"]
+                scenario=ns["scenario_file"],
+                host="0.0.0.0"
             )
         elif (
             ns["host_name"] == "omnet"
