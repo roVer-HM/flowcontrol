@@ -43,6 +43,7 @@ class TikTokController(Controller):
     def initialize_connection(self, con_manager):
         self.con_manager = con_manager
         self.con_manager.register_subscription_listener("vadere1", self.sub, set_default=True)
+        # todo send file
 
     def handle_sim_step(self, sim_time, sim_state, traci_client):
         if self.count >= len(self.control):
@@ -58,4 +59,5 @@ class TikTokController(Controller):
 
     def handle_init(self, sim_time, sim_state, traci_client):
         print("TikTokController: handle_init")
+        self.con_manager.next_call_at(0.0)
         pprint.pprint(sim_state)

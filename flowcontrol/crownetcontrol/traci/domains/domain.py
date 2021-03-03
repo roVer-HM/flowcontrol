@@ -68,9 +68,6 @@ def _parse(valueFunc, varID, data):
     raise FatalTraCIError("Unknown variable %02x or invalid type %02x." % (varID, varType))
 
 
-
-
-
 class SubscriptionResults:
 
     def __init__(self, valueFunc: dict, sub_id, ctx_id, get_id):
@@ -117,43 +114,16 @@ class SubscriptionResults:
         return "<%s, %s>" % (self._results, self._contextResults)
 
 
-class Domain:
+class BaseDomain:
 
-    def __init__(self, name, cmdGetID, cmdSetID,
-                 subscribeID, subscribeResponseID,
-                 contextID, contextResponseID,
-                 retValFunc=None, deprecatedFor=None,
-                 subscriptionDefault=(tc.TRACI_ID_LIST,)):
+    def __init__(self, name):
         self.name = name
-        self._cmdGetID = cmdGetID
-        self._cmdSetID = cmdSetID
-        self._subscribeID = subscribeID
-        self._subscribeResponseID = subscribeResponseID
-        self._contextID = contextID
-        self._contextResponseID = contextResponseID
-        self._retValFunc = {tc.VAR_PARAMETER_WITH_KEY: _readParameterWithKey}
-        if retValFunc is not None:
-            self._retValFunc.update(retValFunc)
-        self._deprecatedFor = deprecatedFor
-        self._subscriptionDefault = subscriptionDefault
         self._connection = None
-        self._traceFile = None
-        _defaultDomains.append(self)
 
-    def register(self, connection, mapping, copy_domain=True):
+    def register(self, connection, mapping=None, copy_domain=True):
         dom = copy.copy(self) if copy_domain else self
         dom._connection = connection
-        subscriptionResults = SubscriptionResults(self._retValFunc,
-                                                  self._subscribeResponseID,
-                                                  self._contextResponseID,
-                                                  self._cmdGetID)
-        mapping[self._subscribeResponseID] = subscriptionResults
-        mapping[self._contextResponseID] = subscriptionResults
-        mapping[self._cmdGetID] = subscriptionResults
         setattr(connection, self.name, dom)
-
-    def _setConnection(self, connection):
-        self._connection = connection
 
     def _setTraceFile(self, traceFile, traceGetters):
         if self._traceFile is None:
@@ -174,7 +144,41 @@ class Domain:
                 method.__name__,
                 ', '.join(list(map(repr, args)) + ["%s=%s" % (n, repr(v)) for n, v in kwargs.items()])))
             return method(*args, **kwargs)
+
         return tracingWrapper
+
+
+class Domain(BaseDomain):
+
+    def __init__(self, name, cmdGetID, cmdSetID, subscribeID, subscribeResponseID, contextID, contextResponseID,
+                 retValFunc=None, deprecatedFor=None, subscriptionDefault=(tc.TRACI_ID_LIST,)):
+
+        super().__init__(name)
+        self._cmdGetID = cmdGetID
+        self._cmdSetID = cmdSetID
+        self._subscribeID = subscribeID
+        self._subscribeResponseID = subscribeResponseID
+        self._contextID = contextID
+        self._contextResponseID = contextResponseID
+        self._retValFunc = {tc.VAR_PARAMETER_WITH_KEY: _readParameterWithKey}
+        if retValFunc is not None:
+            self._retValFunc.update(retValFunc)
+        self._deprecatedFor = deprecatedFor
+        self._subscriptionDefault = subscriptionDefault
+        self._connection = None
+        self._traceFile = None
+        _defaultDomains.append(self)
+
+    def register(self, connection, mapping, copy_domain=True):
+        super().register(connection, mapping, copy_domain)
+        subscriptionResults = SubscriptionResults(self._retValFunc,
+                                                  self._subscribeResponseID,
+                                                  self._contextResponseID,
+                                                  self._cmdGetID)
+        mapping[self._subscribeResponseID] = subscriptionResults
+        mapping[self._contextResponseID] = subscriptionResults
+        mapping[self._cmdGetID] = subscriptionResults
+
 
     def _buildGetCmd(self, varID, objectID="", format="", *values):
         if self._connection is None:
@@ -302,5 +306,3 @@ class Domain:
         Sets the value of the given parameter to value for the given objID
         """
         self._setCmd(tc.VAR_PARAMETER, objID, "tss", 2, param, value)
-
-

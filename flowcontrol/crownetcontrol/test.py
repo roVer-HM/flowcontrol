@@ -2,7 +2,7 @@ from flowcontrol.crownetcontrol.controller.dummy_controller import Controller, T
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
-from flowcontrol.crownetcontrol.traci.connection_manager import ClientModeConnection
+from flowcontrol.crownetcontrol.traci.connection_manager import ClientModeConnection, ServerModeConnection
 from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
 
 
@@ -22,10 +22,16 @@ from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonLi
 #     return ctr
 
 
-def server_test():
-    sub = VaderePersonListener.with_vars("persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST})
+def client_mode():
     controller = TikTokController()
-    traci_manager = ClientModeConnection(control_handler=controller, port=9999)
+    traci_manager = ClientModeConnection(control_handler=controller, host="vadere", port=9999)
+    controller.initialize_connection(traci_manager)
+    controller.start_controller()
+
+
+def server_mode():
+    controller = TikTokController()
+    traci_manager = ServerModeConnection(control_handler=controller, host="0.0.0.0", port=9997)
     controller.initialize_connection(traci_manager)
     controller.start_controller()
 
@@ -35,4 +41,5 @@ def server_test():
 if __name__ == "__main__":
     # main()
     logging.getLogger().setLevel(logging.INFO)
-    server_test()
+    client_mode()
+    # server_mode()

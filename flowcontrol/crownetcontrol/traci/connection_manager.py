@@ -56,18 +56,7 @@ class TraCiManager:
     def _initialize(self, *arg, **kwargs):
         pass
 
-    def _parse_subscription_result(self, result):
-        for subscriptionResults in self._con.subscriptionMapping.values():
-            subscriptionResults.reset()
-        num_subs = result.readInt()
-        responses = []
-        while num_subs > 0:
-            responses.append(self._con.read_subscription(result))
-            num_subs -= 1
-        self._con.notify_subscription_listener()
-        return responses
-
-    def _handle_sim_step(self):
+    def _handle_sim_step(self, *arg, **kwargs):
         pass
 
     def _run(self):
@@ -103,12 +92,9 @@ class ClientModeConnection(TraCiManager):
         If the given value is 0 or absent, exactly one step is performed.
         Values smaller than or equal to the current sim time result in no action.
         """
-        if type(step) is int and step >= 1000:
-            warnings.warn(
-                "API change now handles step as floating point seconds", stacklevel=2
-            )
-        result = self._con.send_cmd(tc.CMD_SIMSTEP, None, None, "D", step)
-        return self._parse_subscription_result(result)
+        result = self.domains.v_ctrl.sim_step(step)
+        self._con.parse_subscription_result(result)
+        self._con.notify_subscription_listener()
 
     def _initialize(self, *arg, **kwargs):
         # init
@@ -158,32 +144,51 @@ class ServerModeConnection(TraCiManager):
         super().__init__(host, port, control_handler)
         self.server_port = -1
 
+    def _control_response(self, var_id, err=""):
+        return self._con.build_cmd_raw(tc.CMD_CONTROLLER, var_id, "", ["d"], self._sim_until)
+
     def _initialize(self, *arg, **kwargs):
-        data = kwargs["data"]
-        self._control_hdl.handle_init(self._default_sub.time, self.sub_listener, self._base_client)
-        return b"ACK/NACK"
+        state = self.sub_listener
+        state.setdefault("data", kwargs["data"])
+        self._control_hdl.handle_init(self._default_sub.time, state, self._base_client)
+
+        # send raw command  with next time_step expected
+        return self._con.build_cmd_raw(tc.CMD_CONTROLLER, tc.VAR_INIT, "", ["d"], self._sim_until)
+
+    def _handle_sim_step(self, *arg, **kwargs):
+        # no default subscription update. Is handled by opp client
+
+        # set current time
+        self.current_time = self._default_sub.time
+
+        # self.sub_listener contains state for controller
+        self._control_hdl.handle_sim_step(self._default_sub.time, self.sub_listener, self._base_client)
+
+        # send raw command  with next time_step expected
+        return self._con.build_cmd_raw(tc.CMD_CONTROLLER, tc.VAR_TIME_STEP, "", ["d"], self._sim_until)
 
     def _run(self):
         while self._running:
             # wait for command
-            action, data = self._con.recv_control()
+            rcv = self._con.recv_control()
 
-            if action == "init":
-                # response: simple act
-                # data contains scenario files and omnetpp init.
-                response = self._initialize(data=data)
-            elif action == "sim_step":
-                # data contains subscription result
-                subscription_result = self._base_client.parse_subscription_result(data)
-                # response: None
-                self._handle_sim_step(subscription_result)
-                response = b"ACK/NACK"
+            if rcv["action"] == tc.VAR_INIT:
+                # response: next sim time at which to call controller
+                # data contains current simtime only.
+                response = self._initialize(data=rcv["simTime"])
+            elif rcv["action"] == tc.VAR_TIME_STEP:
+                # data contains current simtime only.
+                # access current subscriptions trough tc.CMD_SIMSTATE
+                state = self.domains.v_ctrl.sim_state(rcv["simTime"])
+                self._con.parse_subscription_result(state)
+                self._con.notify_subscription_listener()
+                # response: : next sim time at which to call controller
+                response = self._handle_sim_step()
             else:
                 raise FatalTraCIError("unknown command")
 
             if response is not None:
-                # todo
-                self._con.send_control_response(response, "bar")
+                self._con.send_raw(response, append_message_len=True)
 
             # clear state
             self._base_client._string = bytes()
@@ -191,6 +196,7 @@ class ServerModeConnection(TraCiManager):
 
         self._con.close()
         logging.info("connection closed.")
+
 
     def start(self):
         try:
