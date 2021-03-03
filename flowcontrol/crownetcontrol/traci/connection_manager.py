@@ -81,7 +81,7 @@ def parse_args_as_dict(args=None):
         "-s",
         "--scenario",
         dest="scenario_file",
-        default=None,  # TODO: discuss -> defaults
+        default="",  # TODO: discuss -> defaults
         required=False,
         help="Only available in client-mode.",
     )
@@ -103,6 +103,9 @@ def parse_args_as_dict(args=None):
         )
 
     if ns["start_server"] is True and ns["scenario_file"] is None:
+        raise ValueError("Please provide scenario file.")
+
+    if ns["is_in_client_mode"] is True and ns["scenario_file"] is None:
         raise ValueError("Please provide scenario file.")
 
     return ns
@@ -497,7 +500,8 @@ class ControlTraciWrapper:
     @classmethod
     def get_controller_from_args(cls, working_dir, args=None, controller=None):
         ns = parse_args_as_dict(args)
-        logging.debug(ns)
+        logging.info(ns)
+        print(ns)
 
         if (
             ns["host_name"] == "vadere"
