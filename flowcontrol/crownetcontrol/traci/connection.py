@@ -69,6 +69,8 @@ class Connection(object):
 
     def __init__(self, _socket=None):
         self._socket = _socket
+        self._string = bytes()
+        self._queue = []
 
     def recv_exact(self):
         try:
@@ -287,6 +289,13 @@ class Connection(object):
     def start(self):
         raise NotImplemented
 
+    def clear_state(self):
+        self._queue = []
+        self._string = bytes()
+
+    def connect(self, host, port):
+        self._socket.connetct((host, port))
+
 
 class BaseTraCIConnection(Connection):
 
@@ -491,6 +500,9 @@ class WrappedTraCIConnection(BaseTraCIConnection):
             return self.VADERE
         else:
             return self.OPP
+
+    def connect(self, host, port):
+        raise RuntimeError("WrappedTraCIConnection operates in server mode. Do not connect to socket.")
 
     def _wrap(self, cmd_id):
         return tc.CMD_CONTROLLER, tc.VAR_REDIRECT, self._simulator_prefix(cmd_id)

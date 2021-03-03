@@ -41,5 +41,5 @@ def server_mode():
 if __name__ == "__main__":
     # main()
     logging.getLogger().setLevel(logging.INFO)
-    client_mode()
-    # server_mode()
+    # client_mode()
+    server_mode()
