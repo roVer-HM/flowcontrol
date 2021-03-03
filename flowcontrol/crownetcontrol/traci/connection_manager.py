@@ -262,6 +262,10 @@ class ClientModeConnection(TraCiManager):
         self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
 
+        # TODO remove
+        print("sleep ... 20 sec")
+        time.sleep(20)
+
 
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(_create_client_socket()))
