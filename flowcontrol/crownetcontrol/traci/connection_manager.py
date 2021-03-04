@@ -36,7 +36,7 @@ def parse_args_as_dict(args=None):
         "-n",
         "--host-name",
         dest="host_name",
-        default="vadere",  # TODO: discuss -> defaults
+        default="localhost",  # TODO: discuss -> defaults
         required=True,
         help="If vadere is set, the controller is started in client-mode",
     )
@@ -262,19 +262,11 @@ class ClientModeConnection(TraCiManager):
         self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
 
-        # TODO remove
-        print("sleep ... 20 sec")
-        time.sleep(20)
-
-
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(_create_client_socket()))
 
         print((host, port))
         self._con._socket.connect((host, port))
-
-        #self._start_simulation()
-
 
 
     def _simulation_step(self, step=0.0):
@@ -323,6 +315,8 @@ class ClientModeConnection(TraCiManager):
             self.server_thread.start()
             sleep(0.8)
 
+
+
     def _initialize(self, *arg, **kwargs):
 
         print(f"Send scenario file: {self.scenario}")
@@ -345,7 +339,6 @@ class ClientModeConnection(TraCiManager):
             self._default_sub.time, self.sub_listener, self._base_client
         )
 
-
     def _run(self):
         while self._running:
             self._simulation_step(self._sim_until)
@@ -353,6 +346,9 @@ class ClientModeConnection(TraCiManager):
             self._handle_sim_step()
             # clear connection state (for ClientModeConnection _con == _base_client)
             self._con.clear()
+
+            # TODO stop process:  + -> self.server_thread.stop()
+
 
     def _handle_sim_step(self):
         # subscription listener already notified. Use default listener to update
@@ -507,12 +503,9 @@ class ControlTraciWrapper:
     @classmethod
     def get_controller_from_args(cls, working_dir, args=None, controller=None):
         ns = parse_args_as_dict(args)
-        logging.info(ns)
-        print(ns)
 
         if (
-            ns["host_name"] == "vadere"
-            and ns["port"] == 9999
+            ns["port"] == 9999
             and ns["is_in_client_mode"]
         ):
             return ClientModeConnection(
@@ -521,7 +514,7 @@ class ControlTraciWrapper:
                 is_start_server=ns["start_server"],
                 is_gui_mode=ns["gui_mode"],
                 scenario=ns["scenario_file"],
-                host="vadere_rover_run"
+                host=ns["host_name"]
             )
         elif (
             ns["host_name"] == "omnet"
