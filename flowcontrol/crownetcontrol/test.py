@@ -9,9 +9,9 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
 from flowcontrol.crownetcontrol.traci.connection_manager import (
-    ClientModeConnection,
-    ControlTraciWrapper,
+	ControlTraciWrapper,
 )
+from flowcontrol.crownetcontrol.traci.clientmode import ClientModeConnection
 from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
 
 

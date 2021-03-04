@@ -2,7 +2,9 @@ import abc
 import pprint
 
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
-from flowcontrol.crownetcontrol.traci.connection_manager import ServerModeConnection, ClientModeConnection, TraCiManager
+from flowcontrol.crownetcontrol.traci.connection_manager import TraCiManager
+from flowcontrol.crownetcontrol.traci.servermode import ServerModeConnection
+from flowcontrol.crownetcontrol.traci.clientmode import ClientModeConnection
 from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
 
 
