@@ -7,9 +7,16 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 class VaderePersonAPI(Domain):
     def __init__(self):
-        Domain.__init__(self, "v_person",tc.CMD_GET_V_PERSON_VARIABLE, tc.CMD_SET_V_PERSON_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_PERSON_VARIABLE, tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_PERSON_CONTEXT, tc.RESPONSE_SUBSCRIBE_V_PERSON_CONTEXT)
+        Domain.__init__(
+            self,
+            "v_person",
+            tc.CMD_GET_V_PERSON_VARIABLE,
+            tc.CMD_SET_V_PERSON_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_PERSON_VARIABLE,
+            tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_PERSON_CONTEXT,
+            tc.RESPONSE_SUBSCRIBE_V_PERSON_CONTEXT,
+        )
 
     def get_has_next_target(self, element_id):
         return self._getUniversal(tc.VAR_HAS_NEXT_TARGET, element_id)
@@ -79,4 +86,3 @@ class VaderePersonAPI(Domain):
 
     def create_new(self, data):
         self._setCmd(tc.VAR_ADD, "", "s", data)
-

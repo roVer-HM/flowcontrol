@@ -33,28 +33,28 @@ from typing import List
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.domains.VaderePersonAPI import VaderePersonAPI
 from flowcontrol.crownetcontrol.traci.domains.VadereMiscAPI import VadereMiscAPI
-from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import VadereSimulationAPI
+from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import (
+    VadereSimulationAPI,
+)
 from .domains.VadereControlDomain import VadereControlCommandApi
 from .exceptions import TraCIException, FatalTraCIError, TraCISimulationEnd
 from .storage import Storage
-from .subsciption_listners import SubscriptionListener, VaderePersonListener
+from flowcontrol.crownetcontrol.state.state_listener import SubscriptionListener
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 
 
-def _create_client_socket():
+def create_client_socket():
     if sys.platform.startswith("java"):
         # working around jython 2.7.0 bug #2273
-        _socket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-        )
+        _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     else:
         _socket = socket.socket()
     _socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
     return _socket
 
 
-def _create_accept_server_socket(host, port):
+def create_accept_server_socket(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.bind((host, port))
@@ -102,9 +102,13 @@ class Connection(object):
                 self._string = bytes()
                 self._queue = []
                 if status["err"] == "Simulation end reached.":
-                    raise TraCISimulationEnd(status["err"], status["cmd"], _RESULTS[status["result"]])
+                    raise TraCISimulationEnd(
+                        status["err"], status["cmd"], _RESULTS[status["result"]]
+                    )
                 else:
-                    raise TraCIException(status["err"], status["cmd"], _RESULTS[status["result"]])
+                    raise TraCIException(
+                        status["err"], status["cmd"], _RESULTS[status["result"]]
+                    )
             elif status["cmd"] != command:
                 raise FatalTraCIError(
                     "Received answer %s for command %s." % (status["cmd"], command)
@@ -155,7 +159,7 @@ class Connection(object):
             elif f == "B":
                 packed += struct.pack("!BB", tc.TYPE_UBYTE, int(v))
             elif (
-                    f == "u"
+                f == "u"
             ):  # raw unsigned byte needed for distance command and subscribe
                 packed += struct.pack("!B", int(v))
             elif f == "s":
@@ -298,7 +302,6 @@ class Connection(object):
 
 
 class BaseTraCIConnection(Connection):
-
     def __init__(self, _socket, default_domains=None):
         super().__init__()
 
@@ -341,10 +344,14 @@ class BaseTraCIConnection(Connection):
         response = result.read("!B")[0]
         # todo better comparison!
         is_variable_subscription = (
-                                           tc.RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE <= response <= tc.RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE
-                                   ) or (
-                                           tc.RESPONSE_SUBSCRIBE_PARKINGAREA_VARIABLE <= response <= tc.RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE
-                                   )
+            tc.RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE
+            <= response
+            <= tc.RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE
+        ) or (
+            tc.RESPONSE_SUBSCRIBE_PARKINGAREA_VARIABLE
+            <= response
+            <= tc.RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE
+        )
         object_id = result.readString()
         if not is_variable_subscription:
             domain = result.read("!B")[0]
@@ -419,7 +426,7 @@ class BaseTraCIConnection(Connection):
         return self.subscriptionMapping[cmd_id]
 
     def _subscribe_context(
-            self, cmd_id, begin, end, obj_id, domain, dist, var_ids, parameters=None
+        self, cmd_id, begin, end, obj_id, domain, dist, var_ids, parameters=None
     ):
         result = self.send_cmd(
             cmd_id,
@@ -429,7 +436,7 @@ class BaseTraCIConnection(Connection):
             domain,
             dist,
             len(var_ids),
-            *var_ids
+            *var_ids,
         )
         if var_ids:
             object_id, response = self.read_subscription(result)
@@ -441,19 +448,19 @@ class BaseTraCIConnection(Connection):
 
     def _add_subscription_filter(self, filter_type, params=None):
         if filter_type in (
-                tc.FILTER_TYPE_NONE,
-                tc.FILTER_TYPE_NOOPPOSITE,
-                tc.FILTER_TYPE_TURN,
-                tc.FILTER_TYPE_LEAD_FOLLOW,
+            tc.FILTER_TYPE_NONE,
+            tc.FILTER_TYPE_NOOPPOSITE,
+            tc.FILTER_TYPE_TURN,
+            tc.FILTER_TYPE_LEAD_FOLLOW,
         ):
             # filter without parameter
             assert params is None
             self.send_cmd(tc.CMD_ADD_SUBSCRIPTION_FILTER, None, None, "u", filter_type)
         elif filter_type in (
-                tc.FILTER_TYPE_DOWNSTREAM_DIST,
-                tc.FILTER_TYPE_UPSTREAM_DIST,
-                tc.FILTER_TYPE_FIELD_OF_VISION,
-                tc.FILTER_TYPE_LATERAL_DIST,
+            tc.FILTER_TYPE_DOWNSTREAM_DIST,
+            tc.FILTER_TYPE_UPSTREAM_DIST,
+            tc.FILTER_TYPE_FIELD_OF_VISION,
+            tc.FILTER_TYPE_LATERAL_DIST,
         ):
             # filter with float parameter
             self.send_cmd(
@@ -484,7 +491,7 @@ class BaseTraCIConnection(Connection):
                 (len(lanes) + 2) * "u",
                 filter_type,
                 len(lanes),
-                *lanes
+                *lanes,
             )
 
 
@@ -502,7 +509,9 @@ class WrappedTraCIConnection(BaseTraCIConnection):
             return self.OPP
 
     def connect(self, host, port):
-        raise RuntimeError("WrappedTraCIConnection operates in server mode. Do not connect to socket.")
+        raise RuntimeError(
+            "WrappedTraCIConnection operates in server mode. Do not connect to socket."
+        )
 
     def _wrap(self, cmd_id):
         return tc.CMD_CONTROLLER, tc.VAR_REDIRECT, self._simulator_prefix(cmd_id)
@@ -535,21 +544,18 @@ class WrappedTraCIConnection(BaseTraCIConnection):
         self._string = bytes()
         self._queue = []
         # read status and use 'cmd' to decide what to do
-        cmd_len = result.readLength()
+        result.readLength()  # cmd_len
         cmd_id = result.read("!B")[0]
         var_id = result.read("!B")[0]
-        object_id = result.readString()
+        result.readString()  # object_id
 
         if var_id in [tc.VAR_INIT, tc.CMD_SIMSTEP]:
             result.readCompound(1)
             data = result.readTypedDouble()
         else:
-            raise ValueError("XXXX")
+            raise ValueError("unexpected variable received ")
 
-        return {
-            "action": var_id,
-            "cmdId": cmd_id,
-            "simTime": data}
+        return {"action": var_id, "cmdId": cmd_id, "simTime": data}
 
     def recv_control(self):
         """unpack CONTROL commands to their respective standard commands"""
@@ -561,7 +567,6 @@ class WrappedTraCIConnection(BaseTraCIConnection):
 
 
 class DomainHandler:
-
     def __init__(self):
         self.v_person = VaderePersonAPI()
         self.v_misc = VadereMiscAPI()

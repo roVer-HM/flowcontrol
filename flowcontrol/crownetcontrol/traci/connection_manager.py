@@ -1,16 +1,25 @@
 import logging
-import warnings
 from typing import Union
 
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
-from flowcontrol.crownetcontrol.traci.connection import _create_accept_server_socket, WrappedTraCIConnection, \
-    DomainHandler, BaseTraCIConnection, _create_client_socket
-from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError, TraCISimulationEnd
-from flowcontrol.crownetcontrol.traci.subsciption_listners import SubscriptionListener, VaderePersonListener
+from flowcontrol.crownetcontrol.traci.connection import (
+    create_accept_server_socket,
+    WrappedTraCIConnection,
+    DomainHandler,
+    BaseTraCIConnection,
+    create_client_socket,
+)
+from flowcontrol.crownetcontrol.traci.exceptions import (
+    FatalTraCIError,
+    TraCISimulationEnd,
+)
+from flowcontrol.crownetcontrol.state.state_listener import (
+    SubscriptionListener,
+    VadereDefaultStateListener,
+)
 
 
 class TraCiManager:
-
     def __init__(self, host, port, control_handler):
         self.host = host
         self.port = port
@@ -20,7 +29,7 @@ class TraCiManager:
         self.sub_listener = {}
         self.current_time = -1
         self._sim_until = -1
-        self._default_sub: Union[None, VaderePersonListener] = None
+        self._default_sub: Union[None, VadereDefaultStateListener] = None
 
     def _set_connection(self, connection):
         self._traci = connection
@@ -44,7 +53,9 @@ class TraCiManager:
         else:
             self._sim_until = step
 
-    def register_subscription_listener(self, name, listener: SubscriptionListener, set_default=False):
+    def register_state_listener(
+        self, name, listener: SubscriptionListener, set_default=False
+    ):
         self.sub_listener[name] = listener
         if set_default:
             self._default_sub = listener
@@ -78,17 +89,16 @@ class TraCiManager:
             self._run()
         except NotImplementedError as e:
             print(e)
-        except TraCISimulationEnd as sim_end:
+        except TraCISimulationEnd:
             print("Simulation end reached.")
         finally:
             self._cleanup()
 
 
 class ClientModeConnection(TraCiManager):
-
     def __init__(self, control_handler, host="127.0.0.1", port=9999):
         super().__init__(host, port, control_handler)
-        self._set_connection(BaseTraCIConnection(_create_client_socket()))
+        self._set_connection(BaseTraCIConnection(create_client_socket()))
         self.traci.connect(host, port)
 
     def _simulation_step(self, step=0.0):
@@ -111,12 +121,16 @@ class ClientModeConnection(TraCiManager):
             listener.subscribe(self.domains)
         self.traci.notify_subscription_listener()
         if len(self._default_sub.new_pedestrian_ids) > 0:
-            print(f"new pedestrians found {self._default_sub.new_pedestrian_ids}. Subscribe pedestrians variables")
+            print(
+                f"new pedestrians found {self._default_sub.new_pedestrian_ids}. Subscribe pedestrians variables"
+            )
             self._default_sub.update_pedestrian_subscription(self.domains.v_person)
         self.traci.notify_subscription_listener()
 
         # call controller callback
-        self._control_hdl.handle_init(self._default_sub.time, self.sub_listener, self.traci)
+        self._control_hdl.handle_init(
+            self._default_sub.time, self.sub_listener, self.traci
+        )
 
     def _run(self):
         while self._running:
@@ -137,40 +151,42 @@ class ClientModeConnection(TraCiManager):
         self.current_time = self._default_sub.time
 
         # self.sub_listener contains state for controller
-        self._control_hdl.handle_sim_step(self._default_sub.time, self.sub_listener, self.traci)
+        self._control_hdl.handle_sim_step(
+            self._default_sub.time, self.sub_listener, self.traci
+        )
 
         # no result expected. Controller should use base_client to trigger control action
         return None
 
 
 class ServerModeConnection(TraCiManager):
-
     def __init__(self, control_handler, host="127.0.0.1", port=9997):
         super().__init__(host, port, control_handler)
         self.server_port = -1
 
-    def _control_response(self, var_id, err=""):
-        return self.traci.build_cmd_raw(tc.CMD_CONTROLLER, var_id, "", ["d"], self._sim_until)
-
     def _initialize(self, *arg, **kwargs):
-        state = self.sub_listener
-        state.setdefault("data", kwargs["data"])
-        self._control_hdl.handle_init(self._default_sub.time, state, self.traci)
+        self._control_hdl.handle_init(kwargs["sim_time"], self.sub_listener, self.traci)
 
         # send raw command  with next time_step expected
-        return self.traci.build_cmd_raw(tc.CMD_CONTROLLER, tc.VAR_INIT, "", ["d"], self._sim_until)
+        return self.traci.build_cmd_raw(
+            tc.CMD_CONTROLLER, tc.VAR_INIT, "", ["d"], self._sim_until
+        )
 
     def _handle_sim_step(self, *arg, **kwargs):
         # no default subscription update. Is handled by opp client
 
         # set current time
-        self.current_time = self._default_sub.time
+        self.current_time = kwargs["sim_time"]
 
         # self.sub_listener contains state for controller
-        self._control_hdl.handle_sim_step(self._default_sub.time, self.sub_listener, self.traci)
+        self._control_hdl.handle_sim_step(
+            kwargs["sim_time"], self.sub_listener, self.traci
+        )
 
         # send raw command  with next time_step expected
-        return self.traci.build_cmd_raw(tc.CMD_CONTROLLER, tc.VAR_TIME_STEP, "", ["d"], self._sim_until)
+        return self.traci.build_cmd_raw(
+            tc.CMD_CONTROLLER, tc.CMD_SIMSTEP, "", ["d"], self._sim_until
+        )
 
     def _run(self):
         while self._running:
@@ -180,15 +196,18 @@ class ServerModeConnection(TraCiManager):
             if rcv["action"] == tc.VAR_INIT:
                 # response: next sim time at which to call controller
                 # data contains current simtime only.
-                response = self._initialize(data=rcv["simTime"])
-            elif rcv["action"] == tc.VAR_TIME_STEP:
+                state = self.domains.v_ctrl.sim_state(rcv["simTime"])
+                self.traci.parse_subscription_result(state)
+                self.traci.notify_subscription_listener()
+                response = self._initialize(sim_time=rcv["simTime"])
+            elif rcv["action"] == tc.CMD_SIMSTEP:
                 # data contains current simtime only.
                 # access current subscriptions trough tc.CMD_SIMSTATE
                 state = self.domains.v_ctrl.sim_state(rcv["simTime"])
                 self.traci.parse_subscription_result(state)
                 self.traci.notify_subscription_listener()
                 # response: : next sim time at which to call controller
-                response = self._handle_sim_step()
+                response = self._handle_sim_step(sim_time=rcv["simTime"])
             else:
                 raise FatalTraCIError("unknown command")
 
@@ -201,15 +220,17 @@ class ServerModeConnection(TraCiManager):
         self.traci.close()
         logging.info("connection closed.")
 
-
     def start(self):
         try:
             # Connection is controlled by OMNeT++ move _initialize() into _run()
-            _, _socket, _, _server_port = _create_accept_server_socket(self.host, self.port)
+            _, _socket, _, _server_port = create_accept_server_socket(
+                self.host, self.port
+            )
             self._set_connection(WrappedTraCIConnection(_socket))
             self.server_port = _server_port
 
             self._running = True
+            self._init_sub_listener()
             self._run()
         except NotImplementedError as e:
             print(e)

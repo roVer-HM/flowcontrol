@@ -5,7 +5,6 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 
 class VadereControlCommandApi(BaseDomain):
-
     def __init__(self):
         super().__init__("vCtrl")
 

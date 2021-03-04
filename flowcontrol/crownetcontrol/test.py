@@ -1,9 +1,12 @@
-from flowcontrol.crownetcontrol.controller.dummy_controller import Controller, TikTokController
+from flowcontrol.crownetcontrol.controller.dummy_controller import TikTokController
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
-from flowcontrol.crownetcontrol.traci.connection_manager import ClientModeConnection, ServerModeConnection
-from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
+from flowcontrol.crownetcontrol.traci.connection_manager import (
+    ClientModeConnection,
+    ServerModeConnection,
+)
+from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
 
 
 # @classmethod
@@ -23,19 +26,34 @@ from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonLi
 
 
 def client_mode():
+    sub = VadereDefaultStateListener.with_vars(
+        "persons",
+        {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST},
+        init_sub=True,
+    )
     controller = TikTokController()
-    traci_manager = ClientModeConnection(control_handler=controller, host="vadere", port=9999)
+    traci_manager = ClientModeConnection(
+        control_handler=controller, host="vadere", port=9999
+    )
     controller.initialize_connection(traci_manager)
+    traci_manager.register_state_listener("default", sub)
     controller.start_controller()
 
 
 def server_mode():
+    sub = VadereDefaultStateListener.with_vars(
+        "persons",
+        {"pos": tc.VAR_POSITION, "speed": tc.VAR_SPEED, "angle": tc.VAR_ANGLE},
+        init_sub=True,
+    )
+
     controller = TikTokController()
-    traci_manager = ServerModeConnection(control_handler=controller, host="0.0.0.0", port=9997)
+    traci_manager = ServerModeConnection(
+        control_handler=controller, host="0.0.0.0", port=9997
+    )
     controller.initialize_connection(traci_manager)
+    controller.register_state_listener("default", sub)
     controller.start_controller()
-
-
 
 
 if __name__ == "__main__":

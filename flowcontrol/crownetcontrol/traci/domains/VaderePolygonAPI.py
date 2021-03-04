@@ -7,9 +7,16 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 class VaderePolygonAPI(Domain):
     def __init__(self):
-        Domain.__init__(self, "v_polygon",tc.CMD_GET_V_POLYGON_VARIABLE, tc.CMD_SET_V_POLYGON_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_POLYGON_VARIABLE, tc.RESPONSE_SUBSCRIBE_V_POLYGON_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_POLYGON_CONTEXT, tc.RESPONSE_SUBSCRIBE_V_POLYGON_CONTEXT)
+        Domain.__init__(
+            self,
+            "v_polygon",
+            tc.CMD_GET_V_POLYGON_VARIABLE,
+            tc.CMD_SET_V_POLYGON_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_POLYGON_VARIABLE,
+            tc.RESPONSE_SUBSCRIBE_V_POLYGON_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_POLYGON_CONTEXT,
+            tc.RESPONSE_SUBSCRIBE_V_POLYGON_CONTEXT,
+        )
 
     def get_topography_bounds(self):
         return self._getUniversal(tc.VAR_TOPOGRAPHY_BOUNDS, "")
@@ -49,4 +56,3 @@ class VaderePolygonAPI(Domain):
 
     def get_image_angle(self, element_id):
         return self._getUniversal(tc.VAR_ANGLE, element_id)
-

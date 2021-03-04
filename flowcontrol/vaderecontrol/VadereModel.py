@@ -8,8 +8,16 @@ import pandas as pd
 
 import os
 
+
 class SimulationModel(metaclass=ABCMeta):
-    def __init__(self, VADERE_PATH, project_path, scenario_name=None, start_server=True, debug=True):
+    def __init__(
+        self,
+        VADERE_PATH,
+        project_path,
+        scenario_name=None,
+        start_server=True,
+        debug=True,
+    ):
 
         if scenario_name is not None:
             self.scenario_name = scenario_name
@@ -51,12 +59,11 @@ class SimulationModel(metaclass=ABCMeta):
 
     def simulate_until(self, time):
 
-        if not isinstance(time,list):
+        if not isinstance(time, list):
             time = [time]
 
         for t in time:
             self.model.ctr.nextStep(t)
-
 
     @abstractmethod
     def get_objective(self, state):
@@ -80,6 +87,6 @@ class CorridorChoice(SimulationModel):
             if self.polygon.contains(point):
                 counter += 1
 
-        density = counter # / self.polygon.area
+        density = counter  # / self.polygon.area
 
         return density
