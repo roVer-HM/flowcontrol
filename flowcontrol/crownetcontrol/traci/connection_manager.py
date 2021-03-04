@@ -307,6 +307,7 @@ class VadereClientModeConnection(ClientModeConnection):
         self.is_start_server = is_start_server
         self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
+        print([host, port])
 
         super().__init__(host=host, port=port, control_handler=control_handler)
 
