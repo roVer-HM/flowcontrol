@@ -10,8 +10,7 @@ import logging
 
 from flowcontrol.crownetcontrol.traci.connection_manager import (
 	ControlTraciWrapper,
-)
-from flowcontrol.crownetcontrol.traci.clientmode import ClientModeConnection
+	ClientModeConnection)
 from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
 
 
