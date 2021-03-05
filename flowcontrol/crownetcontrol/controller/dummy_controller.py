@@ -12,20 +12,20 @@ class Controller:
     def initialize_connection(self, connection):
         pass
 
-    def start_controller(self):
+    def start_controller(self, args):
         if self.con_manager is None:
             raise RuntimeError("Controller has not working connection")
-        self.con_manager.start()
+        self.con_manager.start(args)
 
     def register_state_listener(self, name, listener):
         self.con_manager.register_state_listener(name, listener)
 
     @abc.abstractmethod
-    def handle_sim_step(self, sim_time, sim_state, traci_client):
+    def handle_sim_step(self, sim_time, sim_state):
         pass
 
     @abc.abstractmethod
-    def handle_init(self, sim_time, sim_state, traci_client):
+    def handle_init(self, sim_time, sim_state):
         pass
 
 
@@ -46,7 +46,7 @@ class TikTokController(Controller):
     def initialize_connection(self, con_manager):
         self.con_manager = con_manager
 
-    def handle_sim_step(self, sim_time, sim_state, traci_client):
+    def handle_sim_step(self, sim_time, sim_state):
         if self.count >= len(self.control):
             return
         print(f"TikTokController: {sim_time} handle_sim_step evaluate control...")
@@ -56,11 +56,12 @@ class TikTokController(Controller):
             self.con_manager.domains.v_person.set_target_list(
                 str(ped_id), self.control[self.count][1]
             )
+        # read if listeners are used
 
         self.con_manager.next_call_at(self.control[self.count][0])
         self.count += 1
 
-    def handle_init(self, sim_time, sim_state, traci_client):
+    def handle_init(self, sim_time, sim_state):
         print("TikTokController: handle_init")
         self.con_manager.next_call_at(0.0)
         pprint.pprint(sim_state)

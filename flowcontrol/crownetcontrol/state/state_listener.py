@@ -14,7 +14,7 @@ class process_cmd:
         return fn
 
 
-class SubscriptionListener(object):
+class StateListener(object):
     __metaclass__ = abc.ABCMeta
     """
     ref_id: objectID
@@ -72,7 +72,7 @@ class SubscriptionListener(object):
         return self._data
 
 
-class VadereDefaultStateListener(SubscriptionListener):
+class VadereDefaultStateListener(StateListener):
     @classmethod
     def with_vars(cls, name, var_list: dict, **kwargs):
         _handle = {

@@ -39,7 +39,7 @@ from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import (
 from .domains.VadereControlDomain import VadereControlCommandApi
 from .exceptions import TraCIException, FatalTraCIError, TraCISimulationEnd
 from .storage import Storage
-from flowcontrol.crownetcontrol.state.state_listener import SubscriptionListener
+from flowcontrol.crownetcontrol.state.state_listener import StateListener
 
 _RESULTS = {0x00: "OK", 0x01: "Not implemented", 0xFF: "Error"}
 
@@ -298,7 +298,7 @@ class Connection(object):
         self._string = bytes()
 
     def connect(self, host, port):
-        self._socket.connetct((host, port))
+        self._socket.connect((host, port))
 
 
 class BaseTraCIConnection(Connection):
@@ -310,13 +310,13 @@ class BaseTraCIConnection(Connection):
         self._string = bytes()
         self._queue = []  # backlog of commands waiting response
         self.subscriptionMapping = {}
-        self.subscriptionListener: List[SubscriptionListener] = []
+        self.subscriptionListener: List[StateListener] = []
 
         if default_domains is not None:
             for domain in default_domains:
                 domain.register(self, self.subscriptionMapping)
 
-    def add_sub_listener(self, listener: SubscriptionListener):
+    def add_sub_listener(self, listener: StateListener):
         self.subscriptionListener.append(listener)
 
     def notify_subscription_listener(self):
