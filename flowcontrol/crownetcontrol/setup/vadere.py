@@ -9,6 +9,14 @@ from xml.etree import ElementTree as xml
 
 from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import VadereControlCommandApi
 
+def get_scenario_content(scenario):
+    if scenario.endswith(".scenario"):
+        with open(scenario, 'r') as f:
+            scenario_content = f.read()
+    else:
+        raise ValueError(f"Scenario file (*.scenario) expexted. Got: {scenario}")
+    return scenario_content
+
 
 class Runner(threading.Thread):
     def __init__(self, command, thread_name, log_location=None, use_stdout=False):
@@ -77,17 +85,9 @@ class VadereServer:
         self.scenario = scenario
         self._start_server(is_start_server, is_gui_mode, scenario)
         self.domains = VadereControlCommandApi()
-        #self._start_simulation()
 
 
-    def _start_simulation(self):
-        if self.scenario.endswith(".scenario"):
-            with open(self.scenario, 'r') as f:
-                scenario_content = f.read()
-        else:
-            raise ValueError(f"Scenario file (*.scenario) expexted. Got: {self.scenario}")
 
-        self.domains.send_file(self.scenario, scenario_content)
 
 
     def _check_vadere_server_jar_available(self, vadere_man):

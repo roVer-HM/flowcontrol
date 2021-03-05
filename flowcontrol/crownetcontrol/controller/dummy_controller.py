@@ -12,10 +12,10 @@ class Controller:
     def initialize_connection(self, connection):
         pass
 
-    def start_controller(self, args):
+    def start_controller(self, *kw, **kwargs):
         if self.con_manager is None:
             raise RuntimeError("Controller has not working connection")
-        self.con_manager.start(args)
+        self.con_manager.start(*kw, **kwargs)
 
     def register_state_listener(self, name, listener):
         self.con_manager.register_state_listener(name, listener)
