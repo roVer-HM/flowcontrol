@@ -5,5 +5,3 @@ sumolib==1.8.0
 pandas>=1.1.0
 ipython==7.8.0
 
-
-

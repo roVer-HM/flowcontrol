@@ -6,6 +6,3 @@ import flowcontrol.strategy
 # __version__ is attribute by convention
 
 __version__ = "0.0.1"
-
-
-

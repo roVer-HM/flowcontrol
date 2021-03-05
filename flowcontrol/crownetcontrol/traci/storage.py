@@ -28,16 +28,17 @@ _DEBUG = False
 
 
 class Storage:
-
     def __init__(self, content):
         self._content = content
         self._pos = 0
 
     def check_number_bytes(self, length):
         if (self._pos + length) < len(self._content):
-            raise RuntimeError(f"expected command with length {length} but only {len(self._content) - self._pos} bytes left.")
+            raise RuntimeError(
+                f"expected command with length {length} but only {len(self._content) - self._pos} bytes left."
+            )
         return True
-        
+
     def read_cmd_length(self):
         cmd_id = self.read("!B")[0]
         if cmd_id > 0:
@@ -53,21 +54,21 @@ class Storage:
             "length": self.read_cmd_length(),
             "cmd": self.read("!B")[0],
             "result": self.read("!B")[0],
-            "err": self.readString()
+            "err": self.readString(),
         }
         return status_dict
 
     def read(self, format):
         oldPos = self._pos
         self._pos += struct.calcsize(format)
-        return struct.unpack(format, self._content[oldPos:self._pos])
+        return struct.unpack(format, self._content[oldPos : self._pos])
 
     def readInt(self):
         return self.read("!i")[0]
 
     def readTypedInt(self):
         t, i = self.read("!Bi")
-        assert(t == tc.TYPE_INTEGER)
+        assert t == tc.TYPE_INTEGER
         return i
 
     def readDouble(self):
@@ -75,7 +76,7 @@ class Storage:
 
     def readTypedDouble(self):
         t, d = self.read("!Bd")
-        assert(t == tc.TYPE_DOUBLE)
+        assert t == tc.TYPE_DOUBLE
         return d
 
     def readLength(self):
@@ -90,7 +91,10 @@ class Storage:
 
     def readTypedString(self):
         t = self.read("!B")[0]
-        assert t == tc.TYPE_STRING, "expected TYPE_STRING (%02x), found %02x." % (tc.TYPE_STRING, t)
+        assert t == tc.TYPE_STRING, "expected TYPE_STRING (%02x), found %02x." % (
+            tc.TYPE_STRING,
+            t,
+        )
         return self.readString()
 
     def readStringList(self):
@@ -99,7 +103,7 @@ class Storage:
 
     def readTypedStringList(self):
         t = self.read("!B")[0]
-        assert(t == tc.TYPE_STRINGLIST)
+        assert t == tc.TYPE_STRINGLIST
         return self.readStringList()
 
     def readDoubleList(self):
@@ -130,8 +134,8 @@ class Storage:
 
     def readCompound(self, expectedSize=None):
         t, s = self.read("!Bi")
-        assert(t == tc.TYPE_COMPOUND)
-        assert(expectedSize is None or s == expectedSize)
+        assert t == tc.TYPE_COMPOUND
+        assert expectedSize is None or s == expectedSize
         return s
 
     def ready(self):
@@ -139,12 +143,10 @@ class Storage:
 
     def printDebug(self):
         if _DEBUG:
-            for char in self._content[self._pos:]:
+            for char in self._content[self._pos :]:
                 print("%03i %02x %s" % (ord(char), ord(char), char))
 
 
 class SingleCommand(Storage):
-
     def __init__(self, content):
         super().__init__(content)
-

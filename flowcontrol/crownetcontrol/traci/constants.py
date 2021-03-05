@@ -43,7 +43,7 @@ CMD_SETORDER = 0x03
 CMD_STOP = 0x12
 
 #  command: reroute to parking area
-CMD_REROUTE_TO_PARKING = 0xc2
+CMD_REROUTE_TO_PARKING = 0xC2
 
 #  command: Resume from parking
 CMD_RESUME = 0x19
@@ -76,7 +76,7 @@ CMD_CHANGETARGET = 0x31
 CMD_CLOSE = 0x7F
 
 #  command: add subscription filter
-CMD_ADD_SUBSCRIPTION_FILTER = 0x7e
+CMD_ADD_SUBSCRIPTION_FILTER = 0x7E
 
 
 #  command: subscribe induction loop (e1) context
@@ -84,240 +84,240 @@ CMD_SUBSCRIBE_INDUCTIONLOOP_CONTEXT = 0x80
 #  response: subscribe induction loop (e1) context
 RESPONSE_SUBSCRIBE_INDUCTIONLOOP_CONTEXT = 0x90
 #  command: get induction loop (e1) variable
-CMD_GET_INDUCTIONLOOP_VARIABLE = 0xa0
+CMD_GET_INDUCTIONLOOP_VARIABLE = 0xA0
 #  response: get induction loop (e1) variable
-RESPONSE_GET_INDUCTIONLOOP_VARIABLE = 0xb0
+RESPONSE_GET_INDUCTIONLOOP_VARIABLE = 0xB0
 #  command: set induction loop (e1) variable, not used yet
-CMD_SET_INDUCTIONLOOP_VARIABLE = 0xc0
+CMD_SET_INDUCTIONLOOP_VARIABLE = 0xC0
 #  command: subscribe induction loop (e1) variable
-CMD_SUBSCRIBE_INDUCTIONLOOP_VARIABLE = 0xd0
+CMD_SUBSCRIBE_INDUCTIONLOOP_VARIABLE = 0xD0
 #  response: subscribe induction loop (e1) variable
-RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE = 0xe0
+RESPONSE_SUBSCRIBE_INDUCTIONLOOP_VARIABLE = 0xE0
 
 #  command: subscribe multi-entry/multi-exit detector (e3) context
 CMD_SUBSCRIBE_MULTIENTRYEXIT_CONTEXT = 0x81
 #  response: subscribe multi-entry/multi-exit detector (e3) context
 RESPONSE_SUBSCRIBE_MULTIENTRYEXIT_CONTEXT = 0x91
 #  command: get multi-entry/multi-exit detector (e3) variable
-CMD_GET_MULTIENTRYEXIT_VARIABLE = 0xa1
+CMD_GET_MULTIENTRYEXIT_VARIABLE = 0xA1
 #  response: get multi-entry/multi-exit detector (e3) variable
-RESPONSE_GET_MULTIENTRYEXIT_VARIABLE = 0xb1
+RESPONSE_GET_MULTIENTRYEXIT_VARIABLE = 0xB1
 #  command: set multi-entry/multi-exit detector (e3) variable, not used yet
-CMD_SET_MULTIENTRYEXIT_VARIABLE = 0xc1
+CMD_SET_MULTIENTRYEXIT_VARIABLE = 0xC1
 #  command: subscribe multi-entry/multi-exit detector (e3) variable
-CMD_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE = 0xd1
+CMD_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE = 0xD1
 #  response: subscribe multi-entry/multi-exit detector (e3) variable
-RESPONSE_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE = 0xe1
+RESPONSE_SUBSCRIBE_MULTIENTRYEXIT_VARIABLE = 0xE1
 
 #  command: subscribe traffic lights context
 CMD_SUBSCRIBE_TL_CONTEXT = 0x82
 #  response: subscribe traffic lights context
 RESPONSE_SUBSCRIBE_TL_CONTEXT = 0x92
 #  command: get traffic lights variable
-CMD_GET_TL_VARIABLE = 0xa2
+CMD_GET_TL_VARIABLE = 0xA2
 #  response: get traffic lights variable
-RESPONSE_GET_TL_VARIABLE = 0xb2
+RESPONSE_GET_TL_VARIABLE = 0xB2
 #  command: set traffic lights variable
-CMD_SET_TL_VARIABLE = 0xc2
+CMD_SET_TL_VARIABLE = 0xC2
 #  command: subscribe traffic lights variable
-CMD_SUBSCRIBE_TL_VARIABLE = 0xd2
+CMD_SUBSCRIBE_TL_VARIABLE = 0xD2
 #  response: subscribe traffic lights variable
-RESPONSE_SUBSCRIBE_TL_VARIABLE = 0xe2
+RESPONSE_SUBSCRIBE_TL_VARIABLE = 0xE2
 
 #  command: subscribe lane context
 CMD_SUBSCRIBE_LANE_CONTEXT = 0x83
 #  response: subscribe lane context
 RESPONSE_SUBSCRIBE_LANE_CONTEXT = 0x93
 #  command: get lane variable
-CMD_GET_LANE_VARIABLE = 0xa3
+CMD_GET_LANE_VARIABLE = 0xA3
 #  response: get lane variable
-RESPONSE_GET_LANE_VARIABLE = 0xb3
+RESPONSE_GET_LANE_VARIABLE = 0xB3
 #  command: set lane variable
-CMD_SET_LANE_VARIABLE = 0xc3
+CMD_SET_LANE_VARIABLE = 0xC3
 #  command: subscribe lane variable
-CMD_SUBSCRIBE_LANE_VARIABLE = 0xd3
+CMD_SUBSCRIBE_LANE_VARIABLE = 0xD3
 #  response: subscribe lane variable
-RESPONSE_SUBSCRIBE_LANE_VARIABLE = 0xe3
+RESPONSE_SUBSCRIBE_LANE_VARIABLE = 0xE3
 
 #  command: subscribe vehicle context
 CMD_SUBSCRIBE_VEHICLE_CONTEXT = 0x84
 #  response: subscribe vehicle context
 RESPONSE_SUBSCRIBE_VEHICLE_CONTEXT = 0x94
 #  command: get vehicle variable
-CMD_GET_VEHICLE_VARIABLE = 0xa4
+CMD_GET_VEHICLE_VARIABLE = 0xA4
 #  response: get vehicle variable
-RESPONSE_GET_VEHICLE_VARIABLE = 0xb4
+RESPONSE_GET_VEHICLE_VARIABLE = 0xB4
 #  command: set vehicle variable
-CMD_SET_VEHICLE_VARIABLE = 0xc4
+CMD_SET_VEHICLE_VARIABLE = 0xC4
 #  command: subscribe vehicle variable
-CMD_SUBSCRIBE_VEHICLE_VARIABLE = 0xd4
+CMD_SUBSCRIBE_VEHICLE_VARIABLE = 0xD4
 #  response: subscribe vehicle variable
-RESPONSE_SUBSCRIBE_VEHICLE_VARIABLE = 0xe4
+RESPONSE_SUBSCRIBE_VEHICLE_VARIABLE = 0xE4
 
 #  command: subscribe vehicle type context
 CMD_SUBSCRIBE_VEHICLETYPE_CONTEXT = 0x85
 #  response: subscribe vehicle type context
 RESPONSE_SUBSCRIBE_VEHICLETYPE_CONTEXT = 0x95
 #  command: get vehicle type variable
-CMD_GET_VEHICLETYPE_VARIABLE = 0xa5
+CMD_GET_VEHICLETYPE_VARIABLE = 0xA5
 #  response: get vehicle type variable
-RESPONSE_GET_VEHICLETYPE_VARIABLE = 0xb5
+RESPONSE_GET_VEHICLETYPE_VARIABLE = 0xB5
 #  command: set vehicle type variable
-CMD_SET_VEHICLETYPE_VARIABLE = 0xc5
+CMD_SET_VEHICLETYPE_VARIABLE = 0xC5
 #  command: subscribe vehicle type variable
-CMD_SUBSCRIBE_VEHICLETYPE_VARIABLE = 0xd5
+CMD_SUBSCRIBE_VEHICLETYPE_VARIABLE = 0xD5
 #  response: subscribe vehicle type variable
-RESPONSE_SUBSCRIBE_VEHICLETYPE_VARIABLE = 0xe5
+RESPONSE_SUBSCRIBE_VEHICLETYPE_VARIABLE = 0xE5
 
 #  command: subscribe route context
 CMD_SUBSCRIBE_ROUTE_CONTEXT = 0x86
 #  response: subscribe route context
 RESPONSE_SUBSCRIBE_ROUTE_CONTEXT = 0x96
 #  command: get route variable
-CMD_GET_ROUTE_VARIABLE = 0xa6
+CMD_GET_ROUTE_VARIABLE = 0xA6
 #  response: get route variable
-RESPONSE_GET_ROUTE_VARIABLE = 0xb6
+RESPONSE_GET_ROUTE_VARIABLE = 0xB6
 #  command: set route variable
-CMD_SET_ROUTE_VARIABLE = 0xc6
+CMD_SET_ROUTE_VARIABLE = 0xC6
 #  command: subscribe route variable
-CMD_SUBSCRIBE_ROUTE_VARIABLE = 0xd6
+CMD_SUBSCRIBE_ROUTE_VARIABLE = 0xD6
 #  response: subscribe route variable
-RESPONSE_SUBSCRIBE_ROUTE_VARIABLE = 0xe6
+RESPONSE_SUBSCRIBE_ROUTE_VARIABLE = 0xE6
 
 #  command: subscribe poi context
 CMD_SUBSCRIBE_POI_CONTEXT = 0x87
 #  response: subscribe poi context
 RESPONSE_SUBSCRIBE_POI_CONTEXT = 0x97
 #  command: get poi variable
-CMD_GET_POI_VARIABLE = 0xa7
+CMD_GET_POI_VARIABLE = 0xA7
 #  response: get poi variable
-RESPONSE_GET_POI_VARIABLE = 0xb7
+RESPONSE_GET_POI_VARIABLE = 0xB7
 #  command: set poi variable
-CMD_SET_POI_VARIABLE = 0xc7
+CMD_SET_POI_VARIABLE = 0xC7
 #  command: subscribe poi variable
-CMD_SUBSCRIBE_POI_VARIABLE = 0xd7
+CMD_SUBSCRIBE_POI_VARIABLE = 0xD7
 #  response: subscribe poi variable
-RESPONSE_SUBSCRIBE_POI_VARIABLE = 0xe7
+RESPONSE_SUBSCRIBE_POI_VARIABLE = 0xE7
 
 #  command: subscribe polygon context
 CMD_SUBSCRIBE_POLYGON_CONTEXT = 0x88
 #  response: subscribe polygon context
 RESPONSE_SUBSCRIBE_POLYGON_CONTEXT = 0x98
 #  command: get polygon variable
-CMD_GET_POLYGON_VARIABLE = 0xa8
+CMD_GET_POLYGON_VARIABLE = 0xA8
 #  response: get polygon variable
-RESPONSE_GET_POLYGON_VARIABLE = 0xb8
+RESPONSE_GET_POLYGON_VARIABLE = 0xB8
 #  command: set polygon variable
-CMD_SET_POLYGON_VARIABLE = 0xc8
+CMD_SET_POLYGON_VARIABLE = 0xC8
 #  command: subscribe polygon variable
-CMD_SUBSCRIBE_POLYGON_VARIABLE = 0xd8
+CMD_SUBSCRIBE_POLYGON_VARIABLE = 0xD8
 #  response: subscribe polygon variable
-RESPONSE_SUBSCRIBE_POLYGON_VARIABLE = 0xe8
+RESPONSE_SUBSCRIBE_POLYGON_VARIABLE = 0xE8
 
 #  command: subscribe junction context
 CMD_SUBSCRIBE_JUNCTION_CONTEXT = 0x89
 #  response: subscribe junction context
 RESPONSE_SUBSCRIBE_JUNCTION_CONTEXT = 0x99
 #  command: get junction variable
-CMD_GET_JUNCTION_VARIABLE = 0xa9
+CMD_GET_JUNCTION_VARIABLE = 0xA9
 #  response: get junction variable
-RESPONSE_GET_JUNCTION_VARIABLE = 0xb9
+RESPONSE_GET_JUNCTION_VARIABLE = 0xB9
 #  command: set junction variable
-CMD_SET_JUNCTION_VARIABLE = 0xc9
+CMD_SET_JUNCTION_VARIABLE = 0xC9
 #  command: subscribe junction variable
-CMD_SUBSCRIBE_JUNCTION_VARIABLE = 0xd9
+CMD_SUBSCRIBE_JUNCTION_VARIABLE = 0xD9
 #  response: subscribe junction variable
-RESPONSE_SUBSCRIBE_JUNCTION_VARIABLE = 0xe9
+RESPONSE_SUBSCRIBE_JUNCTION_VARIABLE = 0xE9
 
 #  command: subscribe edge context
-CMD_SUBSCRIBE_EDGE_CONTEXT = 0x8a
+CMD_SUBSCRIBE_EDGE_CONTEXT = 0x8A
 #  response: subscribe edge context
-RESPONSE_SUBSCRIBE_EDGE_CONTEXT = 0x9a
+RESPONSE_SUBSCRIBE_EDGE_CONTEXT = 0x9A
 #  command: get edge variable
-CMD_GET_EDGE_VARIABLE = 0xaa
+CMD_GET_EDGE_VARIABLE = 0xAA
 #  response: get edge variable
-RESPONSE_GET_EDGE_VARIABLE = 0xba
+RESPONSE_GET_EDGE_VARIABLE = 0xBA
 #  command: set edge variable
-CMD_SET_EDGE_VARIABLE = 0xca
+CMD_SET_EDGE_VARIABLE = 0xCA
 #  command: subscribe edge variable
-CMD_SUBSCRIBE_EDGE_VARIABLE = 0xda
+CMD_SUBSCRIBE_EDGE_VARIABLE = 0xDA
 #  response: subscribe edge variable
-RESPONSE_SUBSCRIBE_EDGE_VARIABLE = 0xea
+RESPONSE_SUBSCRIBE_EDGE_VARIABLE = 0xEA
 
 #  command: subscribe simulation context
-CMD_SUBSCRIBE_SIM_CONTEXT = 0x8b
+CMD_SUBSCRIBE_SIM_CONTEXT = 0x8B
 #  response: subscribe simulation context
-RESPONSE_SUBSCRIBE_SIM_CONTEXT = 0x9b
+RESPONSE_SUBSCRIBE_SIM_CONTEXT = 0x9B
 #  command: get simulation variable
-CMD_GET_SIM_VARIABLE = 0xab
+CMD_GET_SIM_VARIABLE = 0xAB
 #  response: get simulation variable
-RESPONSE_GET_SIM_VARIABLE = 0xbb
+RESPONSE_GET_SIM_VARIABLE = 0xBB
 #  command: set simulation variable
-CMD_SET_SIM_VARIABLE = 0xcb
+CMD_SET_SIM_VARIABLE = 0xCB
 #  command: subscribe simulation variable
-CMD_SUBSCRIBE_SIM_VARIABLE = 0xdb
+CMD_SUBSCRIBE_SIM_VARIABLE = 0xDB
 #  response: subscribe simulation variable
-RESPONSE_SUBSCRIBE_SIM_VARIABLE = 0xeb
+RESPONSE_SUBSCRIBE_SIM_VARIABLE = 0xEB
 
 #  command: subscribe GUI context
-CMD_SUBSCRIBE_GUI_CONTEXT = 0x8c
+CMD_SUBSCRIBE_GUI_CONTEXT = 0x8C
 #  response: subscribe GUI context
-RESPONSE_SUBSCRIBE_GUI_CONTEXT = 0x9c
+RESPONSE_SUBSCRIBE_GUI_CONTEXT = 0x9C
 #  command: get GUI variable
-CMD_GET_GUI_VARIABLE = 0xac
+CMD_GET_GUI_VARIABLE = 0xAC
 #  response: get GUI variable
-RESPONSE_GET_GUI_VARIABLE = 0xbc
+RESPONSE_GET_GUI_VARIABLE = 0xBC
 #  command: set GUI variable
-CMD_SET_GUI_VARIABLE = 0xcc
+CMD_SET_GUI_VARIABLE = 0xCC
 #  command: subscribe GUI variable
-CMD_SUBSCRIBE_GUI_VARIABLE = 0xdc
+CMD_SUBSCRIBE_GUI_VARIABLE = 0xDC
 #  response: subscribe GUI variable
-RESPONSE_SUBSCRIBE_GUI_VARIABLE = 0xec
+RESPONSE_SUBSCRIBE_GUI_VARIABLE = 0xEC
 
 #  command: subscribe lane area detector (e2) context
-CMD_SUBSCRIBE_LANEAREA_CONTEXT = 0x8d
+CMD_SUBSCRIBE_LANEAREA_CONTEXT = 0x8D
 #  response: subscribe lane area detector (e2) context
-RESPONSE_SUBSCRIBE_LANEAREA_CONTEXT = 0x9d
+RESPONSE_SUBSCRIBE_LANEAREA_CONTEXT = 0x9D
 #  command: get lane area detector (e2) variable
-CMD_GET_LANEAREA_VARIABLE = 0xad
+CMD_GET_LANEAREA_VARIABLE = 0xAD
 #  response: get lane area detector (e2) variable
-RESPONSE_GET_LANEAREA_VARIABLE = 0xbd
+RESPONSE_GET_LANEAREA_VARIABLE = 0xBD
 #  command: set lane area detector (e2) variable, not used yet
-CMD_SET_LANEAREA_VARIABLE = 0xcd
+CMD_SET_LANEAREA_VARIABLE = 0xCD
 #  command: subscribe lane area detector (e2) variable
-CMD_SUBSCRIBE_LANEAREA_VARIABLE = 0xdd
+CMD_SUBSCRIBE_LANEAREA_VARIABLE = 0xDD
 #  response: subscribe lane area detector (e2) variable
-RESPONSE_SUBSCRIBE_LANEAREA_VARIABLE = 0xed
+RESPONSE_SUBSCRIBE_LANEAREA_VARIABLE = 0xED
 
 #  command: subscribe person context
-CMD_SUBSCRIBE_PERSON_CONTEXT = 0x8e
+CMD_SUBSCRIBE_PERSON_CONTEXT = 0x8E
 #  response: subscribe person context
-RESPONSE_SUBSCRIBE_PERSON_CONTEXT = 0x9e
+RESPONSE_SUBSCRIBE_PERSON_CONTEXT = 0x9E
 #  command: get person variable
-CMD_GET_PERSON_VARIABLE = 0xae
+CMD_GET_PERSON_VARIABLE = 0xAE
 #  response: get person variable
-RESPONSE_GET_PERSON_VARIABLE = 0xbe
+RESPONSE_GET_PERSON_VARIABLE = 0xBE
 #  command: set person variable
-CMD_SET_PERSON_VARIABLE = 0xce
+CMD_SET_PERSON_VARIABLE = 0xCE
 #  command: subscribe person variable
-CMD_SUBSCRIBE_PERSON_VARIABLE = 0xde
+CMD_SUBSCRIBE_PERSON_VARIABLE = 0xDE
 #  response: subscribe person variable
-RESPONSE_SUBSCRIBE_PERSON_VARIABLE = 0xee
+RESPONSE_SUBSCRIBE_PERSON_VARIABLE = 0xEE
 
 #  command: subscribe busstop context
-CMD_SUBSCRIBE_BUSSTOP_CONTEXT = 0x8f
+CMD_SUBSCRIBE_BUSSTOP_CONTEXT = 0x8F
 #  response: subscribe busstop context
-RESPONSE_SUBSCRIBE_BUSSTOP_CONTEXT = 0x9f
+RESPONSE_SUBSCRIBE_BUSSTOP_CONTEXT = 0x9F
 #  command: get busstop variable
-CMD_GET_BUSSTOP_VARIABLE = 0xaf
+CMD_GET_BUSSTOP_VARIABLE = 0xAF
 #  response: get busstop variable
-RESPONSE_GET_BUSSTOP_VARIABLE = 0xbf
+RESPONSE_GET_BUSSTOP_VARIABLE = 0xBF
 #  command: set busstop variable, not used yet
-CMD_SET_BUSSTOP_VARIABLE = 0xcf
+CMD_SET_BUSSTOP_VARIABLE = 0xCF
 #  command: subscribe busstop variable
-CMD_SUBSCRIBE_BUSSTOP_VARIABLE = 0xdf
+CMD_SUBSCRIBE_BUSSTOP_VARIABLE = 0xDF
 #  response: subscribe busstop variable
-RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE = 0xef
+RESPONSE_SUBSCRIBE_BUSSTOP_VARIABLE = 0xEF
 
 #  command: subscribe parkingarea context
 CMD_SUBSCRIBE_PARKINGAREA_CONTEXT = 0x04
@@ -410,34 +410,34 @@ CMD_SUBSCRIBE_VARIABLESPEEDSIGN_VARIABLE = 0x59
 RESPONSE_SUBSCRIBE_VARIABLESPEEDSIGN_VARIABLE = 0x69
 
 #  command: subscribe meandata context
-CMD_SUBSCRIBE_MEANDATA_CONTEXT = 0x0a
+CMD_SUBSCRIBE_MEANDATA_CONTEXT = 0x0A
 #  response: subscribe meandata context
-RESPONSE_SUBSCRIBE_MEANDATA_CONTEXT = 0x1a
+RESPONSE_SUBSCRIBE_MEANDATA_CONTEXT = 0x1A
 #  command: get meandata variable
-CMD_GET_MEANDATA_VARIABLE = 0x2a
+CMD_GET_MEANDATA_VARIABLE = 0x2A
 #  response: get meandata variable
-RESPONSE_GET_MEANDATA_VARIABLE = 0x3a
+RESPONSE_GET_MEANDATA_VARIABLE = 0x3A
 #  command: set meandata variable, not used yet
-CMD_SET_MEANDATA_VARIABLE = 0x4a
+CMD_SET_MEANDATA_VARIABLE = 0x4A
 #  command: subscribe meandata variable
-CMD_SUBSCRIBE_MEANDATA_VARIABLE = 0x5a
+CMD_SUBSCRIBE_MEANDATA_VARIABLE = 0x5A
 #  response: subscribe meandata variable
-RESPONSE_SUBSCRIBE_MEANDATA_VARIABLE = 0x6a
+RESPONSE_SUBSCRIBE_MEANDATA_VARIABLE = 0x6A
 
 #  command: subscribe overheadwire context
-CMD_SUBSCRIBE_OVERHEADWIRE_CONTEXT = 0x0b
+CMD_SUBSCRIBE_OVERHEADWIRE_CONTEXT = 0x0B
 #  response: subscribe overheadwire context
-RESPONSE_SUBSCRIBE_OVERHEADWIRE_CONTEXT = 0x1b
+RESPONSE_SUBSCRIBE_OVERHEADWIRE_CONTEXT = 0x1B
 #  command: get overheadwire variable
-CMD_GET_OVERHEADWIRE_VARIABLE = 0x2b
+CMD_GET_OVERHEADWIRE_VARIABLE = 0x2B
 #  response: get overheadwire variable
-RESPONSE_GET_OVERHEADWIRE_VARIABLE = 0x3b
+RESPONSE_GET_OVERHEADWIRE_VARIABLE = 0x3B
 #  command: set overheadwire variable
-CMD_SET_OVERHEADWIRE_VARIABLE = 0x4b
+CMD_SET_OVERHEADWIRE_VARIABLE = 0x4B
 #  command: subscribe overheadwire variable
-CMD_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x5b
+CMD_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x5B
 #  response: subscribe overheadwire variable
-RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x6b
+RESPONSE_SUBSCRIBE_OVERHEADWIRE_VARIABLE = 0x6B
 
 
 #  ****************************************
@@ -698,34 +698,34 @@ JAM_LENGTH_VEHICLE = 0x18
 JAM_LENGTH_METERS = 0x19
 
 #  last step person list (get: edges, vehicles)
-LAST_STEP_PERSON_ID_LIST = 0x1a
+LAST_STEP_PERSON_ID_LIST = 0x1A
 
 #  full name (get: edges, simulation, trafficlight)
-VAR_NAME = 0x1b
+VAR_NAME = 0x1B
 
 #  carFollowModel function followSpeed (get: vehicle)
-VAR_FOLLOW_SPEED = 0x1c
+VAR_FOLLOW_SPEED = 0x1C
 
 #  carFollowModel function stopSpeed (get: vehicle)
-VAR_STOP_SPEED = 0x1d
+VAR_STOP_SPEED = 0x1D
 
 #  carFollowModel function getSecureGap (get: vehicle)
-VAR_SECURE_GAP = 0x1e
+VAR_SECURE_GAP = 0x1E
 
 #  estimated (depart) delay for next stop
-VAR_STOP_DELAY = 0x1f
+VAR_STOP_DELAY = 0x1F
 
 #  estimated arrival delay for next stop
 VAR_STOP_ARRIVALDELAY = 0x22
 
 #   begin time(get: calibrator)
-VAR_BEGIN = 0x1c
+VAR_BEGIN = 0x1C
 
 #   end time(get: calibrator)
-VAR_END = 0x1d
+VAR_END = 0x1D
 
 #  vtype list (get: calibrator)
-VAR_VTYPES = 0x1e
+VAR_VTYPES = 0x1E
 
 #   vehicles per hour (get: calibrator)
 VAR_VEHSPERHOUR = 0x13
@@ -779,19 +779,19 @@ TL_RIVAL_VEHICLES = 0x30
 TL_PRIORITY_VEHICLES = 0x31
 
 #  controlled junctions (get: traffic lights)
-TL_CONTROLLED_JUNCTIONS = 0x2a
+TL_CONTROLLED_JUNCTIONS = 0x2A
 
 #  complete definition (get: traffic lights)
-TL_COMPLETE_DEFINITION_RYG = 0x2b
+TL_COMPLETE_DEFINITION_RYG = 0x2B
 
 #  complete program (set: traffic lights)
-TL_COMPLETE_PROGRAM_RYG = 0x2c
+TL_COMPLETE_PROGRAM_RYG = 0x2C
 
 #  assumed time to next switch (get: traffic lights)
-TL_NEXT_SWITCH = 0x2d
+TL_NEXT_SWITCH = 0x2D
 
 #  current state, using external signal names (get: traffic lights)
-TL_EXTERNAL_STATE = 0x2e
+TL_EXTERNAL_STATE = 0x2E
 
 #  outgoing link number (get: lanes)
 LANE_LINK_NUMBER = 0x30
@@ -818,7 +818,7 @@ VAR_SLOPE = 0x36
 VAR_SPEED = 0x40
 
 #  adapt previous speed (set: vehicle)
-VAR_PREV_SPEED = 0x3c
+VAR_PREV_SPEED = 0x3C
 
 #  lateral speed (get: vehicle)
 VAR_SPEED_LAT = 0x32
@@ -848,16 +848,16 @@ VAR_ACCEL = 0x46
 VAR_DECEL = 0x47
 
 #  max. (physically possible) deceleration (get: vehicles, vehicle types)
-VAR_EMERGENCY_DECEL = 0x7b
+VAR_EMERGENCY_DECEL = 0x7B
 
 #  apparent deceleration (get: vehicles, vehicle types)
-VAR_APPARENT_DECEL = 0x7c
+VAR_APPARENT_DECEL = 0x7C
 
 #  action step length (get: vehicles, vehicle types)
-VAR_ACTIONSTEPLENGTH = 0x7d
+VAR_ACTIONSTEPLENGTH = 0x7D
 
 #  last action time (get: vehicles)
-VAR_LASTACTIONTIME = 0x7f
+VAR_LASTACTIONTIME = 0x7F
 
 #  driver's desired headway (get: vehicle types)
 VAR_TAU = 0x48
@@ -866,22 +866,22 @@ VAR_TAU = 0x48
 VAR_VEHICLECLASS = 0x49
 
 #  emission class (get: vehicle types)
-VAR_EMISSIONCLASS = 0x4a
+VAR_EMISSIONCLASS = 0x4A
 
 #  shape class (get: vehicle types)
-VAR_SHAPECLASS = 0x4b
+VAR_SHAPECLASS = 0x4B
 
 #  minimum gap (get: vehicle types)
-VAR_MINGAP = 0x4c
+VAR_MINGAP = 0x4C
 
 #  width (get: vehicle types, lanes, polygons, poi)
-VAR_WIDTH = 0x4d
+VAR_WIDTH = 0x4D
 
 #  shape (get: polygons)
-VAR_SHAPE = 0x4e
+VAR_SHAPE = 0x4E
 
 #  type id (get: vehicles, polygons, pois)
-VAR_TYPE = 0x4f
+VAR_TYPE = 0x4F
 
 #  road id (get: vehicles)
 VAR_ROAD_ID = 0x50
@@ -902,7 +902,7 @@ VAR_EDGES = 0x54
 VAR_LANES = 0x30
 
 #  update bestLanes (set: vehicle)
-VAR_UPDATE_BESTLANES = 0x6a
+VAR_UPDATE_BESTLANES = 0x6A
 
 #  filled? (get: polygons)
 VAR_FILL = 0x55
@@ -923,77 +923,77 @@ VAR_EDGE_TRAVELTIME = 0x58
 VAR_EDGE_EFFORT = 0x59
 
 #  last step travel time (get: edge, lane)
-VAR_CURRENT_TRAVELTIME = 0x5a
+VAR_CURRENT_TRAVELTIME = 0x5A
 
 #  signals state (get/set: vehicle)
-VAR_SIGNALS = 0x5b
+VAR_SIGNALS = 0x5B
 
 #  vehicle: new lane/position along (set: vehicle)
-VAR_MOVE_TO = 0x5c
+VAR_MOVE_TO = 0x5C
 
 #  polygon: add dynamics (set: polygon)
-VAR_ADD_DYNAMICS = 0x5c
+VAR_ADD_DYNAMICS = 0x5C
 
 #  vehicle: highlight (set: vehicle, poi)
-VAR_HIGHLIGHT = 0x6c
+VAR_HIGHLIGHT = 0x6C
 
 #  driver imperfection (set: vehicle)
-VAR_IMPERFECTION = 0x5d
+VAR_IMPERFECTION = 0x5D
 
 #  speed factor (set: vehicle)
-VAR_SPEED_FACTOR = 0x5e
+VAR_SPEED_FACTOR = 0x5E
 
 #  speed deviation (set: vehicle)
-VAR_SPEED_DEVIATION = 0x5f
+VAR_SPEED_DEVIATION = 0x5F
 
 #  routing mode (get/set: vehicle)
 VAR_ROUTING_MODE = 0x89
 
 #  speed without TraCI influence (get: vehicle)
-VAR_SPEED_WITHOUT_TRACI = 0xb1
+VAR_SPEED_WITHOUT_TRACI = 0xB1
 
 #  best lanes (get: vehicle)
-VAR_BEST_LANES = 0xb2
+VAR_BEST_LANES = 0xB2
 
 #  how speed is set (set: vehicle)
-VAR_SPEEDSETMODE = 0xb3
+VAR_SPEEDSETMODE = 0xB3
 
 #  move vehicle to explicit (remote controlled) position (set: vehicle)
-MOVE_TO_XY = 0xb4
+MOVE_TO_XY = 0xB4
 
 #  is the vehicle stopped, and if so parked and/or triggered?
 #  value = stopped + 2 * parking + 4 * triggered
-VAR_STOPSTATE = 0xb5
+VAR_STOPSTATE = 0xB5
 
 #  how lane changing is performed (get/set: vehicle)
-VAR_LANECHANGE_MODE = 0xb6
+VAR_LANECHANGE_MODE = 0xB6
 
 #  maximum speed regarding max speed on the current lane and speed factor (get: vehicle)
-VAR_ALLOWED_SPEED = 0xb7
+VAR_ALLOWED_SPEED = 0xB7
 
 #  position (1D lateral position relative to center of the current lane) (get: vehicle)
-VAR_LANEPOSITION_LAT = 0xb8
+VAR_LANEPOSITION_LAT = 0xB8
 
 #  get/set prefered lateral alignment within the lane (vehicle)
-VAR_LATALIGNMENT = 0xb9
+VAR_LATALIGNMENT = 0xB9
 
 #  get/set maximum lateral speed (vehicle, vtypes)
-VAR_MAXSPEED_LAT = 0xba
+VAR_MAXSPEED_LAT = 0xBA
 
 #  get/set minimum lateral gap (vehicle, vtypes)
-VAR_MINGAP_LAT = 0xbb
+VAR_MINGAP_LAT = 0xBB
 
 #  get/set vehicle height (vehicle, vtypes, poi)
-VAR_HEIGHT = 0xbc
+VAR_HEIGHT = 0xBC
 
 #  get/set vehicle line
-VAR_LINE = 0xbd
+VAR_LINE = 0xBD
 
 #  get/set vehicle via
-VAR_VIA = 0xbe
+VAR_VIA = 0xBE
 
 #  get (lane change relevant) neighboring vehicles (vehicles)
-VAR_NEIGHBORS = 0xbf
+VAR_NEIGHBORS = 0xBF
 
 #  current CO2 emission of a node (get: vehicle, lane, edge)
 VAR_CO2EMISSION = 0x60
@@ -1022,13 +1022,13 @@ VAR_PERSON_NUMBER = 0x67
 #  person capacity (vehicle , vehicle type)
 VAR_PERSON_CAPACITY = 0x38
 
-VAR_BUS_STOP_ID_LIST = 0x9f
+VAR_BUS_STOP_ID_LIST = 0x9F
 
 #  number of persons waiting at a defined bus stop (get: simulation)
 VAR_BUS_STOP_WAITING = 0x67
 
 #  ids of persons waiting at a defined bus stop (get: simulation)
-VAR_BUS_STOP_WAITING_IDS = 0xef
+VAR_BUS_STOP_WAITING_IDS = 0xEF
 
 #  current leader together with gap (get: vehicle)
 VAR_LEADER = 0x68
@@ -1040,7 +1040,7 @@ VAR_FOLLOWER = 0x78
 VAR_ROUTE_INDEX = 0x69
 
 #  current waiting time (get: vehicle, lane)
-VAR_WAITING_TIME = 0x7a
+VAR_WAITING_TIME = 0x7A
 
 #  current waiting time (get: vehicle)
 VAR_ACCUMULATED_WAITING_TIME = 0x87
@@ -1106,16 +1106,16 @@ VAR_TELEPORT_ENDING_VEHICLES_IDS = 0x78
 VAR_ARRIVED_VEHICLES_NUMBER = 0x79
 
 #  ids of arrived vehicles (get: simulation)
-VAR_ARRIVED_VEHICLES_IDS = 0x7a
+VAR_ARRIVED_VEHICLES_IDS = 0x7A
 
 #  delta t (get: simulation)
-VAR_DELTA_T = 0x7b
+VAR_DELTA_T = 0x7B
 
 #  bounding box (get: simulation)
-VAR_NET_BOUNDING_BOX = 0x7c
+VAR_NET_BOUNDING_BOX = 0x7C
 
 #  minimum number of expected vehicles (get: simulation)
-VAR_MIN_EXPECTED_VEHICLES = 0x7d
+VAR_MIN_EXPECTED_VEHICLES = 0x7D
 
 #  number of vehicles starting to park (get: simulation)
 VAR_STOP_STARTING_VEHICLES_NUMBER = 0x68
@@ -1124,28 +1124,28 @@ VAR_STOP_STARTING_VEHICLES_NUMBER = 0x68
 VAR_STOP_STARTING_VEHICLES_IDS = 0x69
 
 #  number of vehicles ending to park (get: simulation)
-VAR_STOP_ENDING_VEHICLES_NUMBER = 0x6a
+VAR_STOP_ENDING_VEHICLES_NUMBER = 0x6A
 
 #  ids of vehicles ending to park (get: simulation)
-VAR_STOP_ENDING_VEHICLES_IDS = 0x6b
+VAR_STOP_ENDING_VEHICLES_IDS = 0x6B
 
 #  number of vehicles starting to park (get: simulation)
-VAR_PARKING_STARTING_VEHICLES_NUMBER = 0x6c
+VAR_PARKING_STARTING_VEHICLES_NUMBER = 0x6C
 
 #  ids of vehicles starting to park (get: simulation)
-VAR_PARKING_STARTING_VEHICLES_IDS = 0x6d
+VAR_PARKING_STARTING_VEHICLES_IDS = 0x6D
 
 #  number of vehicles maneuvering (get: simulation)
-VAR_PARKING_MANEUVERING_VEHICLES_NUMBER = 0x3a
+VAR_PARKING_MANEUVERING_VEHICLES_NUMBER = 0x3A
 
 #  ids of vehicles maneuvering (get: simulation)
-VAR_PARKING_MANEUVERING_VEHICLES_IDS = 0x3b
+VAR_PARKING_MANEUVERING_VEHICLES_IDS = 0x3B
 
 #  number of vehicles ending to park (get: simulation)
-VAR_PARKING_ENDING_VEHICLES_NUMBER = 0x6e
+VAR_PARKING_ENDING_VEHICLES_NUMBER = 0x6E
 
 #  ids of vehicles ending to park (get: simulation)
-VAR_PARKING_ENDING_VEHICLES_IDS = 0x6f
+VAR_PARKING_ENDING_VEHICLES_IDS = 0x6F
 
 #  number of vehicles involved in a collision (get: simulation)
 VAR_COLLIDING_VEHICLES_NUMBER = 0x80
@@ -1157,7 +1157,7 @@ VAR_COLLIDING_VEHICLES_IDS = 0x81
 VAR_EMERGENCYSTOPPING_VEHICLES_NUMBER = 0x89
 
 #  ids of vehicles involved in a collision (get: simulation)
-VAR_EMERGENCYSTOPPING_VEHICLES_IDS = 0x8a
+VAR_EMERGENCYSTOPPING_VEHICLES_IDS = 0x8A
 
 #  clears the simulation of all not inserted vehicles (set: simulation)
 CMD_CLEAR_PENDING_VEHICLES = 0x94
@@ -1169,10 +1169,10 @@ CMD_SAVE_SIMSTATE = 0x95
 CMD_LOAD_SIMSTATE = 0x96
 
 #  sets/retrieves abstract parameter
-VAR_PARAMETER = 0x7e
+VAR_PARAMETER = 0x7E
 
 #  retrieves abstract parameter and returns (key, value) tuple
-VAR_PARAMETER_WITH_KEY = 0x3e
+VAR_PARAMETER_WITH_KEY = 0x3E
 
 
 #  add an instance (poi, polygon, vehicle, person, route)
@@ -1212,28 +1212,28 @@ CMD_REROUTE_EFFORT = 0x91
 VAR_ROUTE_VALID = 0x92
 
 #  retrieve information regarding the current person/container stage
-VAR_STAGE = 0xc0
+VAR_STAGE = 0xC0
 
 #  retrieve information regarding the next edge including crossings and walkingAreas (pedestrians only)
-VAR_NEXT_EDGE = 0xc1
+VAR_NEXT_EDGE = 0xC1
 
 #  retrieve information regarding the number of remaining stages
-VAR_STAGES_REMAINING = 0xc2
+VAR_STAGES_REMAINING = 0xC2
 
 #  retrieve the current vehicle id for the driving stage (person, container)
-VAR_VEHICLE = 0xc3
+VAR_VEHICLE = 0xC3
 
 #  append a person stage (person)
-APPEND_STAGE = 0xc4
+APPEND_STAGE = 0xC4
 
 #  replace a person stage (person)
-REPLACE_STAGE = 0xcd
+REPLACE_STAGE = 0xCD
 
 #  append a person stage (person)
-REMOVE_STAGE = 0xc5
+REMOVE_STAGE = 0xC5
 
 #  retrieve taxi reservation (person)
-VAR_TAXI_RESERVATIONS = 0xc6
+VAR_TAXI_RESERVATIONS = 0xC6
 
 #  sample last route (routeprobe)
 VAR_SAMPLE_LAST = 0x20
@@ -1242,28 +1242,28 @@ VAR_SAMPLE_LAST = 0x20
 VAR_SAMPLE_CURRENT = 0x21
 
 #  zoom
-VAR_VIEW_ZOOM = 0xa0
+VAR_VIEW_ZOOM = 0xA0
 
 #  view position
-VAR_VIEW_OFFSET = 0xa1
+VAR_VIEW_OFFSET = 0xA1
 
 #  view schema
-VAR_VIEW_SCHEMA = 0xa2
+VAR_VIEW_SCHEMA = 0xA2
 
 #  view by boundary
-VAR_VIEW_BOUNDARY = 0xa3
+VAR_VIEW_BOUNDARY = 0xA3
 
 #  select/deselect object (gui)
-VAR_SELECT = 0xa4
+VAR_SELECT = 0xA4
 
 #  screenshot
-VAR_SCREENSHOT = 0xa5
+VAR_SCREENSHOT = 0xA5
 
 #  track vehicle
-VAR_TRACK_VEHICLE = 0xa6
+VAR_TRACK_VEHICLE = 0xA6
 
 #  presence of view
-VAR_HAS_VIEW = 0xa7
+VAR_HAS_VIEW = 0xA7
 
 # @name currently wanted lane-change action
 # @{
@@ -1322,9 +1322,21 @@ LCA_BLOCKED_BY_LEADER = LCA_BLOCKED_BY_LEFT_LEADER | LCA_BLOCKED_BY_RIGHT_LEADER
 # @brief blocker by follower
 LCA_BLOCKED_BY_FOLLOWER = LCA_BLOCKED_BY_LEFT_FOLLOWER | LCA_BLOCKED_BY_RIGHT_FOLLOWER
 # @brief blocked in all directions
-LCA_BLOCKED = LCA_BLOCKED_LEFT | LCA_BLOCKED_RIGHT | LCA_INSUFFICIENT_SPACE | LCA_INSUFFICIENT_SPEED
+LCA_BLOCKED = (
+    LCA_BLOCKED_LEFT
+    | LCA_BLOCKED_RIGHT
+    | LCA_INSUFFICIENT_SPACE
+    | LCA_INSUFFICIENT_SPEED
+)
 # @brief reasons of lane change
-LCA_CHANGE_REASONS = (LCA_STRATEGIC | LCA_COOPERATIVE | LCA_SPEEDGAIN | LCA_KEEPRIGHT | LCA_SUBLANE | LCA_TRACI)
+LCA_CHANGE_REASONS = (
+    LCA_STRATEGIC
+    | LCA_COOPERATIVE
+    | LCA_SPEEDGAIN
+    | LCA_KEEPRIGHT
+    | LCA_SUBLANE
+    | LCA_TRACI
+)
 #  LCA_BLOCKED_BY_CURRENT_LEADER = 1 << 28
 #  LCA_BLOCKED_BY_CURRENT_FOLLOWER = 1 << 29
 # @}

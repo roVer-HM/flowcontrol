@@ -31,11 +31,16 @@ for root, dirs, files in os.walk(mRoot):
     for file in files:
         if file == "testclient.prog":
             full = os.path.join(root, file)
-            out = open(full + ".hex", 'w')
+            out = open(full + ".hex", "w")
             change = False
             for line in open(full):
                 ls = line.split()
-                if ls and ls[0] in ["setvalue", "getvalue", "getvariable", "getvariable_plus"]:
+                if ls and ls[0] in [
+                    "setvalue",
+                    "getvalue",
+                    "getvariable",
+                    "getvariable_plus",
+                ]:
                     if not ls[1][:2] == "0x":
                         ls[1] = "0x%x" % int(ls[1])
                         change = True

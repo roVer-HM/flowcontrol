@@ -19,7 +19,7 @@ class SubscriptionListener(object):
     """
     ref_id: objectID
     """
-    GLOBAL_OBJECT_ID = "-1"
+    GLOBAL_OBJECT_ID = ""
     ALL_OBJECTS = "*"  # all objects ids exept "-1"
 
     def __init__(self, name, handle_dict: dict, init_sub=False):
@@ -72,21 +72,21 @@ class SubscriptionListener(object):
         return self._data
 
 
-class VaderePersonListener(SubscriptionListener):
-
+class VadereDefaultStateListener(SubscriptionListener):
     @classmethod
     def with_vars(cls, name, var_list: dict, **kwargs):
         _handle = {
-            tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE:
-                {
-                    cls.GLOBAL_OBJECT_ID: [tc.VAR_ID_LIST],
-                    cls.ALL_OBJECTS: var_list,
-                 },
-            tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE:
-                {
-                    cls.GLOBAL_OBJECT_ID: [tc.VAR_TIME, tc.VAR_DEPARTED_PEDESTRIAN_IDS,
-                                           tc.VAR_ARRIVED_PEDESTRIAN_PEDESTRIAN_IDS]
-                },
+            tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE: {
+                cls.GLOBAL_OBJECT_ID: [tc.VAR_ID_LIST],
+                cls.ALL_OBJECTS: var_list,
+            },
+            tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE: {
+                cls.GLOBAL_OBJECT_ID: [
+                    tc.VAR_TIME,
+                    tc.VAR_DEPARTED_PEDESTRIAN_IDS,
+                    tc.VAR_ARRIVED_PEDESTRIAN_PEDESTRIAN_IDS,
+                ]
+            },
         }
         return cls(name, _handle, **kwargs)
 
@@ -100,7 +100,7 @@ class VaderePersonListener(SubscriptionListener):
             "removed_ped_ids": [],
             "new_ped_ids": [],
             "time": -1,
-            "pedestrians": []
+            "pedestrians": [],
         }
 
     @property
@@ -123,9 +123,18 @@ class VaderePersonListener(SubscriptionListener):
     def time(self):
         return self._data.get("time", -1)
 
-    def update_pedestrian_subscription(self, api: VaderePersonAPI, begin=tc.INVALID_DOUBLE_VALUE,
-                                       end=tc.INVALID_DOUBLE_VALUE):
-        vars = [v for _, v in self.handle_dict[tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE][self.ALL_OBJECTS].items()]
+    def update_pedestrian_subscription(
+        self,
+        api: VaderePersonAPI,
+        begin=tc.INVALID_DOUBLE_VALUE,
+        end=tc.INVALID_DOUBLE_VALUE,
+    ):
+        vars = [
+            v
+            for _, v in self.handle_dict[tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE][
+                self.ALL_OBJECTS
+            ].items()
+        ]
         for obj_id in self.new_pedestrian_ids:
             api.subscribe(objectID=obj_id, varIDs=vars, begin=begin, end=end)
 
@@ -144,11 +153,16 @@ class VaderePersonListener(SubscriptionListener):
     def _handle_person(self, result: SubscriptionResults):
         _data = {}
         # person sub global
-        _res = result.data[self.GLOBAL_OBJECT_ID]
-        self._data["all_ped_ids"] = list(_res[tc.VAR_ID_LIST])
+        if self.GLOBAL_OBJECT_ID in result.data:
+            _res = result.data[self.GLOBAL_OBJECT_ID]
+            self._data["all_ped_ids"] = list(_res[tc.VAR_ID_LIST])
+        else:
+            self._data["all_ped_ids"] = []
 
         # person sub for ALL_OBJECTS
-        person_vars = self.handle_dict[tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE].get(self.ALL_OBJECTS, {})
+        person_vars = self.handle_dict[tc.RESPONSE_SUBSCRIBE_V_PERSON_VARIABLE].get(
+            self.ALL_OBJECTS, {}
+        )
         if person_vars != {}:
             for obj_id, vars in result.data.items():
                 if obj_id == self.GLOBAL_OBJECT_ID:

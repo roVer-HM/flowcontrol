@@ -7,9 +7,16 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
 class VadereSimulationAPI(Domain):
     def __init__(self):
-        Domain.__init__(self, "v_simulation",tc.CMD_GET_V_SIM_VARIABLE, tc.CMD_SET_V_SIM_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_SIM_VARIABLE, tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE, 
-                                tc.CMD_SUBSCRIBE_V_SIM_CONTEXT, tc.RESPONSE_SUBSCRIBE_V_SIM_CONTEXT)
+        Domain.__init__(
+            self,
+            "v_simulation",
+            tc.CMD_GET_V_SIM_VARIABLE,
+            tc.CMD_SET_V_SIM_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_SIM_VARIABLE,
+            tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE,
+            tc.CMD_SUBSCRIBE_V_SIM_CONTEXT,
+            tc.RESPONSE_SUBSCRIBE_V_SIM_CONTEXT,
+        )
 
     def get_network_bound(self):
         return self._getUniversal(tc.VAR_NET_BOUNDING_BOX, "")
@@ -37,4 +44,3 @@ class VadereSimulationAPI(Domain):
 
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
-

@@ -1,27 +1,36 @@
 import argparse
 import logging
-import signal
-import threading
-import warnings
-from typing import Union
 import os
 import subprocess
-import time
+import warnings
 from time import sleep
-import xml.etree.ElementTree as xml
+from typing import Union
+from xml.etree import ElementTree as xml
 
+from flowcontrol.crownetcontrol.setup.vadere import Runner
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import (
-    _create_accept_server_socket,
+    create_accept_server_socket,
     WrappedTraCIConnection,
     DomainHandler,
     BaseTraCIConnection,
-    _create_client_socket,
+    create_client_socket,
 )
 from flowcontrol.crownetcontrol.traci.exceptions import (
     FatalTraCIError,
     TraCISimulationEnd,
 )
+from flowcontrol.crownetcontrol.state.state_listener import (
+    SubscriptionListener,
+    VadereDefaultStateListener,
+)
+from flowcontrol.crownetcontrol.traci.connection import (
+    DomainHandler,
+    BaseTraCIConnection,
+    _create_client_socket, _create_accept_server_socket, WrappedTraCIConnection)
+from flowcontrol.crownetcontrol.traci.exceptions import (
+    TraCISimulationEnd,
+    FatalTraCIError)
 from flowcontrol.crownetcontrol.traci.subsciption_listners import (
     SubscriptionListener,
     VaderePersonListener,
@@ -36,7 +45,7 @@ def parse_args_as_dict(args=None):
         "-n",
         "--host-name",
         dest="host_name",
-        default="vadere",  # TODO: discuss -> defaults
+        default="localhost",  # TODO: discuss -> defaults
         required=True,
         help="If vadere is set, the controller is started in client-mode",
     )
@@ -81,7 +90,7 @@ def parse_args_as_dict(args=None):
         "-s",
         "--scenario",
         dest="scenario_file",
-        default=None,  # TODO: discuss -> defaults
+        default="",  # TODO: discuss -> defaults
         required=False,
         help="Only available in client-mode.",
     )
@@ -105,62 +114,10 @@ def parse_args_as_dict(args=None):
     if ns["start_server"] is True and ns["scenario_file"] is None:
         raise ValueError("Please provide scenario file.")
 
+    if ns["is_in_client_mode"] is True and ns["scenario_file"] is None:
+        raise ValueError("Please provide scenario file.")
+
     return ns
-
-
-class Runner(threading.Thread):
-    def __init__(self, command, thread_name, log_location=None, use_stdout=False):
-        threading.Thread.__init__(self)
-        self.command = command
-        self.log_location = log_location
-        self.use_stdout = use_stdout
-        self.thread_name = thread_name
-        self.log = logging.getLogger()
-
-    def stop(self):
-        self._cleanup()
-
-    def run(self):
-        try:
-            if self.log_location is None:
-                self.log_location = os.devnull
-
-            log_file = open(self.log_location, "w")
-            self.process = subprocess.Popen(
-                self.command,
-                cwd=os.path.curdir,
-                shell=False,
-                stdin=None,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-            )
-            for line in self.process.stdout:
-                if self.use_stdout:
-                    print(f"{self.thread_name}> {line.decode('utf-8')}", end="")
-                log_file.write(line.decode("utf-8"))
-
-            if self.process.returncode is not None:
-                self._cleanup()
-
-        finally:
-            log_file.close()
-            print(
-                f"{self.thread_name}> subprocess returncode={self.process.returncode}"
-            )
-
-    def _cleanup(self):
-        try:
-            os.kill(self.process.pid, signal.SIGTERM)
-            self.process.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            self.log.error("subprocess not stopping. Send SIGKILL")
-
-        if self.process.returncode is None:
-            os.kill(self.process.pid, signal.SIGKILL)
-            time.sleep(0.5)
-            if self.process.returncode is None:
-                self.log.error("subprocess still not dead")
-                raise
 
 
 class TraCiManager:
@@ -173,12 +130,17 @@ class TraCiManager:
         self.sub_listener = {}
         self.current_time = -1
         self._sim_until = -1
-        self._default_sub: Union[None, VaderePersonListener] = None
+        self._default_sub: Union[None, VadereDefaultStateListener] = None
 
     def _set_connection(self, connection):
-        self._con = connection
-        self._base_client: BaseTraCIConnection = self._con
-        self.domains.register(self._base_client)
+        self._traci = connection
+        self.domains.register(self.traci)
+
+    @property
+    def traci(self):
+        if self._traci is None:
+            raise RuntimeError("traci connection not set yet!")
+        return self._traci
 
     def next_call_in(self, step=-1):
         if step <= 0:
@@ -192,7 +154,7 @@ class TraCiManager:
         else:
             self._sim_until = step
 
-    def register_subscription_listener(
+    def register_state_listener(
         self, name, listener: SubscriptionListener, set_default=False
     ):
         self.sub_listener[name] = listener
@@ -206,23 +168,12 @@ class TraCiManager:
     def _init_sub_listener(self):
         for name, listener in self.sub_listener.items():
             print(f"register listener {name}")
-            self._con.add_sub_listener(listener)
+            self.traci.add_sub_listener(listener)
 
     def _initialize(self, *arg, **kwargs):
         pass
 
-    def _parse_subscription_result(self, result):
-        for subscriptionResults in self._con.subscriptionMapping.values():
-            subscriptionResults.reset()
-        num_subs = result.readInt()
-        responses = []
-        while num_subs > 0:
-            responses.append(self._con.read_subscription(result))
-            num_subs -= 1
-        self._con.notify_subscription_listener()
-        return responses
-
-    def _handle_sim_step(self):
+    def _handle_sim_step(self, *arg, **kwargs):
         pass
 
     def _run(self):
@@ -239,26 +190,44 @@ class TraCiManager:
             self._run()
         except NotImplementedError as e:
             print(e)
-        except TraCISimulationEnd as sim_end:
+        except TraCISimulationEnd:
             print("Simulation end reached.")
         finally:
             self._cleanup()
 
 
+class ControlTraciWrapper:
+    @classmethod
+    def get_controller_from_args(cls, working_dir, args=None, controller=None):
+        ns = parse_args_as_dict(args)
+
+        if (
+            ns["port"] == 9999
+            and ns["is_in_client_mode"]
+        ):
+            return VadereClientModeConnection(
+                control_handler=controller,
+                port=ns["port"],
+                is_start_server=ns["start_server"],
+                is_gui_mode=ns["gui_mode"],
+                scenario=ns["scenario_file"],
+                host=ns["host_name"]
+            )
+        elif (
+            ns["host_name"] == "omnet"
+            and ns["port"] == 9997 #TODO check port number
+            and not ns["is_in_client_mode"]
+        ):
+            return ServerModeConnection(control_handler=controller, port=ns["port"])
+        else:
+            raise NotImplementedError("Port and host configuration not found.")
+
+
 class ClientModeConnection(TraCiManager):
-    def __init__(
-        self,
-        control_handler,
-        host="127.0.0.1",
-        port=9999,
-        is_start_server=False,
-        is_gui_mode=False,
-        scenario = None
-    ):
-        self._start_server(is_start_server, is_gui_mode, scenario)
+    def __init__(self, control_handler, host="127.0.0.1", port=9999):
         super().__init__(host, port, control_handler)
-        self._set_connection(BaseTraCIConnection(_create_client_socket()))
-        self._con._socket.connect((host, port))
+        self._set_connection(BaseTraCIConnection(create_client_socket()))
+        self.traci.connect(host, port)
 
     def _simulation_step(self, step=0.0):
         """
@@ -266,62 +235,29 @@ class ClientModeConnection(TraCiManager):
         If the given value is 0 or absent, exactly one step is performed.
         Values smaller than or equal to the current sim time result in no action.
         """
-        if type(step) is int and step >= 1000:
-            warnings.warn(
-                "API change now handles step as floating point seconds", stacklevel=2
-            )
-        result = self._con.send_cmd(tc.CMD_SIMSTEP, None, None, "D", step)
-        return self._parse_subscription_result(result)
-
-    def _start_server(self, is_start_server, is_gui_mode, scenario):
-
-        if is_start_server:
-            try:
-                vadere_path = os.environ["VADERE_PATH"]
-            except:
-                raise ValueError("Add VADERE_PATH to your enviroment variables.")
-
-            self._is_gui_mode = is_gui_mode
-            self.scenario = scenario
-
-            if is_start_server:
-                logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
-
-            vadere_man = os.path.join(
-                vadere_path,
-                "VadereManager/target/vadere-server.jar",
-            )
-
-            self._check_vadere_server_jar_available(vadere_man)
-
-            vadere_server_cmd = [
-                "java",
-                "-jar",
-                vadere_man,
-            ]
-            vadere_server_cmd.extend(self._server_args())
-            self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server",)
-            print("Start Server Thread...")
-            self.server_thread.start()
-            sleep(0.8)
+        result = self.domains.v_ctrl.sim_step(step)
+        self.traci.parse_subscription_result(result)
+        self.traci.notify_subscription_listener()
 
     def _initialize(self, *arg, **kwargs):
+        # init
+        # send file
 
         # default subscriptions
         print("register default subscriptions")
-        for listener in self._con.subscriptionListener:
+        for listener in self.traci.subscriptionListener:
             listener.subscribe(self.domains)
-        self._con.notify_subscription_listener()
+        self.traci.notify_subscription_listener()
         if len(self._default_sub.new_pedestrian_ids) > 0:
             print(
                 f"new pedestrians found {self._default_sub.new_pedestrian_ids}. Subscribe pedestrians variables"
             )
             self._default_sub.update_pedestrian_subscription(self.domains.v_person)
-        self._con.notify_subscription_listener()
+        self.traci.notify_subscription_listener()
 
         # call controller callback
         self._control_hdl.handle_init(
-            self._default_sub.time, self.sub_listener, self._base_client
+            self._default_sub.time, self.sub_listener, self.traci
         )
 
     def _run(self):
@@ -330,38 +266,52 @@ class ClientModeConnection(TraCiManager):
             # no response required for ClientModeConnection
             self._handle_sim_step()
             # clear connection state (for ClientModeConnection _con == _base_client)
-            self._con.clear()
+            self.traci.clear()
 
     def _handle_sim_step(self):
         # subscription listener already notified. Use default listener to update
         # subscription of new/removed pedestrians because we are the only client
         # and must mange the subscription here.
         self._default_sub.update_pedestrian_subscription(self.domains.v_person)
-        self._con.notify_subscription_listener()
+        self.traci.notify_subscription_listener()
 
         # set current time
         self.current_time = self._default_sub.time
 
         # self.sub_listener contains state for controller
         self._control_hdl.handle_sim_step(
-            self._default_sub.time, self.sub_listener, self._base_client
+            self._default_sub.time, self.sub_listener, self.traci
         )
 
         # no result expected. Controller should use base_client to trigger control action
         return None
 
-    def _server_args(self):
-        cmd = ["--single-client"]
-        if self._is_gui_mode:
-            cmd.extend(["--gui-mode"])
-        cmd.extend(
-            [
-                "--scenario",
-                self.scenario,
-            ]
-        )
 
-        return cmd
+class VadereClientModeConnection(ClientModeConnection):
+
+    def __init__(
+            self,
+            control_handler,
+            host="127.0.0.1",
+            port=9999,
+            is_start_server=False,
+            is_gui_mode=False,
+            scenario=None
+    ):
+        self.is_start_server = is_start_server
+        self.scenario = scenario
+        self._start_server(is_start_server, is_gui_mode, scenario)
+        print([host, port])
+        print("sleep")
+        sleep(20)
+
+        super().__init__(host=host, port=port, control_handler=control_handler)
+
+    def _initialize(self, *arg, **kwargs):
+        print(f"Send scenario file: {self.scenario}")
+        self._start_simulation()
+        super()._initialize(arg, kwargs)
+
 
     def _check_vadere_server_jar_available(self, vadere_man):
 
@@ -376,7 +326,6 @@ class ClientModeConnection(TraCiManager):
             self._package_vadere(pom_file)
             if os.path.isfile(vadere_man) is False:
                 raise FileExistsError(f"Failed to generate {vadere_man}.")
-
 
 
     def _check_pom_file(self, pom_file):
@@ -413,10 +362,54 @@ class ClientModeConnection(TraCiManager):
             except:
                 print("Failed to package vadere.")
 
+    def _start_simulation(self):
+        if self.scenario.endswith(".scenario"):
+            with open(self.scenario, 'r') as f:
+                scenario_content = f.read()
+        else:
+            raise ValueError(f"Scenario file (*.scenario) expexted. Got: {self.scenario}")
 
+        self._con.send_file(self.scenario, scenario_content)
 
+    def _server_args(self):
+        cmd = ["--single-client"]
+        if self._is_gui_mode:
+            cmd.extend(["--gui-mode"])
+        return cmd
 
+    def _start_server(self, is_start_server, is_gui_mode, scenario):
 
+        if is_start_server:
+            try:
+                vadere_path = os.environ["VADERE_PATH"]
+            except:
+                raise ValueError("Add VADERE_PATH to your enviroment variables.")
+
+            self._is_gui_mode = is_gui_mode
+            self.scenario = scenario
+
+            if is_start_server:
+                logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
+
+            vadere_man = os.path.join(
+                vadere_path,
+                "VadereManager/target/vadere-server.jar",
+            )
+
+            self._check_vadere_server_jar_available(vadere_man)
+
+            vadere_server_cmd = [
+                "java",
+                "-jar",
+                vadere_man,
+            ]
+            vadere_server_cmd.extend(self._server_args())
+            self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server", )
+            print("Start Server Thread...")
+            self.server_thread.start()
+            sleep(0.8)
+
+            # TODO end?
 
 
 class ServerModeConnection(TraCiManager):
@@ -425,81 +418,74 @@ class ServerModeConnection(TraCiManager):
         self.server_port = -1
 
     def _initialize(self, *arg, **kwargs):
-        data = kwargs["data"]
-        self._control_hdl.handle_init(
-            self._default_sub.time, self.sub_listener, self._base_client
+        self._control_hdl.handle_init(kwargs["sim_time"], self.sub_listener, self.traci)
+
+        # send raw command  with next time_step expected
+        return self.traci.build_cmd_raw(
+            tc.CMD_CONTROLLER, tc.VAR_INIT, "", ["d"], self._sim_until
         )
-        return b"ACK/NACK"
+
+    def _handle_sim_step(self, *arg, **kwargs):
+        # no default subscription update. Is handled by opp client
+
+        # set current time
+        self.current_time = kwargs["sim_time"]
+
+        # self.sub_listener contains state for controller
+        self._control_hdl.handle_sim_step(
+            kwargs["sim_time"], self.sub_listener, self.traci
+        )
+
+        # send raw command  with next time_step expected
+        return self.traci.build_cmd_raw(
+            tc.CMD_CONTROLLER, tc.CMD_SIMSTEP, "", ["d"], self._sim_until
+        )
 
     def _run(self):
         while self._running:
             # wait for command
-            action, data = self._con.recv_control()
+            rcv = self.traci.recv_control()
 
-            if action == "init":
-                # response: simple act
-                # data contains scenario files and omnetpp init.
-                response = self._initialize(data=data)
-            elif action == "sim_step":
-                # data contains subscription result
-                subscription_result = self._base_client.parse_subscription_result(data)
-                # response: None
-                self._handle_sim_step(subscription_result)
-                response = b"ACK/NACK"
+            if rcv["action"] == tc.VAR_INIT:
+                # response: next sim time at which to call controller
+                # data contains current simtime only.
+                state = self.domains.v_ctrl.sim_state(rcv["simTime"])
+                self.traci.parse_subscription_result(state)
+                self.traci.notify_subscription_listener()
+                response = self._initialize(sim_time=rcv["simTime"])
+            elif rcv["action"] == tc.CMD_SIMSTEP:
+                # data contains current simtime only.
+                # access current subscriptions trough tc.CMD_SIMSTATE
+                state = self.domains.v_ctrl.sim_state(rcv["simTime"])
+                self.traci.parse_subscription_result(state)
+                self.traci.notify_subscription_listener()
+                # response: : next sim time at which to call controller
+                response = self._handle_sim_step(sim_time=rcv["simTime"])
             else:
                 raise FatalTraCIError("unknown command")
 
             if response is not None:
-                # todo
-                self._con.send_control_response(response, "bar")
+                self.traci.send_raw(response, append_message_len=True)
 
             # clear state
-            self._base_client._string = bytes()
-            self._base_client._queue = []
+            self.traci.clear_state()
 
-        self._con.close()
+        self.traci.close()
         logging.info("connection closed.")
 
     def start(self):
         try:
             # Connection is controlled by OMNeT++ move _initialize() into _run()
-            _, _socket, _, _server_port = _create_accept_server_socket(
+            _, _socket, _, _server_port = create_accept_server_socket(
                 self.host, self.port
             )
             self._set_connection(WrappedTraCIConnection(_socket))
             self.server_port = _server_port
 
             self._running = True
+            self._init_sub_listener()
             self._run()
         except NotImplementedError as e:
             print(e)
         finally:
             self._cleanup()
-
-
-class ControlTraciWrapper:
-    @classmethod
-    def get_controller_from_args(cls, working_dir, args=None, controller=None):
-        ns = parse_args_as_dict(args)
-        logging.debug(ns)
-
-        if (
-            ns["host_name"] == "vadere"
-            and ns["port"] == 9999
-            and ns["is_in_client_mode"]
-        ):
-            return ClientModeConnection(
-                control_handler=controller,
-                port=ns["port"],
-                is_start_server=ns["start_server"],
-                is_gui_mode=ns["gui_mode"],
-                scenario=ns["scenario_file"]
-            )
-        elif (
-            ns["host_name"] == "omnet"
-            and ns["port"] == 9997
-            and not ns["is_in_client_mode"]
-        ):
-            return ServerModeConnection(control_handler=controller, port=ns["port"])
-        else:
-            raise NotImplementedError("Port and host configuration not found.")

@@ -53,7 +53,9 @@ def translateFile(filePath, fdo, java, start, item, end, item_parser):
                 if line.find(item) >= 0 and comment_marker not in line:
                     (ctype, cname, cvalue) = item_parser(line)
                     if java:
-                        line = "    public static final {} {} = {};".format(ctype, cname, cvalue)
+                        line = "    public static final {} {} = {};".format(
+                            ctype, cname, cvalue
+                        )
                     else:
                         line = "{} = {}".format(cname, cvalue)
                 print(line, file=fdo)
@@ -62,7 +64,7 @@ def translateFile(filePath, fdo, java, start, item, end, item_parser):
 
 
 def parseTraciConstant(line):
-    match = re.search(r'(\S+) ([A-Z0-9_]+) = (\S+);', line)
+    match = re.search(r"(\S+) ([A-Z0-9_]+) = (\S+);", line)
     if match:
         return match.group(1, 2, 3)
     else:
@@ -70,20 +72,25 @@ def parseTraciConstant(line):
 
 
 def parseLaneChangeAction(line):
-    line = line.rstrip(',')
-    match = re.search('([A-Z0-9_]+) = (.+)', line)
+    line = line.rstrip(",")
+    match = re.search("([A-Z0-9_]+) = (.+)", line)
     if match:
-        return ('int', match.group(1), match.group(2))
+        return ("int", match.group(1), match.group(2))
     else:
         return None
 
 
 dirname = os.path.dirname(__file__)
 argParser = argparse.ArgumentParser()
-argParser.add_argument("-j", "--java",
-                       help="generate Java output as static members of the given class", metavar="CLASS")
-argParser.add_argument("-o", "--output",
-                       help="File to save constants into", metavar="FILE")
+argParser.add_argument(
+    "-j",
+    "--java",
+    help="generate Java output as static members of the given class",
+    metavar="CLASS",
+)
+argParser.add_argument(
+    "-o", "--output", help="File to save constants into", metavar="FILE"
+)
 options = argParser.parse_args()
 header = """# Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.org/sumo
 # Copyright (C) 2009-2020 German Aerospace Center (DLR) and others.
@@ -103,13 +110,23 @@ header = """# Eclipse SUMO, Simulation of Urban MObility; see https://eclipse.or
 
 \"\"\"
 This script contains TraCI constant definitions from <SUMO_HOME>/src/libsumo/TraCIConstants.h.\
-""" % (os.path.basename(__file__), datetime.datetime.now())
+""" % (
+    os.path.basename(__file__),
+    datetime.datetime.now(),
+)
 
 
-outputs = [(options.output if options.output else os.path.join(dirname, "constants.py"), None)]
+outputs = [
+    (options.output if options.output else os.path.join(dirname, "constants.py"), None)
+]
 if options.output is None:
-    outputs.append((dirname + "/../contributed/traas/src/main/java/de/tudresden/sumo/config/Constants.java",
-                    options.java if options.java else "de.tudresden.sumo.config.Constants"))
+    outputs.append(
+        (
+            dirname
+            + "/../contributed/traas/src/main/java/de/tudresden/sumo/config/Constants.java",
+            options.java if options.java else "de.tudresden.sumo.config.Constants",
+        )
+    )
 for out, className in outputs:
     fdo = open(out, "w")
     h = header.replace("<file>", os.path.basename(out))
@@ -128,13 +145,25 @@ for out, className in outputs:
         print('"""\n', file=fdo)
 
     srcDir = os.path.join(dirname, "..", "..", "src")
-    translateFile(os.path.join(srcDir, "libsumo", "TraCIConstants.h"),
-                  fdo, className is not None,
-                  "namespace libsumo {", "TRACI_CONST ", "} // namespace libsumo", parseTraciConstant)
+    translateFile(
+        os.path.join(srcDir, "libsumo", "TraCIConstants.h"),
+        fdo,
+        className is not None,
+        "namespace libsumo {",
+        "TRACI_CONST ",
+        "} // namespace libsumo",
+        parseTraciConstant,
+    )
 
-    translateFile(os.path.join(srcDir, "utils", "xml", "SUMOXMLDefinitions.h"),
-                  fdo, className is not None,
-                  "enum LaneChangeAction {", "LCA_", "};", parseLaneChangeAction)
+    translateFile(
+        os.path.join(srcDir, "utils", "xml", "SUMOXMLDefinitions.h"),
+        fdo,
+        className is not None,
+        "enum LaneChangeAction {",
+        "LCA_",
+        "};",
+        parseLaneChangeAction,
+    )
     if className:
         fdo.write("}\n")
     fdo.close()

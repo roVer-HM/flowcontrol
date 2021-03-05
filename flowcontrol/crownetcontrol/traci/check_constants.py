@@ -30,7 +30,7 @@ for c, val in constants.__dict__.items():
 print("Duplicate constant use:")
 for val, clist in occ.items():
     if len(clist) > 1:
-        print("%s : %s" % (hex(val), ' '.join(sorted(clist))))
+        print("%s : %s" % (hex(val), " ".join(sorted(clist))))
 
 print("unused constants:")
 for i in range(257):

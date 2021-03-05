@@ -1,18 +1,12 @@
-import os
-import sys
-
-from flowcontrol.crownetcontrol.controller.dummy_controller import (
-    Controller,
-    TikTokController,
-)
+from flowcontrol.crownetcontrol.controller.dummy_controller import TikTokController
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
 from flowcontrol.crownetcontrol.traci.connection_manager import (
     ClientModeConnection,
-    ControlTraciWrapper,
+    ServerModeConnection,
 )
-from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonListener
+from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
 
 
 # @classmethod
@@ -31,81 +25,39 @@ from flowcontrol.crownetcontrol.traci.subsciption_listners import VaderePersonLi
 #     return ctr
 
 
-def server_test():
-    sub = VaderePersonListener.with_vars(
-        "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
+def client_mode():
+    sub = VadereDefaultStateListener.with_vars(
+        "persons",
+        {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST},
+        init_sub=True,
     )
     controller = TikTokController()
-    traci_manager = ClientModeConnection(control_handler=controller, port=9999)
+    traci_manager = ClientModeConnection(
+        control_handler=controller, host="vadere", port=9999
+    )
     controller.initialize_connection(traci_manager)
+    traci_manager.register_state_listener("default", sub)
     controller.start_controller()
 
 
-def server_test_2():
-    # TODO start vadere manually, but do handle inifile
-    sub = VaderePersonListener.with_vars(
-        "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
+def server_mode():
+    sub = VadereDefaultStateListener.with_vars(
+        "persons",
+        {"pos": tc.VAR_POSITION, "speed": tc.VAR_SPEED, "angle": tc.VAR_ANGLE},
+        init_sub=True,
     )
+
     controller = TikTokController()
-
-    if len(sys.argv) == 1:
-        settings = [
-            "--port",
-            "9999",
-            "--host-name",
-            "vadere",
-            "--client-mode"
-        ]
-
-        traci_manager = ControlTraciWrapper.get_controller_from_args(
-            working_dir=os.getcwd(), args=settings, controller=controller)
-    else:
-        traci_manager = ControlTraciWrapper.get_controller_from_args(
-            working_dir=os.path.dirname(os.path.abspath(__file__)),
-            controller=controller)
-
-    controller.initialize_connection(traci_manager)
-    controller.start_controller()
-
-def server_test_3_start_vadere():
-
-    scenario_file = os.path.join(os.environ["VADERE_PATH"], "Scenarios/Demos/roVer/scenarios/scenario002.scenario")
-
-    sub = VaderePersonListener.with_vars(
-        "persons", {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST}
+    traci_manager = ServerModeConnection(
+        control_handler=controller, host="0.0.0.0", port=9997
     )
-    controller = TikTokController()
-
-    if len(sys.argv) == 1:
-        settings = [
-            "--port",
-            "9999",
-            "--host-name",
-            "vadere",
-            "--client-mode",
-            "--start-server",
-            "--gui-mode",
-            "--scenario",
-            scenario_file
-        ]
-
-        traci_manager = ControlTraciWrapper.get_controller_from_args(
-            working_dir=os.getcwd(), args=settings, controller=controller)
-    else:
-        traci_manager = ControlTraciWrapper.get_controller_from_args(
-            working_dir=os.path.dirname(os.path.abspath(__file__)),
-            controller=controller)
-
     controller.initialize_connection(traci_manager)
+    controller.register_state_listener("default", sub)
     controller.start_controller()
-
-
 
 
 if __name__ == "__main__":
     # main()
     logging.getLogger().setLevel(logging.INFO)
-    #server_test()
-    server_test_2()
-    #server_test_3_start_vadere()
-    print()
+    # client_mode()
+    server_mode()
