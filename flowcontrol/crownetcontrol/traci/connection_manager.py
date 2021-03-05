@@ -1,6 +1,13 @@
+import argparse
 import logging
+import os
+import subprocess
+import warnings
+from time import sleep
 from typing import Union
+from xml.etree import ElementTree as xml
 
+from flowcontrol.crownetcontrol.setup.vadere import Runner
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import (
     create_accept_server_socket,
@@ -17,6 +24,100 @@ from flowcontrol.crownetcontrol.state.state_listener import (
     SubscriptionListener,
     VadereDefaultStateListener,
 )
+from flowcontrol.crownetcontrol.traci.connection import (
+    DomainHandler,
+    BaseTraCIConnection,
+    _create_client_socket, _create_accept_server_socket, WrappedTraCIConnection)
+from flowcontrol.crownetcontrol.traci.exceptions import (
+    TraCISimulationEnd,
+    FatalTraCIError)
+from flowcontrol.crownetcontrol.traci.subsciption_listners import (
+    SubscriptionListener,
+    VaderePersonListener,
+)
+
+
+def parse_args_as_dict(args=None):
+    # parse arguments
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-n",
+        "--host-name",
+        dest="host_name",
+        default="localhost",  # TODO: discuss -> defaults
+        required=True,
+        help="If vadere is set, the controller is started in client-mode",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--port",
+        dest="port",
+        default=9999,
+        required=True,
+        help="Client: 9999, server: 9997?",
+        type=int,
+    )
+
+    parser.add_argument(
+        "--client-mode",
+        dest="is_in_client_mode",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Additional information.",  # TODO: redundant?
+    )
+
+    parser.add_argument(
+        "--gui-mode",
+        dest="gui_mode",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Only available when server is started automatically.",
+    )
+
+    parser.add_argument(
+        "--start-server",
+        dest="start_server",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Only available when server is started automatically.",
+    )
+    parser.add_argument(
+        "-s",
+        "--scenario",
+        dest="scenario_file",
+        default="",  # TODO: discuss -> defaults
+        required=False,
+        help="Only available in client-mode.",
+    )
+
+
+    if args is None:
+        ns = vars(parser.parse_args())
+    else:
+        ns = vars(parser.parse_args(args))
+
+    if ns["start_server"] is True and ns["is_in_client_mode"] is False:
+        raise ValueError(
+            "Start server option is only available in client-mode. Set --client-mode option."
+        )
+
+    if ns["start_server"] is False and ns["gui_mode"] is True:
+        raise ValueError(
+            "Gui mode is only available if the server is started automatically. Set --start-server option."
+        )
+
+    if ns["start_server"] is True and ns["scenario_file"] is None:
+        raise ValueError("Please provide scenario file.")
+
+    if ns["is_in_client_mode"] is True and ns["scenario_file"] is None:
+        raise ValueError("Please provide scenario file.")
+
+    return ns
 
 
 class TraCiManager:
@@ -95,6 +196,33 @@ class TraCiManager:
             self._cleanup()
 
 
+class ControlTraciWrapper:
+    @classmethod
+    def get_controller_from_args(cls, working_dir, args=None, controller=None):
+        ns = parse_args_as_dict(args)
+
+        if (
+            ns["port"] == 9999
+            and ns["is_in_client_mode"]
+        ):
+            return VadereClientModeConnection(
+                control_handler=controller,
+                port=ns["port"],
+                is_start_server=ns["start_server"],
+                is_gui_mode=ns["gui_mode"],
+                scenario=ns["scenario_file"],
+                host=ns["host_name"]
+            )
+        elif (
+            ns["host_name"] == "omnet"
+            and ns["port"] == 9997 #TODO check port number
+            and not ns["is_in_client_mode"]
+        ):
+            return ServerModeConnection(control_handler=controller, port=ns["port"])
+        else:
+            raise NotImplementedError("Port and host configuration not found.")
+
+
 class ClientModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9999):
         super().__init__(host, port, control_handler)
@@ -157,6 +285,131 @@ class ClientModeConnection(TraCiManager):
 
         # no result expected. Controller should use base_client to trigger control action
         return None
+
+
+class VadereClientModeConnection(ClientModeConnection):
+
+    def __init__(
+            self,
+            control_handler,
+            host="127.0.0.1",
+            port=9999,
+            is_start_server=False,
+            is_gui_mode=False,
+            scenario=None
+    ):
+        self.is_start_server = is_start_server
+        self.scenario = scenario
+        self._start_server(is_start_server, is_gui_mode, scenario)
+        print([host, port])
+        print("sleep")
+        sleep(20)
+
+        super().__init__(host=host, port=port, control_handler=control_handler)
+
+    def _initialize(self, *arg, **kwargs):
+        print(f"Send scenario file: {self.scenario}")
+        self._start_simulation()
+        super()._initialize(arg, kwargs)
+
+
+    def _check_vadere_server_jar_available(self, vadere_man):
+
+        vadere_path = os.environ["VADERE_PATH"]
+
+        if os.path.isfile(vadere_man):
+            logging.info(f"Found vadere-server.jar in {os.path.dirname(vadere_man)}.")
+        else:
+            logging.info(f"Could not find {vadere_man}.")
+            pom_file = os.path.join(vadere_path, "pom.xml")
+
+            self._package_vadere(pom_file)
+            if os.path.isfile(vadere_man) is False:
+                raise FileExistsError(f"Failed to generate {vadere_man}.")
+
+
+    def _check_pom_file(self, pom_file):
+
+        if os.path.isfile(pom_file):
+            pom_file_content = xml.parse(pom_file)
+            root = pom_file_content.getroot()
+            namesp = root.tag.replace("project", "")
+            repo_name = root.find(namesp + "artifactId").text
+
+            if repo_name != "vadere":
+                raise ValueError(f"Extract project {repo_name} from pom.xml. Pom file does not belong to vadere project.")
+        else:
+            raise ValueError(f"Pom file {pom_file} does not exist. Please check whether env var VADERE_PATH is set correctly.")
+
+        return True
+
+    def _package_vadere(self, pom_file):
+
+        if self._check_pom_file(pom_file):
+            print(f"Start packaging vadere ... ")
+            try:
+                command = ["mvn", "clean", "-f", pom_file]
+                subprocess.check_call(command, stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                command = [
+                    "mvn",
+                    "package",
+                    "-f",
+                    pom_file,
+                    "-Dmaven.test.skip=true",
+                ]
+                subprocess.check_call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print("Finished packaging vadere.")
+            except:
+                print("Failed to package vadere.")
+
+    def _start_simulation(self):
+        if self.scenario.endswith(".scenario"):
+            with open(self.scenario, 'r') as f:
+                scenario_content = f.read()
+        else:
+            raise ValueError(f"Scenario file (*.scenario) expexted. Got: {self.scenario}")
+
+        self._con.send_file(self.scenario, scenario_content)
+
+    def _server_args(self):
+        cmd = ["--single-client"]
+        if self._is_gui_mode:
+            cmd.extend(["--gui-mode"])
+        return cmd
+
+    def _start_server(self, is_start_server, is_gui_mode, scenario):
+
+        if is_start_server:
+            try:
+                vadere_path = os.environ["VADERE_PATH"]
+            except:
+                raise ValueError("Add VADERE_PATH to your enviroment variables.")
+
+            self._is_gui_mode = is_gui_mode
+            self.scenario = scenario
+
+            if is_start_server:
+                logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
+
+            vadere_man = os.path.join(
+                vadere_path,
+                "VadereManager/target/vadere-server.jar",
+            )
+
+            self._check_vadere_server_jar_available(vadere_man)
+
+            vadere_server_cmd = [
+                "java",
+                "-jar",
+                vadere_man,
+            ]
+            vadere_server_cmd.extend(self._server_args())
+            self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server", )
+            print("Start Server Thread...")
+            self.server_thread.start()
+            sleep(0.8)
+
+            # TODO end?
 
 
 class ServerModeConnection(TraCiManager):

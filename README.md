@@ -55,6 +55,10 @@ We model this with a simplified model:
 * time-delay: we define a random variable for the reaction time from which we draw randomly.
 * reacitvity: we define a random variable for the reactivity from which we draw randomly.
 
+## System requirements
+Python >= 3.7 required. 
+
+
 ## Dependencies
 
 ## Other repositories

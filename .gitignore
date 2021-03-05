@@ -3,6 +3,9 @@ vadere-server-output/
 .idea
 .venv
 venv
+flowcontrol.egg-info
+*.pyc
+*.pyc
 .directory
 
 # Byte-compiled / optimized / DLL files
