@@ -20,11 +20,10 @@ def get_controller_from_args(working_dir, args=None, controller=None):
             host=ns["host_name"],
         )
     elif (
-        ns["host_name"] == "omnet"
-        and ns["port"] == 9997  # TODO check port number
+        ns["port"] == 9997  # TODO check port number
         and not ns["is_in_client_mode"]
     ):
-        return ServerModeConnection(control_handler=controller, port=ns["port"])
+        return ServerModeConnection(control_handler=controller, port=ns["port"], host=ns["host_name"])
     else:
         raise NotImplementedError("Port and host configuration not found.")
 
