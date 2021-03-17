@@ -1,4 +1,6 @@
 import logging
+import time
+
 from typing import Union
 
 from flowcontrol.crownetcontrol.state.state_listener import (
@@ -84,7 +86,13 @@ class ClientModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9999):
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(create_client_socket()))
-        self.traci.connect(host, port)
+
+        startTime = time.time()
+        maxWaitingTime = 10.0
+        connected = False
+        while not connected and ((time.time() - startTime) < maxWaitingTime) is True:
+            self.traci.connect(host, port)
+            connected = True
 
     def _simulation_step(self, step=0.0):
         """
