@@ -102,10 +102,4 @@ def parse_args_as_dict(args=None):
             "Gui mode is only available if the server is started automatically. Set --start-server option."
         )
 
-    if ns["start_server"] is True and ns["scenario_file"] is None:
-        raise ValueError("Please provide scenario file.")
-
-    if ns["is_in_client_mode"] is True and ns["scenario_file"] is None:
-        raise ValueError("Please provide scenario file.")
-
     return ns
