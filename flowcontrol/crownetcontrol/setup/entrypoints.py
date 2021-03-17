@@ -78,14 +78,14 @@ def parse_args_as_dict(args=None):
         required=False,
         help="Only available when server is started automatically.",
     )
-    parser.add_argument(
-        "-s",
-        "--scenario",
-        dest="scenario_file",
-        default="",  # TODO: discuss -> defaults
-        required=False,
-        help="Only available in client-mode.",
-    )
+    # parser.add_argument(
+    #     "-s",
+    #     "--scenario",
+    #     dest="scenario_file",
+    #     default="",  # TODO: discuss -> defaults
+    #     required=False,
+    #     help="Only available in client-mode.",
+    # )
 
     if args is None:
         ns = vars(parser.parse_args())
