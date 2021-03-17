@@ -225,8 +225,12 @@ class ServerModeConnection(TraCiManager):
     def start(self,*kw, **kwargs):
         try:
             # Connection is controlled by OMNeT++ move _initialize() into _run()
+            host = self.host
+            if host != "localhost":
+                host = "0.0.0.0"
+
             _, _socket, _, _server_port = create_accept_server_socket(
-                self.host, self.port
+                host, self.port
             )
             self._set_connection(WrappedTraCIConnection(_socket))
             self.server_port = _server_port
