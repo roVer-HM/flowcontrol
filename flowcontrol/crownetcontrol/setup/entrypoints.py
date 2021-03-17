@@ -12,7 +12,7 @@ def get_controller_from_args(working_dir, args=None, controller=None):
     if ns["port"] == 9999 and ns["is_in_client_mode"]:
         # TODO: start server if necessary
 
-        VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"], scenario=ns["scenario_file"])
+        VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
 
         return ClientModeConnection(
             control_handler=controller,

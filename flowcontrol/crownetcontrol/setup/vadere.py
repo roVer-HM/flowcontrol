@@ -79,15 +79,10 @@ class VadereServer:
             self,
             is_start_server=False,
             is_gui_mode=False,
-            scenario=None
     ):
         self.is_start_server = is_start_server
-        self.scenario = scenario
-        self._start_server(is_start_server, is_gui_mode, scenario)
+        self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
-
-
-
 
 
     def _check_vadere_server_jar_available(self, vadere_man):
@@ -147,7 +142,7 @@ class VadereServer:
             cmd.extend(["--gui-mode"])
         return cmd
 
-    def _start_server(self, is_start_server, is_gui_mode, scenario):
+    def _start_server(self, is_start_server, is_gui_mode):
 
         if is_start_server:
             try:
@@ -156,7 +151,6 @@ class VadereServer:
                 raise ValueError("Add VADERE_PATH to your enviroment variables.")
 
             self._is_gui_mode = is_gui_mode
-            self.scenario = scenario
 
             if is_start_server:
                 logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
