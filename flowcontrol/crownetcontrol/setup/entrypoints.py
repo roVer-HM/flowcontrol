@@ -3,7 +3,8 @@ import argparse
 from flowcontrol.crownetcontrol.setup.vadere import VadereServer
 from flowcontrol.crownetcontrol.traci.connection_manager import (
     ServerModeConnection,
-    ClientModeConnection)
+    ClientModeConnection,
+)
 
 
 def get_controller_from_args(working_dir, args=None, controller=None):
@@ -15,15 +16,12 @@ def get_controller_from_args(working_dir, args=None, controller=None):
         VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
 
         return ClientModeConnection(
-            control_handler=controller,
-            port=ns["port"],
-            host=ns["host_name"],
+            control_handler=controller, port=ns["port"], host=ns["host_name"],
         )
-    elif (
-        ns["port"] == 9997  # TODO check port number
-        and not ns["is_in_client_mode"]
-    ):
-        return ServerModeConnection(control_handler=controller, port=ns["port"], host=ns["host_name"])
+    elif ns["port"] == 9997 and not ns["is_in_client_mode"]:  # TODO check port number
+        return ServerModeConnection(
+            control_handler=controller, port=ns["port"], host=ns["host_name"]
+        )
     else:
         raise NotImplementedError("Port and host configuration not found.")
 

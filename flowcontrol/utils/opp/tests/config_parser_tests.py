@@ -162,8 +162,6 @@ class OppConfigFileBaseTest(unittest.TestCase):
 
     def test_include_config_(self):
         opp = self.get_object(
-            "General",
-            OppConfigType.READ_ONLY,
-            path="omnetpp_include_other.ini",
+            "General", OppConfigType.READ_ONLY, path="omnetpp_include_other.ini",
         )
         print()

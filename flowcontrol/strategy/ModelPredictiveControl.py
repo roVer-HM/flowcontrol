@@ -10,7 +10,7 @@ from flowcontrol.vaderecontrol.VadereModel import SimulationModel
 
 class ModelPredictiveController(metaclass=ABCMeta):
     def __init__(
-            self, model: SimulationModel, controller_times: np.array, nr_predition_steps=6
+        self, model: SimulationModel, controller_times: np.array, nr_predition_steps=6
     ):
         self.model = model
         self.nr_prediction_steps = nr_predition_steps
@@ -20,7 +20,6 @@ class ModelPredictiveController(metaclass=ABCMeta):
         self.controller_times = controller_times
         self.last_position = None
         self.temp_position = None
-
 
     def simulate_until_(self, t):
         self.model.get_control().nextStep(t)

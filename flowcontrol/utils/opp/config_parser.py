@@ -168,7 +168,11 @@ class OppConfigFileBase(MutableMapping):
 
     @classmethod
     def from_path(
-        cls, ini_path, config = "final" , cfg_type=OppConfigType.EDIT_LOCAL, is_parent=False
+        cls,
+        ini_path,
+        config="final",
+        cfg_type=OppConfigType.EDIT_LOCAL,
+        is_parent=False,
     ):
         _root = OppParser(inline_comment_prefixes="#")
         _root.read(ini_path)

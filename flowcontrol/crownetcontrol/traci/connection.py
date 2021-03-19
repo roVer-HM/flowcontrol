@@ -518,7 +518,6 @@ class BaseTraCIConnection(Connection):
         print()
 
 
-
 class WrappedTraCIConnection(BaseTraCIConnection):
     VADERE = "V"
     OPP = "O"

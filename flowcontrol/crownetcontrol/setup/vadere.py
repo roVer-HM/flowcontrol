@@ -7,11 +7,14 @@ import time
 from time import sleep
 from xml.etree import ElementTree as xml
 
-from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import VadereControlCommandApi
+from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import (
+    VadereControlCommandApi,
+)
+
 
 def get_scenario_content(scenario):
     if scenario.endswith(".scenario"):
-        with open(scenario, 'r') as f:
+        with open(scenario, "r") as f:
             scenario_content = f.read()
     else:
         raise ValueError(f"Scenario file (*.scenario) expexted. Got: {scenario}")
@@ -74,16 +77,12 @@ class Runner(threading.Thread):
 
 
 class VadereServer:
-
     def __init__(
-            self,
-            is_start_server=False,
-            is_gui_mode=False,
+        self, is_start_server=False, is_gui_mode=False,
     ):
         self.is_start_server = is_start_server
         self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
-
 
     def _check_vadere_server_jar_available(self, vadere_man):
 
@@ -99,7 +98,6 @@ class VadereServer:
             if os.path.isfile(vadere_man) is False:
                 raise FileExistsError(f"Failed to generate {vadere_man}.")
 
-
     def _check_pom_file(self, pom_file):
 
         if os.path.isfile(pom_file):
@@ -109,9 +107,13 @@ class VadereServer:
             repo_name = root.find(namesp + "artifactId").text
 
             if repo_name != "vadere":
-                raise ValueError(f"Extract project {repo_name} from pom.xml. Pom file does not belong to vadere project.")
+                raise ValueError(
+                    f"Extract project {repo_name} from pom.xml. Pom file does not belong to vadere project."
+                )
         else:
-            raise ValueError(f"Pom file {pom_file} does not exist. Please check whether env var VADERE_PATH is set correctly.")
+            raise ValueError(
+                f"Pom file {pom_file} does not exist. Please check whether env var VADERE_PATH is set correctly."
+            )
 
         return True
 
@@ -121,7 +123,9 @@ class VadereServer:
             print(f"Start packaging vadere ... ")
             try:
                 command = ["mvn", "clean", "-f", pom_file]
-                subprocess.check_call(command, stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+                subprocess.check_call(
+                    command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
                 command = [
                     "mvn",
                     "package",
@@ -129,12 +133,12 @@ class VadereServer:
                     pom_file,
                     "-Dmaven.test.skip=true",
                 ]
-                subprocess.check_call(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call(
+                    command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
                 print("Finished packaging vadere.")
             except:
                 print("Failed to package vadere.")
-
-
 
     def _server_args(self):
         cmd = ["--single-client"]
@@ -153,11 +157,12 @@ class VadereServer:
             self._is_gui_mode = is_gui_mode
 
             if is_start_server:
-                logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
+                logging.info(
+                    f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
+                )
 
             vadere_man = os.path.join(
-                vadere_path,
-                "VadereManager/target/vadere-server.jar",
+                vadere_path, "VadereManager/target/vadere-server.jar",
             )
 
             self._check_vadere_server_jar_available(vadere_man)
@@ -168,11 +173,13 @@ class VadereServer:
                 vadere_man,
             ]
             vadere_server_cmd.extend(self._server_args())
-            self.server_thread = Runner(command=vadere_server_cmd, thread_name="Server", )
+            self.server_thread = Runner(
+                command=vadere_server_cmd, thread_name="Server",
+            )
             print("Start Server Thread...")
             self.server_thread.start()
             sleep(0.8)
 
+
 if __name__ == "__main__":
     pass
-

@@ -3,17 +3,19 @@ import time
 
 from typing import Union
 
-from flowcontrol.crownetcontrol.state.state_listener import (
-    StateListener,
-)
+from flowcontrol.crownetcontrol.state.state_listener import StateListener
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import (
     DomainHandler,
     BaseTraCIConnection,
-    create_client_socket, create_accept_server_socket, WrappedTraCIConnection)
+    create_client_socket,
+    create_accept_server_socket,
+    WrappedTraCIConnection,
+)
 from flowcontrol.crownetcontrol.traci.exceptions import (
     TraCISimulationEnd,
-    FatalTraCIError)
+    FatalTraCIError,
+)
 
 
 class TraCiManager:
@@ -50,9 +52,7 @@ class TraCiManager:
         else:
             self._sim_until = step
 
-    def register_state_listener(
-        self, name, listener: StateListener, set_default=False
-    ):
+    def register_state_listener(self, name, listener: StateListener, set_default=False):
         self.sub_listener[name] = listener
         if set_default:
             self._default_sub = listener
@@ -222,16 +222,14 @@ class ServerModeConnection(TraCiManager):
         self.traci.close()
         logging.info("connection closed.")
 
-    def start(self,*kw, **kwargs):
+    def start(self, *kw, **kwargs):
         try:
             # Connection is controlled by OMNeT++ move _initialize() into _run()
             host = self.host
             if host != "localhost":
                 host = "0.0.0.0"
 
-            _, _socket, _, _server_port = create_accept_server_socket(
-                host, self.port
-            )
+            _, _socket, _, _server_port = create_accept_server_socket(host, self.port)
             self._set_connection(WrappedTraCIConnection(_socket))
             self.server_port = _server_port
 

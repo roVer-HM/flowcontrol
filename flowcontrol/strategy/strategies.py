@@ -72,5 +72,3 @@ class CorridorChoice(Strategy):
 
     def get_simulator_destination(self):
         return self.destination
-
-

@@ -13,7 +13,9 @@ def read_flowcontrol_version():
     # code parts were taken from here https://stackoverflow.com/a/67692
 
     path2setup = os.path.dirname(__file__)
-    version_file = os.path.abspath(os.path.join(path2setup, "flowcontrol", "version.py"))
+    version_file = os.path.abspath(
+        os.path.join(path2setup, "flowcontrol", "version.py")
+    )
 
     spec = importlib.util.spec_from_file_location("version", version_file)
     version = importlib.util.module_from_spec(spec)
@@ -27,9 +29,7 @@ def read_flowcontrol_version():
 AUTHOR = "crownet development team"
 EMAIL = "christina_maria.mayr@hm.edu"
 
-long_description = (
-    "flowcontrol is a Python package that provides control strategies for pedestrian flow control"
-)
+long_description = "flowcontrol is a Python package that provides control strategies for pedestrian flow control"
 
 path_to_pkg_requirements = os.path.join(
     Path(__file__).absolute().parent, "requirements.txt"
@@ -47,9 +47,7 @@ setup(
     long_description=long_description,
     license="MIT",
     url="https://sam-dev.cs.hm.edu/rover/flowcontrol",
-    keywords=[
-        "crowd management, flow control, information dissemination"
-    ],
+    keywords=["crowd management, flow control, information dissemination"],
     author_email=EMAIL,
     packages=find_packages(),
     package_dir={"flowcontrol": "flowcontrol"},

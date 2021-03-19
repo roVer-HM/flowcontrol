@@ -31,10 +31,9 @@ class VadereControlCommandApi(BaseDomain):
         return self._connection.send_cmd(tc.CMD_SIMSTATE, None, None, "D", simstep)
 
     def send_dissemination_cmd(self, pack_size, cmd_content):
-        #pack_size : integer
+        # pack_size : integer
         # cmd_content: control command
         # TODO check here
-
 
         _cmd = bytes()
         _cmd += Connection.pack("i", 3)
