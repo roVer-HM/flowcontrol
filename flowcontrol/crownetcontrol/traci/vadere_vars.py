@@ -10,6 +10,7 @@ VAR_INIT = 0x00
 CMD_FILE_SEND = 0x75
 #  command: simulation state
 CMD_SIMSTATE = 0x04
+VAR_DISSEMINATION = 0x06
 
 
 # rename variable to match vadere versions

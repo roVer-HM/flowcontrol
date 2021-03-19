@@ -21,6 +21,7 @@ class VadereMiscAPI(Domain):
     def create_target_changer(self, data):
         self._setCmd(tc.VAR_ADD_TARGET_CHANGER, "", "s", data)
 
+
     def add_stimulus_infos(self, data):
         self._setCmd(tc.VAR_ADD_STIMULUS_INFOS, "", "s", data)
 
@@ -29,3 +30,5 @@ class VadereMiscAPI(Domain):
 
     def remove_target_changer(self, element_id):
         self._setCmd(tc.VAR_REMOVE_TARGET_CHANGER, element_id, "Error", None)
+
+
