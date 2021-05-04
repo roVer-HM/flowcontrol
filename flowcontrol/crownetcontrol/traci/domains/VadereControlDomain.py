@@ -19,7 +19,6 @@ class VadereControlCommandApi(BaseDomain):
         _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
 
         self._connection.send_raw(_cmd, append_message_len=True)
-        # todo: check result
         return self._connection.recv_exact()
 
     def sim_step(self, simstep=0.0):
@@ -30,20 +29,29 @@ class VadereControlCommandApi(BaseDomain):
         """access subscription data (i.e. current state) """
         return self._connection.send_cmd(tc.CMD_SIMSTATE, None, None, "D", simstep)
 
-    def send_dissemination_cmd(self, pack_size, cmd_content):
-        # pack_size : integer
-        # cmd_content: control command
-        # TODO check here
 
+    def send_control(self, message, packet_size):
+        packet_size = str(packet_size)
         _cmd = bytes()
-        _cmd += struct.pack("i", 3)
-        _cmd += struct.pack("i", pack_size)
-        _cmd += struct.pack("i", len(cmd_content))
-        _cmd += struct.pack(f"!{len(cmd_content)}B", cmd_content)
+        _cmd += struct.pack("!B", tc.CMD_CONTROLLER)
+        _cmd += struct.pack("!i", len(packet_size)) + packet_size.encode("latin1")
+        _cmd += struct.pack("!i", len(message)) + message.encode("latin1")
 
-        # data is of type bytes
-        # data contains
-        # Integer: simulated packet length
-        # Integer: byte array lengths
-        # Bytes: control command that contains the json-string
-        self._connection.send_cmd(tc.VAR_DISSEMINATION, None, None, "t")
+        # assume big packet
+        _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
+
+        self._connection.send_raw(_cmd, append_message_len=True)
+        return self._connection.recv_exact()
+
+
+
+
+
+
+
+
+
+
+
+
+

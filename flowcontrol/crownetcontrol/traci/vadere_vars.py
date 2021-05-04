@@ -3,14 +3,15 @@ from . import constants as tc
 
 # control commands
 # todo move to correct files
-CMD_CONTROLLER = 0x0D
 RESPONSE_CMD_CONTROLLER = 0x1D
 VAR_REDIRECT = 0xFF
 VAR_INIT = 0x00
 CMD_FILE_SEND = 0x75
 #  command: simulation state
 CMD_SIMSTATE = 0x04
-VAR_DISSEMINATION = 0x06
+CMD_CONTROLLER = 0x06
+
+
 
 
 # rename variable to match vadere versions
@@ -46,3 +47,4 @@ VAR_ADD_TARGET_CHANGER = 0x00
 VAR_REMOVE_TARGET_CHANGER = 0x01
 VAR_ADD_STIMULUS_INFOS = 0x02
 VAR_GET_ALL_STIMULUS_INFOS = 0x03
+#VAR_DISSEMINATION = 0x06

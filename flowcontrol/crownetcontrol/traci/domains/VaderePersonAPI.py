@@ -86,3 +86,7 @@ class VaderePersonAPI(Domain):
 
     def create_new(self, data):
         self._setCmd(tc.VAR_ADD, "", "s", data)
+
+
+
+

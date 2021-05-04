@@ -29,3 +29,26 @@ class VadereMiscAPI(Domain):
 
     def remove_target_changer(self, element_id):
         self._setCmd(tc.VAR_REMOVE_TARGET_CHANGER, element_id, "Error", None)
+
+    def send_dissemination_cmd(self, cmd_content, pack_size = 0):
+        # pack_size : integer
+        # cmd_content: control command
+        # TODO check here
+
+        #_cmd = bytes()
+        #_cmd += struct.pack("i", 3)
+        #_cmd += struct.pack("i", pack_size)
+        #_cmd += struct.pack("!i", len(cmd_content)) + cmd_content.encode("latin1")
+        #self._connection.send_cmd(tc.CMD_CONTROLLER, tc.VAR_DISSEMINATION, None, None, "t")
+
+        # data is of type bytes
+        # data contains
+        # Integer: simulated packet length
+        # Integer: byte array lengths
+        # Bytes: control command that contains the json-string
+        self._setCmd(tc.VAR_DISSEMINATION, "", "s", cmd_content)
+
+
+
+
+

@@ -44,3 +44,5 @@ class VadereSimulationAPI(Domain):
 
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
+
+

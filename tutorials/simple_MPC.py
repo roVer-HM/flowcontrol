@@ -30,12 +30,20 @@ class PingPong(Controller):
             return
         print(f"TikTokController: {sim_time} handle_sim_step evaluate control...")
 
+        with open("scenarios/CorridorChoiceData.json", "r") as myfile:
+            json_command = myfile.read()
+        print(json_command)
+
+        self.con_manager.domains.v_ctrl.send_control(message=json_command, packet_size=0)
+
+
         print(f"TikTokController: {sim_time} apply control action ")
         for ped_id in ["1", "2", "3", "4"]:
             self.con_manager.domains.v_person.set_target_list(
                 str(ped_id), self.control[self.count][1]
             )
         # read if listeners are used
+
 
         self.con_manager.next_call_at(self.control[self.count][0])
         self.count += 1
@@ -68,8 +76,7 @@ if __name__ == "__main__":
 
     traci_manager = get_controller_from_args(working_dir=os.getcwd(), args=settings, controller=controller)
 
-
     controller.initialize_connection(traci_manager)
     kwargs = {"file_name": scenario_file, "file_content": get_scenario_content(scenario_file)}
-    controller.register_state_listener("default", sub) #? new
+    controller.register_state_listener("default", sub, set_default=True) #? new
     controller.start_controller(**kwargs)
