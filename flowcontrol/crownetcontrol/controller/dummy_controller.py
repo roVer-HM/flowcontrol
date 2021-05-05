@@ -17,8 +17,8 @@ class Controller:
             raise RuntimeError("Controller has not working connection")
         self.con_manager.start(*kw, **kwargs)
 
-    def register_state_listener(self, name, listener):
-        self.con_manager.register_state_listener(name, listener)
+    def register_state_listener(self, name, listener, set_default=False):
+        self.con_manager.register_state_listener(name, listener, set_default)
 
     @abc.abstractmethod
     def handle_sim_step(self, sim_time, sim_state):
