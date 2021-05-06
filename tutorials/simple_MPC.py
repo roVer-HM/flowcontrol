@@ -34,7 +34,7 @@ class PingPong(Controller):
             json_command = myfile.read()
         print(json_command)
 
-        self.con_manager.domains.v_ctrl.send_control(message=json_command, packet_size=0)
+        self.con_manager.domains.v_sim.send_control(message=json_command)
 
 
         print(f"TikTokController: {sim_time} apply control action ")

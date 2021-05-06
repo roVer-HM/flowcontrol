@@ -30,18 +30,7 @@ class VadereControlCommandApi(BaseDomain):
         return self._connection.send_cmd(tc.CMD_SIMSTATE, None, None, "D", simstep)
 
 
-    def send_control(self, message, packet_size):
-        packet_size = str(packet_size)
-        _cmd = bytes()
-        _cmd += struct.pack("!B", tc.CMD_CONTROLLER)
-        _cmd += struct.pack("!i", len(packet_size)) + packet_size.encode("latin1")
-        _cmd += struct.pack("!i", len(message)) + message.encode("latin1")
 
-        # assume big packet
-        _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
-
-        self._connection.send_raw(_cmd, append_message_len=True)
-        return self._connection.recv_exact()
 
 
 
