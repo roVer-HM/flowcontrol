@@ -2,7 +2,7 @@ import struct
 
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain, BaseDomain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
-from flowcontrol.crownetcontrol.traci.connection import Connection
+
 
 
 class VadereControlCommandApi(BaseDomain):
@@ -19,7 +19,6 @@ class VadereControlCommandApi(BaseDomain):
         _cmd = struct.pack("!Bi", 0, len(_cmd) + 5) + _cmd
 
         self._connection.send_raw(_cmd, append_message_len=True)
-        # todo: check result
         return self._connection.recv_exact()
 
     def sim_step(self, simstep=0.0):
@@ -30,20 +29,18 @@ class VadereControlCommandApi(BaseDomain):
         """access subscription data (i.e. current state) """
         return self._connection.send_cmd(tc.CMD_SIMSTATE, None, None, "D", simstep)
 
-    def send_dissemination_cmd(self, pack_size, cmd_content):
-        # pack_size : integer
-        # cmd_content: control command
-        # TODO check here
 
-        _cmd = bytes()
-        _cmd += Connection.pack("i", 3)
-        _cmd += Connection.pack("i", pack_size)
-        _cmd += Connection.pack("i", len(cmd_content))
-        _cmd += struct.pack(f"!{len(cmd_content)}B", cmd_content)
 
-        # data is of type bytes
-        # data contains
-        # Integer: simulated packet length
-        # Integer: byte array lengths
-        # Bytes: control command that contains the json-string
-        self._connection.send_cmd(tc.VAR_DISSEMINATION, None, None, "t")
+
+
+
+
+
+
+
+
+
+
+
+
+

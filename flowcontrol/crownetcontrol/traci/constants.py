@@ -268,7 +268,7 @@ CMD_GET_GUI_VARIABLE = 0xAC
 #  response: get GUI variable
 RESPONSE_GET_GUI_VARIABLE = 0xBC
 #  command: set GUI variable
-CMD_SET_GUI_VARIABLE = 0xCC
+CMD_SET_GUI_VARIABLE = 0xcc
 #  command: subscribe GUI variable
 CMD_SUBSCRIBE_GUI_VARIABLE = 0xDC
 #  response: subscribe GUI variable

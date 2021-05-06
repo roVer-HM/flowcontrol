@@ -145,6 +145,17 @@ class Connection(object):
             assert type(values[0]) == bytes
             return values[0]
         packed = bytes()
+        if _format.startswith("t"):
+            _format_new = _format[1:] # check this
+            f_len = len(_format_new)
+
+            if f_len != len(values):
+                raise ValueError("..")
+
+            v = Connection.pack(_format_new,*values)
+            packed += struct.pack("!Bi", tc.TYPE_COMPOUND, f_len) + v
+            return packed
+
         for f, v in zip(_format, values):
             if f == "i":
                 packed += struct.pack("!Bi", tc.TYPE_INTEGER, int(v))
@@ -174,8 +185,6 @@ class Connection(object):
                     packed += struct.pack("!BBi", tc.TYPE_POLYGON, 0, len(v))
                 for p in v:
                     packed += struct.pack("!dd", *p)
-            elif f == "t":  # tuple aka compound
-                packed += struct.pack("!Bi", tc.TYPE_COMPOUND, v)
             elif f == "c":  # color
                 packed += struct.pack(
                     "!BBBBB",

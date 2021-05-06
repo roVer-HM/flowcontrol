@@ -18,6 +18,9 @@ class Controller:
         self.con_manager.start(*kw, **kwargs)
 
     def register_state_listener(self, name, listener, set_default=False):
+        # set_default = True if omnet is present
+        self.con_manager.register_state_listener(name, listener, set_default)
+    def register_state_listener(self, name, listener, set_default=False):
         self.con_manager.register_state_listener(name, listener, set_default)
 
     @abc.abstractmethod

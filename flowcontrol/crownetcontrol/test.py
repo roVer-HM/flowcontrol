@@ -25,7 +25,7 @@ from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateLi
 #     return ctr
 
 
-def client_mode():
+def client_mode(host = "vadere", **kwargs):
     sub = VadereDefaultStateListener.with_vars(
         "persons",
         {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST},
@@ -33,11 +33,11 @@ def client_mode():
     )
     controller = TikTokController()
     traci_manager = ClientModeConnection(
-        control_handler=controller, host="vadere", port=9999
+        control_handler=controller, host=host, port=9999
     )
     controller.initialize_connection(traci_manager)
     traci_manager.register_state_listener("default", sub)
-    controller.start_controller()
+    controller.start_controller(**kwargs)
 
 
 def server_mode():

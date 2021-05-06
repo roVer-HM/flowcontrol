@@ -1,0 +1,27 @@
+{
+  "model" : "RouteChoice",
+  "time" : 0.4,
+  "pedCommands": [{
+    "id" : 1,
+    "targetIds" : [1,2,3],
+    "probability" : [0.2,0.4,0.4],
+    "endtime" : 2.4,
+    "space" : {
+      "bounded" : true,
+      "x": 0,
+      "y": 0,
+      "radius" : 5
+    }
+  }, {
+    "id" : 2,
+    "targetIds" : [1,2,3],
+    "probability" : [0,1.0,0.0],
+    "endtime" : -1,
+    "space" : {
+      "bounded" : false,
+      "x": 0,
+      "y": 0,
+      "radius" : 5
+    }
+  }]
+}
