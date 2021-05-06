@@ -2,15 +2,15 @@ import abc
 import pprint
 
 
+
 class Controller:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         self.con_manager = None
 
-    @abc.abstractmethod
-    def initialize_connection(self, connection):
-        pass
+    def initialize_connection(self, con_manager):
+        self.con_manager = con_manager
 
     def start_controller(self, *kw, **kwargs):
         if self.con_manager is None:
@@ -19,8 +19,6 @@ class Controller:
 
     def register_state_listener(self, name, listener, set_default=False):
         # set_default = True if omnet is present
-        self.con_manager.register_state_listener(name, listener, set_default)
-    def register_state_listener(self, name, listener, set_default=False):
         self.con_manager.register_state_listener(name, listener, set_default)
 
     @abc.abstractmethod
