@@ -9,6 +9,8 @@ from flowcontrol.utils.opp.scenario import get_scenario_file
 from flowcontrol.crownetcontrol.controller.control_action import CorridorChoice
 
 
+import json
+
 class PingPong(Controller):
     def __init__(self):
         super().__init__()
@@ -50,7 +52,7 @@ class CorridorChoiceExample(Controller):
     def __init__(self):
         super().__init__()
         self.time_step = 0
-        self.time_step_interval = 5.0
+        self.time_step_interval = 0.4
         self.control = CorridorChoice(
             parameter_names=["targetProbability"],
             constants={"targetIds": [2, 3]},
@@ -60,15 +62,24 @@ class CorridorChoiceExample(Controller):
 
     def handle_sim_step(self, sim_time, sim_state):
 
-        if sim_time % 10 == 0:
-            p1 = [0,1.0]
+        if sim_time % 0.8 == 0:
+            p1 = [0.0,1.0]
+            print("Use target [3]")
         else:
-            p1 = [1.0,0]
+            p1 = [0.5,0.5]
+            print("Use target [2,3]")
 
-        action = self.control.set_action(**{"targetProbability":p1 })
+
+
+        command =  {"targetIds" : [2,3] , "probability" : p1}
+        action = { "time" : sim_time, "space" : {"x" : 0.0, "y" : 0.0, "radius":100}, "command" : command }
+        action = json.dumps(action)
+
+
+
 
         print(f"TikTokController: {sim_time} apply control action ")
-        self.con_manager.domains.v_sim.send_control(message=action)
+        self.con_manager.domains.v_sim.send_control(message=action, model= "RouteChoice")
 
         self.time_step += self.time_step_interval
         self.con_manager.next_call_at(self.time_step)
@@ -88,6 +99,7 @@ if __name__ == "__main__":
     )
 
     controller = CorridorChoiceExample()
+    #controller = PingPong()
     scenario_file = get_scenario_file("scenarios/test001.scenario")
 
     settings = ["--port", "9999", "--host-name", "localhost", "--client-mode"]

@@ -45,14 +45,11 @@ class VadereSimulationAPI(Domain):
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
 
-    def send_control(self, message, pack_size=-1, sending_node_id="-1"):
+    def send_control(self, message, model, pack_size=-3, sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
         """
-        cmd_id = self._cmdSetID
-        obj_id = "-1"
-        var_id = 0x20  # TODO choose correct one
-        
+
         # No compound module needed. (I forgot that you just want to send a Json string)
         # format="s" is string see connection.py line 143 (pack) and line 165
         # self._connection.send_cmd(cmd_id, var_id, obj_id, _format="", *values)
@@ -62,17 +59,8 @@ class VadereSimulationAPI(Domain):
         # Client: only has BaseTraCIConnection which does not override build_cmd from Connection (connection.py: 234)
         # Server: has WrappedTraCIConnection which OVERRIDES build_cmd (connection.py: 542) (self._wrap)
 
-        self._connection.send_cmd(cmd_id, var_id, obj_id, "tiss", pack_size, sending_node_id, message)
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tisss", pack_size, sending_node_id, model , message)
 
-
-
-        # how to use compound object (if we need them which I do not now)
-        # Example structuer [String, Int, Double, String]
-        # 1. Create compound object only (no packets! only bytes)
-        #c_obj = self._connection.pack("iss", pack_size, sending_node_id, message)
-
-        # 2. Send the compound object in a packet. _format string 't' for compound see pack in connection.py:143
-        #self._connection.send_cmd(cmd_id, var_id, obj_id, "t", c_obj)
 
 
 
