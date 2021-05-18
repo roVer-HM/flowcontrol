@@ -10,6 +10,7 @@ from xml.etree import ElementTree as xml
 from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import (
     VadereControlCommandApi,
 )
+from flowcontrol.utils.misc import query_yes_no
 
 
 def get_scenario_content(scenario):
@@ -120,25 +121,28 @@ class VadereServer:
     def _package_vadere(self, pom_file):
 
         if self._check_pom_file(pom_file):
-            print(f"Start packaging vadere ... ")
-            try:
-                command = ["mvn", "clean", "-f", pom_file]
-                subprocess.check_call(
-                    command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-                command = [
-                    "mvn",
-                    "package",
-                    "-f",
-                    pom_file,
-                    "-Dmaven.test.skip=true",
-                ]
-                subprocess.check_call(
-                    command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-                print("Finished packaging vadere.")
-            except:
-                print("Failed to package vadere.")
+            if query_yes_no("Create vadere-server.jar?"):
+                print(f"Start packaging vadere ... ")
+                try:
+                    command = ["mvn", "clean", "-f", pom_file]
+                    subprocess.check_call(
+                        command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+                    command = [
+                        "mvn",
+                        "package",
+                        "-f",
+                        pom_file,
+                        "-Dmaven.test.skip=true",
+                    ]
+                    subprocess.check_call(
+                        command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
+                    print("Finished packaging vadere.")
+                except:
+                    print("Failed to package vadere.")
+            else:
+                exit("Please provide vadere-server.jar in vadere repo.")
 
     def _server_args(self):
         cmd = ["--single-client"]
@@ -152,7 +156,7 @@ class VadereServer:
             try:
                 vadere_path = os.environ["VADERE_PATH"]
             except:
-                raise ValueError("Add VADERE_PATH to your enviroment variables.")
+                raise ValueError("Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/")
 
             self._is_gui_mode = is_gui_mode
 

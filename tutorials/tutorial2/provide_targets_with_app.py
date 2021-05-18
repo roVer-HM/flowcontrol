@@ -11,43 +11,8 @@ from flowcontrol.crownetcontrol.controller.control_action import CorridorChoice
 
 import json
 
-class PingPong(Controller):
-    def __init__(self):
-        super().__init__()
-        self.control = [
-            (0, ["2"]),
-            (5.0, ["3"]),
-            (10, ["2"]),
-            (15, ["3"]),
-            (20, ["2"]),
-            (25, ["3"]),
-            (30, ["2"]),
-        ]
-        self.count = 0
-
-    def handle_sim_step(self, sim_time, sim_state):
-        if self.count >= len(self.control):
-            return
-        print(f"TikTokController: {sim_time} handle_sim_step evaluate control...")
-
-        print(f"TikTokController: {sim_time} apply control action ")
-        for ped_id in ["1", "2", "3", "4"]:
-            self.con_manager.domains.v_person.set_target_list(
-                str(ped_id), self.control[self.count][1]
-            )
-        # read if listeners are used
-
-        self.con_manager.next_call_at(self.control[self.count][0])
-        self.count += 1
-
-    def handle_init(self, sim_time, sim_state):
-        print("TikTokController: handle_init")
-        self.con_manager.next_call_at(0.0)
-        print(sim_state)
-
 
 class CorridorChoiceExample(Controller):
-
 
     def __init__(self):
         super().__init__()
@@ -58,25 +23,18 @@ class CorridorChoiceExample(Controller):
             constants={"targetIds": [2, 3]},
         )
 
-
-
     def handle_sim_step(self, sim_time, sim_state):
 
-        if sim_time % 0.8 == 0:
+        if sim_time <= 7.0:
             p1 = [0.0,1.0]
             print("Use target [3]")
         else:
-            p1 = [0.5,0.5]
-            print("Use target [2,3]")
+            p1 = [1.0,0.0]
+            print("Use target [2]")
 
-
-
-        command =  {"targetIds" : [2,3] , "probability" : p1}
-        action = { "time" : sim_time, "space" : {"x" : 0.0, "y" : 0.0, "radius":100}, "command" : command }
+        command = {"targetIds" : [2,3] , "probability" : p1}
+        action = { "time" : sim_time+0.4, "space" : {"x" : 0.0, "y" : 0.0, "radius": 100}, "command" : command}
         action = json.dumps(action)
-
-
-
 
         print(f"TikTokController: {sim_time} apply control action ")
         self.con_manager.domains.v_sim.send_control(message=action, model= "RouteChoice")
@@ -92,6 +50,19 @@ class CorridorChoiceExample(Controller):
 
 if __name__ == "__main__":
 
+    # Tutorial 2:
+
+    # Scenario: there are two targets.
+    # Control action: change the agents' targets over time using a navigation app.
+    # Communication channel: navigation app (no delay, information arrives immediately)
+    # Reaction behavior: none (all agents react immediately)
+
+    # Take-away from this tutorial
+    # - learn how to disseminate information using a navigation app
+
+    # Before you start:
+    # Make sure that the system variable VADERE_PATH=/path/to/vadere-repo/ is defined (e.g. add it to your configuration).
+
     sub = VadereDefaultStateListener.with_vars(
         "persons",
         {"pos": tc.VAR_POSITION, "speed": tc.VAR_SPEED, "angle": tc.VAR_ANGLE},
@@ -99,10 +70,9 @@ if __name__ == "__main__":
     )
 
     controller = CorridorChoiceExample()
-    #controller = PingPong()
-    scenario_file = get_scenario_file("scenarios/test001.scenario")
+    scenario_file = get_scenario_file("../scenarios/test001.scenario")
 
-    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode"]
+    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
 
     traci_manager = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller=controller
@@ -113,5 +83,5 @@ if __name__ == "__main__":
         "file_name": scenario_file,
         "file_content": get_scenario_content(scenario_file),
     }
-    controller.register_state_listener("default", sub, set_default=True)  # ? new
+    controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)

@@ -61,6 +61,13 @@ class VadereSimulationAPI(Domain):
 
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tisss", pack_size, sending_node_id, model , message)
 
+    def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
+
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT_INIT, obj_id, "tsss", controlModelName, controlModelType, reactionModelParameter)
+
+
+
+
 
 
 
