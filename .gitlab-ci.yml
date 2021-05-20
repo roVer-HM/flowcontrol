@@ -30,5 +30,5 @@ integrationtest:
     - python3 download_vadere.py
     - python3 tutorial__app_and_reaction_behavior.py --no-gui
     - python3 tutorial__set_targets_with_app.py --no-gui
-    - python3 tutorial__set_targets --no-gui
+    - python3 tutorial__set_targets.py --no-gui
   allow_failure: false
