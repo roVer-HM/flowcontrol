@@ -83,7 +83,9 @@ class TraCiManager:
 
 
 class ClientModeConnection(TraCiManager):
-    def __init__(self, control_handler, host="127.0.0.1", port=9999):
+    def __init__(self, control_handler, host="127.0.0.1", port=9999, server_thread = None):
+        self.server_thread = server_thread
+
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(create_client_socket()))
 
@@ -131,6 +133,7 @@ class ClientModeConnection(TraCiManager):
             # clear connection state (for ClientModeConnection _con == _base_client)
             self.traci.clear()
 
+
     def _handle_sim_step(self):
         # subscription listener already notified. Use default listener to update
         # subscription of new/removed pedestrians because we are the only client
@@ -161,6 +164,12 @@ class ClientModeConnection(TraCiManager):
             print("Simulation end reached.")
         finally:
             self._cleanup()
+
+    def _cleanup(self):
+        if self.server_thread is not None:
+            print("Shut down server.")
+            self.server_thread.stop()
+
 
 
 class ServerModeConnection(TraCiManager):

@@ -13,10 +13,10 @@ def get_controller_from_args(working_dir, args=None, controller=None):
     if ns["port"] == 9999 and ns["is_in_client_mode"]:
         # TODO: start server if necessary
 
-        VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
+        vadere = VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
 
         return ClientModeConnection(
-            control_handler=controller, port=ns["port"], host=ns["host_name"],
+            control_handler=controller, port=ns["port"], host=ns["host_name"], server_thread = vadere.get_server_thread()
         )
     elif ns["port"] == 9997 and not ns["is_in_client_mode"]:  # TODO check port number
         return ServerModeConnection(

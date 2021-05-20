@@ -81,6 +81,7 @@ class VadereServer:
     def __init__(
         self, is_start_server=False, is_gui_mode=False,
     ):
+        self.server_thread = None
         self.is_start_server = is_start_server
         self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
@@ -183,6 +184,9 @@ class VadereServer:
             print("Start Server Thread...")
             self.server_thread.start()
             sleep(0.8)
+
+    def get_server_thread(self):
+        return self.server_thread
 
 
 if __name__ == "__main__":
