@@ -23,5 +23,8 @@ unittests:
 integrationtest:
   stage: integration_test
   script: 
-    - echo "Start integration test"
+    - source ./venv/bin/activate
+    - python3 setup.py install
+    - cd tutorials
+    - python3 download_vadere.py
   allow_failure: true

@@ -1,6 +1,10 @@
 from urllib.request import urlopen
 from tempfile import NamedTemporaryFile
 import platform
+
+# This is just to make sure that the systems path is set up correctly, to have correct imports.
+# (It can be ignored)
+
 from flowcontrol.utils.misc import query_yes_no
 
 from zipfile import ZipFile
@@ -32,6 +36,8 @@ if __name__ == "__main__":
 			is_download = True
 
 	if is_download:
+		print(f"Download vadere-server.jar. Download link: {zipurl}")
+		print("Download started .. (this can take a couple of minutes)")
 		with urlopen(zipurl) as zipresp, NamedTemporaryFile() as tfile:
 			tfile.write(zipresp.read())
 			tfile.seek(0)
@@ -46,4 +52,6 @@ if __name__ == "__main__":
 					if fileName == jar_file:
 						# Extract a single file from zip
 						zipObj.extract(fileName, jar_file_path)
+
+		print(".. download completed.")
 

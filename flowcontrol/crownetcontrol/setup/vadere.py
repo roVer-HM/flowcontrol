@@ -7,6 +7,8 @@ import time
 from time import sleep
 from xml.etree import ElementTree as xml
 
+import glob
+
 from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import (
     VadereControlCommandApi,
 )
@@ -86,9 +88,13 @@ class VadereServer:
         self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
 
-    def _check_vadere_server_jar_available(self, vadere_man):
+    def _check_vadere_server_jar_available(self):
 
-        vadere_path = os.environ["VADERE_PATH"]
+        try:
+            vadere_path = os.environ["VADERE_PATH"]
+            vadere_man = os.path.join(vadere_path, "VadereManager/target/vadere-server.jar")
+        except:
+            raise ValueError("Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/")
 
         if os.path.isfile(vadere_man):
             logging.info(f"Found vadere-server.jar in {os.path.dirname(vadere_man)}.")
@@ -151,13 +157,10 @@ class VadereServer:
             cmd.extend(["--gui-mode"])
         return cmd
 
-    def _start_server(self, is_start_server, is_gui_mode):
+    def _start_server(self, is_start_server, is_gui_mode, vadere_path = None):
 
         if is_start_server:
-            try:
-                vadere_path = os.environ["VADERE_PATH"]
-            except:
-                raise ValueError("Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/")
+
 
             self._is_gui_mode = is_gui_mode
 
@@ -166,16 +169,24 @@ class VadereServer:
                     f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
                 )
 
-            vadere_man = os.path.join(
-                vadere_path, "VadereManager/target/vadere-server.jar",
-            )
-
-            self._check_vadere_server_jar_available(vadere_man)
+            if vadere_path is None:
+                jar_files = [x for x in glob.glob(os.getcwd() + "/**/vadere-server.jar", recursive = True) if os.path.isfile(x)]
+                if len(jar_files) == 1:
+                    vadere_path = jar_files[0]
+                    print(f"Found vadere-server.jar in {vadere_path}.")
+                elif len(jar_files) == 0:
+                    print(f"Could not locate vadere-server jar.")
+                    if query_yes_no("Package vadere in local vadere-repository [Y] or download [n]?"):
+                        self._check_vadere_server_jar_available()
+                    else:
+                        print("Please run the download script 'download_vadere.py'")
+                        print("Then restart the script.")
+                        exit(0)
 
             vadere_server_cmd = [
                 "java",
                 "-jar",
-                vadere_man,
+                vadere_path,
             ]
             vadere_server_cmd.extend(self._server_args())
             self.server_thread = Runner(
