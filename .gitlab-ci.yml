@@ -1,0 +1,25 @@
+stages:
+  - unit_test
+  - integration_test
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - ./venv
+
+before_script:
+  - virtualenv --system-site-packages --python py38 ./venv
+  - source ./venv/bin/activate
+  - pip3 install -q -I -r requirements.txt
+
+
+unittests:
+  stage: unit_test
+  script:
+    - source ./venv/bin/activate
+    - python3 -m unittest discover -v
+
+
+black_check:
+  stage: integration_test
+  allow_failure: true
