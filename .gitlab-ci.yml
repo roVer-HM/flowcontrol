@@ -20,6 +20,8 @@ unittests:
     - python3 -m unittest discover -v
 
 
-black_check:
+integrationtest:
   stage: integration_test
+  script: 
+    - echo "Start integration test"
   allow_failure: true
