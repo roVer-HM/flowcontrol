@@ -66,7 +66,7 @@ if __name__ == "__main__":
     )
 
     controller = CorridorChoiceExample()
-    scenario_file = get_scenario_file("../scenarios/test001.scenario")
+    scenario_file = get_scenario_file("scenarios/test001.scenario")
 
     settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
 

@@ -44,18 +44,20 @@ class PingPong(Controller):
 
 if __name__ == "__main__":
 
-    # Tutorial 1:
-
-    # Scenario: there are two targets.
-    # Control action: change the agents' targets over time.
-    # Communication channel: none (agents get informed immediately)
-    # Reaction behavior: none (all agents react immediately)
+    # Content, see Tutorial 1:
 
     # Take-away from this tutorial
-    # - learn how to define a simple controller
+    # - learn how to debug
 
-    # Before you start:
-    # Make sure that the system variable VADERE_PATH=/path/to/vadere-repo/ is defined (e.g. add it to your configuration).
+    # Open the vadere repository in an IDE and configure the Vadere Manager (org.vadere.manager.Manager):
+    # Pass following arguments to the Vadere Manager
+    # "--loglevel TRACE --single-client --gui-mode --port 9999"
+    # Set a breakpoint in the method 'process_setTargetList' (org.vadere.manager.traci.commandHandler.PersonCommandHandler)
+
+    # Debugging:
+    # Vadere IDE: Run org.vadere.manager.Manager in debug mode.
+    # In this IDE: Run this main (mode=debug/run).
+
 
     sub = VadereDefaultStateListener.with_vars(
         "persons",
@@ -64,9 +66,9 @@ if __name__ == "__main__":
     )
 
     controller = PingPong()
-    scenario_file = get_scenario_file("../scenarios/test001.scenario")
+    scenario_file = get_scenario_file("scenarios/test001.scenario")
 
-    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
+    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode"]
 
     traci_manager = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller=controller
