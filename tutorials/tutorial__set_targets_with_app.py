@@ -50,6 +50,11 @@ class CorridorChoiceExample(Controller):
 
 if __name__ == "__main__":
 
+    use_gui = True
+    if len(sys.argv) > 1:
+        if sys.argv[-1] == '--no-gui':
+            use_gui = False
+
     # Tutorial 2:
 
     # Scenario: there are two targets.
@@ -72,7 +77,10 @@ if __name__ == "__main__":
     controller = CorridorChoiceExample()
     scenario_file = get_scenario_file("scenarios/test001.scenario")
 
-    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
+    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server"]
+
+    if use_gui:
+        settings.append("--gui-mode")
 
     traci_manager = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller=controller

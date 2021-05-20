@@ -161,7 +161,6 @@ class VadereServer:
 
         if is_start_server:
 
-
             self._is_gui_mode = is_gui_mode
 
             if is_start_server:
