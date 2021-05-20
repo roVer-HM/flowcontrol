@@ -14,7 +14,7 @@ import os
 
 if __name__ == "__main__":
 
-	jar_file = "vadere-console.jar"
+	jar_file = "vadere-server.jar"
 
 	if platform.system() == "Linux":
 		zipurl = "http://www.vadere.org/builds/master/vadere.master.linux.zip"
