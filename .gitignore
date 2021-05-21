@@ -2,12 +2,14 @@ log.out
 vadere-server-output/
 .idea
 .venv
+.venv_dev
 venv
 flowcontrol.egg-info
 *.pyc
 *.pyc
 .directory
 vadere-server.jar
+tags
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
