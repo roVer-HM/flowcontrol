@@ -60,9 +60,12 @@ class Runner(threading.Thread):
 
         finally:
             log_file.close()
-            print(
-                f"{self.thread_name}> subprocess returncode={self.process.returncode}"
-            )
+            if self.process is not None:
+                print(
+                    f"{self.thread_name}> subprocess returncode={self.process.returncode}"
+                )
+                ##TODO: fix
+
 
     def _cleanup(self):
         try:
@@ -97,14 +100,15 @@ class VadereServer:
             raise ValueError("Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/")
 
         if os.path.isfile(vadere_man):
-            logging.info(f"Found vadere-server.jar in {os.path.dirname(vadere_man)}.")
+            print(f"Found vadere-server.jar in {os.path.dirname(vadere_man)}.")
         else:
-            logging.info(f"Could not find {vadere_man}.")
+            print(f"Could not find {vadere_man}.")
             pom_file = os.path.join(vadere_path, "pom.xml")
 
             self._package_vadere(pom_file)
             if os.path.isfile(vadere_man) is False:
                 raise FileExistsError(f"Failed to generate {vadere_man}.")
+        return vadere_man
 
     def _check_pom_file(self, pom_file):
 
@@ -167,7 +171,7 @@ class VadereServer:
                 logging.info(
                     f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
                 )
-
+            #TODO refactor
             if vadere_path is None:
                 jar_files = [x for x in glob.glob(os.getcwd() + "/**/vadere-server.jar", recursive = True) if os.path.isfile(x)]
                 if len(jar_files) == 1:
@@ -176,7 +180,7 @@ class VadereServer:
                 elif len(jar_files) == 0:
                     print(f"Could not locate vadere-server jar.")
                     if query_yes_no("Package vadere in local vadere-repository [Y] or download [n]?"):
-                        self._check_vadere_server_jar_available()
+                        vadere_path = self._check_vadere_server_jar_available()
                     else:
                         print("Please run the download script 'download_vadere.py'")
                         print("Then restart the script.")
