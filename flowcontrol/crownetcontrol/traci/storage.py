@@ -44,7 +44,7 @@ class Storage:
         if cmd_id > 0:
             return cmd_id
         else:
-            return self.readInt()[0]
+            return self.readInt()
 
     def read_cmd_var(self):
         return self.read("!BB")

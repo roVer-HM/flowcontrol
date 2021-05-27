@@ -30,14 +30,14 @@ class CorridorChoiceExample(Controller):
         action = { "time" : sim_time+0.4, "space" : {"x" : 0.0, "y" : 0.0, "radius": 100}, "command" : command}
         action = json.dumps(action)
 
-        print(f"TikTokController: {sim_time} apply control action ")
+        print(f"CorridorChoiceExample: {sim_time} apply control action ")
         self.con_manager.domains.v_sim.send_control(message=action, model= "RouteChoice")
 
         self.time_step += self.time_step_interval
         self.con_manager.next_call_at(self.time_step)
 
     def handle_init(self, sim_time, sim_state):
-        print("TikTokController: handle_init")
+        print("CorridorChoiceExample: handle_init")
         self.con_manager.next_call_at(0.0)
         print(sim_state)
 

@@ -533,20 +533,24 @@ class WrappedTraCIConnection(BaseTraCIConnection):
 
     def __init__(self, _socket, default_domains=None):
         super().__init__(_socket, default_domains)
-
-    def _simulator_prefix(self, cmd_id):
-        if cmd_id > 0:
-            return self.VADERE
-        else:
-            return self.OPP
+        self.ff_dispatcher = [
+            lambda cmd, var: self.VADERE if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT_INIT else None,
+            lambda cmd, var: self.OPP if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT else None,
+            lambda cmd, var: self.VADERE
+        ]
 
     def connect(self, host, port):
         raise RuntimeError(
             "WrappedTraCIConnection operates in server mode. Do not connect to socket."
         )
 
-    def _wrap(self, cmd_id):
-        return tc.CMD_CONTROLLER, tc.VAR_REDIRECT, self._simulator_prefix(cmd_id)
+    def _wrap(self, cmd_id, var_id):
+        sim_prefix = self.VADERE  # default to vadere
+        for _f in self.ff_dispatcher:
+            sim_prefix = _f(cmd_id, var_id)
+            if sim_prefix is not None:
+                break
+        return tc.CMD_CONTROLLER, tc.VAR_REDIRECT, sim_prefix
 
     def build_cmd(self, cmd_id, var_id, obj_id, _format="", *values):
         """
@@ -554,7 +558,7 @@ class WrappedTraCIConnection(BaseTraCIConnection):
         """
         payload = super().build_cmd(cmd_id, var_id, obj_id, _format, *values)
 
-        w_cmd_od, w_var_id, w_obj_id = self._wrap(cmd_id)
+        w_cmd_od, w_var_id, w_obj_id = self._wrap(cmd_id, var_id)
         wrapped_cmd = super().build_cmd(w_cmd_od, w_var_id, w_obj_id, "packet", payload)
         return wrapped_cmd
 

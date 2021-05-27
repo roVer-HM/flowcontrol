@@ -182,7 +182,7 @@ class ServerModeConnection(TraCiManager):
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(
-            tc.CMD_CONTROLLER, tc.VAR_INIT, "", ["d"], self._sim_until
+            tc.CMD_CONTROLLER, tc.VAR_INIT, "", "d", self._sim_until
         )
 
     def _handle_sim_step(self, *arg, **kwargs):
@@ -196,7 +196,7 @@ class ServerModeConnection(TraCiManager):
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(
-            tc.CMD_CONTROLLER, tc.CMD_SIMSTEP, "", ["d"], self._sim_until
+            tc.CMD_CONTROLLER, tc.CMD_SIMSTEP, "", "d", self._sim_until
         )
 
     def _run(self):
