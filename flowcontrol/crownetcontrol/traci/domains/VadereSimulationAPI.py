@@ -59,6 +59,7 @@ class VadereSimulationAPI(Domain):
         # Client: only has BaseTraCIConnection which does not override build_cmd from Connection (connection.py: 234)
         # Server: has WrappedTraCIConnection which OVERRIDES build_cmd (connection.py: 542) (self._wrap)
 
+        #TODO: add additional 4: number_mes (int), offset_time (double,s), freq (double, Hz), hop_count (int)
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tisss", pack_size, sending_node_id, model , message)
 
     def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
