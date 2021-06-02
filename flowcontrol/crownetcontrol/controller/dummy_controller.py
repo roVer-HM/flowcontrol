@@ -29,6 +29,16 @@ class Controller:
     def handle_init(self, sim_time, sim_state):
         pass
 
+    @classmethod
+    def get(cls, controller_type):
+
+        for c in cls.__subclasses__():
+            if c().__class__.__name__ == controller_type:
+                controller = c
+
+
+        return controller()
+
 
 class TikTokController(Controller):
     def __init__(self):
