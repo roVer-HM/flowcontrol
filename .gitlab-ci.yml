@@ -28,7 +28,7 @@ integrationtest:
     - python3 setup.py install
     - cd tutorials
     - python3 download_vadere.py
-    - python3 tutorial__app_and_reaction_behavior.py --no-gui
-    - python3 tutorial__set_targets_with_app.py --no-gui
-    - python3 tutorial__set_targets.py --no-gui
+    - python3 tutorial__app_and_reaction_behavior.py --port 9999 --host-name localhost --client-mode --start-server --gui-mode
+    - python3 tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --gui-mode
+    - python3 tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --gui-mode
   allow_failure: false
