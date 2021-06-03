@@ -1,4 +1,4 @@
-from flowcontrol.crownetcontrol.controller.dummy_controller import TikTokController
+from flowcontrol.strategy.controller.dummy_controller import TikTokController
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 

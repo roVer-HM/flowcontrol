@@ -3,7 +3,7 @@ import os
 from flowcontrol.crownetcontrol.setup.entrypoints import get_controller_from_args
 from flowcontrol.crownetcontrol.setup.vadere import get_scenario_content
 from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
-from flowcontrol.crownetcontrol.controller.dummy_controller import Controller
+from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.opp.scenario import get_scenario_file
 
@@ -44,6 +44,8 @@ class PingPong(Controller):
 
 if __name__ == "__main__":
 
+    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode"]
+
     # Content, see Tutorial 1:
 
     # Take-away from this tutorial
@@ -68,13 +70,10 @@ if __name__ == "__main__":
     controller = PingPong()
     scenario_file = get_scenario_file("scenarios/test001.scenario")
 
-    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode"]
-
-    traci_manager = get_controller_from_args(
+    controller = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller=controller
     )
 
-    controller.initialize_connection(traci_manager)
     kwargs = {
         "file_name": scenario_file,
         "file_content": get_scenario_content(scenario_file),

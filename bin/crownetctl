@@ -4,11 +4,6 @@ import argparse
 import logging
 import os
 
-from traci.main import start_server
-from ControlStrategies.strategies import Strategy
-import sys
-import traci
-
 
 def parse_args_as_dict(args=None):
 	# parse arguments
@@ -56,10 +51,6 @@ def parse_args_as_dict(args=None):
 
 
 if __name__ == "__main__":
-	#traci.start()
-
-	#traci.trafficlight.setRedYellowGreenState("0", "GrGr")
-	#traci.inductionloop.getLastStepVehicleNumber("0")
 
 
 	if len(sys.argv) == 1:

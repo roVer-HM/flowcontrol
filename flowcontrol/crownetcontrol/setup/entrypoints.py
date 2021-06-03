@@ -6,24 +6,35 @@ from flowcontrol.crownetcontrol.traci.connection_manager import (
     ClientModeConnection,
 )
 
+from flowcontrol.strategy.controller.dummy_controller import Controller
+
 
 def get_controller_from_args(working_dir, args=None, controller=None):
+
     ns = parse_args_as_dict(args)
 
+    if controller is None:
+        print("No controller found.")
+        controller = Controller.get(ns["controller_type"])
+
+
     if ns["port"] == 9999 and ns["is_in_client_mode"]:
-        # TODO: start server if necessary
 
         vadere = VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
 
-        return ClientModeConnection(
+        traci_manager = ClientModeConnection(
             control_handler=controller, port=ns["port"], host=ns["host_name"], server_thread = vadere.get_server_thread()
         )
     elif ns["port"] == 9997 and not ns["is_in_client_mode"]:  # TODO check port number
-        return ServerModeConnection(
+        traci_manager = ServerModeConnection(
             control_handler=controller, port=ns["port"], host=ns["host_name"]
         )
     else:
         raise NotImplementedError("Port and host configuration not found.")
+
+    controller.initialize_connection(traci_manager)
+
+    return controller
 
 
 def parse_args_as_dict(args=None):
@@ -75,14 +86,13 @@ def parse_args_as_dict(args=None):
         required=False,
         help="Only available when server is started automatically.",
     )
-    # parser.add_argument(
-    #     "-s",
-    #     "--scenario",
-    #     dest="scenario_file",
-    #     default="",  # TODO: discuss -> defaults
-    #     required=False,
-    #     help="Only available in client-mode.",
-    # )
+    parser.add_argument(
+        "-c",
+        "--controller-type",
+        dest="controller_type",
+        default="",
+        required=False,
+    )
 
     if args is None:
         ns = vars(parser.parse_args())

@@ -3,7 +3,7 @@ import os, sys
 from flowcontrol.crownetcontrol.setup.entrypoints import get_controller_from_args
 from flowcontrol.crownetcontrol.setup.vadere import get_scenario_content
 from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
-from flowcontrol.crownetcontrol.controller.dummy_controller import Controller
+from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.opp.scenario import get_scenario_file
 
@@ -46,10 +46,10 @@ class CorridorChoiceExample(Controller):
 
 if __name__ == "__main__":
 
-    use_gui = True
-    if len(sys.argv) > 1:
-        if sys.argv[-1] == '--no-gui':
-            use_gui = False
+    if len(sys.argv) == 1:
+        settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
+    else:
+        settings = sys.argv[1:]
 
     # Tutorial 3:
 
@@ -73,18 +73,12 @@ if __name__ == "__main__":
     controller = CorridorChoiceExample()
     scenario_file = get_scenario_file("scenarios/test001.scenario")
 
-    settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server"]
 
-    if use_gui:
-        settings.append("--gui-mode")
-
-    print(settings)
-
-    traci_manager = get_controller_from_args(
-        working_dir=os.getcwd(), args=settings, controller=controller
+    controller = get_controller_from_args(
+        working_dir=os.getcwd(), args=settings, controller = controller
     )
 
-    controller.initialize_connection(traci_manager)
+
     kwargs = {
         "file_name": scenario_file,
         "file_content": get_scenario_content(scenario_file),
