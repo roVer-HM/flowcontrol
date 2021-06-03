@@ -6,7 +6,6 @@ from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateLi
 from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.opp.scenario import get_scenario_file
-from flowcontrol.strategy.controller import CorridorChoice
 
 
 import json
@@ -18,10 +17,6 @@ class CorridorChoiceExample(Controller):
         super().__init__()
         self.time_step = 0
         self.time_step_interval = 0.4
-        self.control = CorridorChoice(
-            parameter_names=["targetProbability"],
-            constants={"targetIds": [2, 3]},
-        )
 
     def handle_sim_step(self, sim_time, sim_state):
 
@@ -49,7 +44,7 @@ class CorridorChoiceExample(Controller):
 
 
 if __name__ == "__main__":
-    
+
     if len(sys.argv) == 1:
         settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
     else:
