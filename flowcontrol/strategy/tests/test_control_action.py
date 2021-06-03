@@ -1,5 +1,5 @@
 from unittest import TestCase
-from flowcontrol.crownetcontrol.controller.control_action import ControlAction, CorridorChoice
+from flowcontrol.strategy.controller import ControlAction, CorridorChoice
 
 
 class TestControlAction(TestCase):
