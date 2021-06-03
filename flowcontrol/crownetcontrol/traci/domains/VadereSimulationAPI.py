@@ -45,14 +45,11 @@ class VadereSimulationAPI(Domain):
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
 
-    def send_control(self, message, model, pack_size=-3, sending_node_id="-1", obj_id = "-2"):
+    def send_control(self, message, model, sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
         """
 
-        # No compound module needed. (I forgot that you just want to send a Json string)
-        # format="s" is string see connection.py line 143 (pack) and line 165
-        # self._connection.send_cmd(cmd_id, var_id, obj_id, _format="", *values)
         #self._connection.send_cmd(cmd_id, var_id, obj_id, "s", json)
         # send_cmd (defined in Connection [connection.py:159]) will call build_cmd. THIS function is different
         # between client and server mode!!!
@@ -60,7 +57,7 @@ class VadereSimulationAPI(Domain):
         # Server: has WrappedTraCIConnection which OVERRIDES build_cmd (connection.py: 542) (self._wrap)
 
         #TODO: add additional 4: number_mes (int), offset_time (double,s), freq (double, Hz), hop_count (int)
-        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tisss", pack_size, sending_node_id, model , message)
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model , message)
 
     def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
 
