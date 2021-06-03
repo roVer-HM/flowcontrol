@@ -47,7 +47,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--controller-type", "PingPong", "--gui-mode"]
     else:
-        settings = sys.argv
+        settings = sys.argv[1:]
 
 
     # Tutorial 1:
