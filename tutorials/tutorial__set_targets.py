@@ -59,8 +59,6 @@ if __name__ == "__main__":
     # Take-away from this tutorial
     # - learn how to define a simple controller
 
-    # Before you start:
-    # Make sure that the system variable VADERE_PATH=/path/to/vadere-repo/ is defined (e.g. add it to your configuration).
 
     sub = VadereDefaultStateListener.with_vars(
         "persons",
@@ -68,7 +66,7 @@ if __name__ == "__main__":
         init_sub=True,
     )
 
-    controller = PingPong()
+    controller = Controller.get("PingPong")
     scenario_file = get_scenario_file("scenarios/test001.scenario")
 
     settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server"]

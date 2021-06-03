@@ -1,5 +1,6 @@
 import abc
 import pprint
+import sys
 
 
 
@@ -28,6 +29,20 @@ class Controller:
     @abc.abstractmethod
     def handle_init(self, sim_time, sim_state):
         pass
+
+    @classmethod
+    def get(cls, controller_type):
+
+        controllers = [c for c in cls.__subclasses__() if c().__class__.__name__ == controller_type]
+        if len(controllers) == 0:
+            raise ValueError(f"Controller of type {controller_type} not found. Make sure that the controller is placed in the main script or is part of the flowcontrol simulator.")
+        if len(controllers) > 1:
+
+            controllers = [c for c in controllers if c().__module__ == "__main__"]
+            if len(controllers) == 1:
+                print(f"Warning: Multiple controllers of type {controller_type} found. Use controller defined in {sys.argv[0]}.")
+
+        return controllers[0]()
 
 
 class TikTokController(Controller):
