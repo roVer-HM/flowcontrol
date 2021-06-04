@@ -13,6 +13,7 @@ class CorridorChoiceExample(Controller):
 
     def __init__(self):
         super().__init__()
+        self.commandID = 0
         self.time_step = 0
         self.time_step_interval = 0.4
         self.controlModelName = "RouteChoice1"
@@ -29,14 +30,17 @@ class CorridorChoiceExample(Controller):
             print("Use target [2]")
 
         command = {"targetIds" : [2,3] , "probability" : p1}
-        action = { "time" : sim_time+0.4, "space" : {"x" : 0.0, "y" : 0.0, "radius": 100}, "command" : command}
+        action = { "time" : sim_time+0.4, "space" : {"x" : 0.0, "y" : 0.0, "radius": 100}, "commandID" : self.commandID ,"command" : command}
         action = json.dumps(action)
 
         print(f"TikTokController: {sim_time} apply control action ")
         self.con_manager.domains.v_sim.send_control(message=action, model= self.controlModelName)
 
+        self.commandID += 1
+
         self.time_step += self.time_step_interval
         self.con_manager.next_call_at(self.time_step)
+
 
     def handle_init(self, sim_time, sim_state):
         print("TikTokController: Add reaction behavior to control model.")
@@ -83,8 +87,6 @@ if __name__ == "__main__":
     controller = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller = controller
     )
-
-
 
     controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)
