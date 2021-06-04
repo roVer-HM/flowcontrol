@@ -5,7 +5,7 @@ from flowcontrol.crownetcontrol.setup.vadere import get_scenario_content
 from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
 from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
-from flowcontrol.utils.opp.scenario import get_scenario_file
+from flowcontrol.utils.misc import get_scenario_file
 
 import json
 
@@ -51,6 +51,12 @@ if __name__ == "__main__":
     else:
         settings = sys.argv[1:]
 
+    scenario_file = get_scenario_file("scenarios/test001.scenario")
+    kwargs = {
+        "file_name": scenario_file,
+        "file_content": get_scenario_content(scenario_file),
+    }
+
     # Tutorial 3:
 
     # Scenario: there are two targets.
@@ -71,7 +77,7 @@ if __name__ == "__main__":
     )
 
     controller = CorridorChoiceExample()
-    scenario_file = get_scenario_file("scenarios/test001.scenario")
+
 
 
     controller = get_controller_from_args(
@@ -79,9 +85,6 @@ if __name__ == "__main__":
     )
 
 
-    kwargs = {
-        "file_name": scenario_file,
-        "file_content": get_scenario_content(scenario_file),
-    }
+
     controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)

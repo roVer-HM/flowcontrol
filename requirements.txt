@@ -3,4 +3,5 @@ shapely
 setuptools>=51.0.0
 pandas>=1.1.5
 matplotlib==3.3.2
+omnetinireader
 
