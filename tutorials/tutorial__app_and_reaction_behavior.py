@@ -13,7 +13,6 @@ class CorridorChoiceExample(Controller):
 
     def __init__(self):
         super().__init__()
-        self.commandID = 0
         self.time_step = 0
         self.time_step_interval = 0.4
         self.controlModelName = "RouteChoice1"
@@ -37,7 +36,6 @@ class CorridorChoiceExample(Controller):
         self.con_manager.domains.v_sim.send_control(message=action, model= self.controlModelName)
 
         self.commandID += 1
-
         self.time_step += self.time_step_interval
         self.con_manager.next_call_at(self.time_step)
 

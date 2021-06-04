@@ -8,6 +8,7 @@ class Controller:
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
+        self.commandID = 0
         self.con_manager = None
 
     def initialize_connection(self, con_manager):
