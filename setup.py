@@ -64,4 +64,5 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Scientific/Engineering",
     ],
+    zip_safe=False
 )
