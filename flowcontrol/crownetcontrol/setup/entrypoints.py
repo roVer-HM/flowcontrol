@@ -20,7 +20,7 @@ def get_controller_from_args(working_dir, args=None, controller=None):
 
     if ns["port"] == 9999 and ns["is_in_client_mode"]:
 
-        vadere = VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"])
+        vadere = VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"], output_dir = ns["output_dir"])
 
         traci_manager = ClientModeConnection(
             control_handler=controller, port=ns["port"], host=ns["host_name"], server_thread = vadere.get_server_thread()
@@ -91,6 +91,14 @@ def parse_args_as_dict(args=None):
         "--controller-type",
         dest="controller_type",
         default="",
+        required=False,
+    )
+
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        dest="output_dir",
+        default="vadere-server-output",
         required=False,
     )
 

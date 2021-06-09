@@ -56,6 +56,7 @@ class Runner(threading.Thread):
                 log_file.write(line.decode("utf-8"))
 
             if self.process.returncode is not None:
+
                 self._cleanup()
 
         finally:
@@ -84,10 +85,11 @@ class Runner(threading.Thread):
 
 class VadereServer:
     def __init__(
-        self, is_start_server=False, is_gui_mode=False,
+        self, is_start_server=False, is_gui_mode=False, output_dir = "vadere-server-output"
     ):
         self.server_thread = None
         self.is_start_server = is_start_server
+        self.output_dir = output_dir
         self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
 
@@ -159,6 +161,7 @@ class VadereServer:
         cmd = ["--single-client"]
         if self._is_gui_mode:
             cmd.extend(["--gui-mode"])
+        cmd.extend(["--output-dir", self.output_dir])
         return cmd
 
     def _start_server(self, is_start_server, is_gui_mode, vadere_path = None):
