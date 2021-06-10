@@ -1,5 +1,6 @@
 import logging
 import time
+from threading import Thread
 
 from typing import Union
 
@@ -84,7 +85,7 @@ class TraCiManager:
 
 class ClientModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9999, server_thread = None):
-        self.server_thread = server_thread
+        self.server_thread : Thread = server_thread
 
         super().__init__(host, port, control_handler)
         self._set_connection(BaseTraCIConnection(create_client_socket()))
@@ -166,9 +167,10 @@ class ClientModeConnection(TraCiManager):
             self._cleanup()
 
     def _cleanup(self):
-        if self.server_thread is not None:
-            print("Shut down server.")
-            self.server_thread.stop()
+
+        if self.server_thread.is_alive():
+           print("Shut down server.")
+           self.server_thread.stop()
 
 
 
