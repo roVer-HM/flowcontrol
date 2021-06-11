@@ -200,7 +200,7 @@ class VadereServer:
             )
             print("Start Server Thread...")
             self.server_thread.start()
-            sleep(0.8)
+            sleep(2.0)
 
     def get_server_thread(self):
         return self.server_thread

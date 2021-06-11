@@ -168,7 +168,7 @@ class ClientModeConnection(TraCiManager):
 
     def _cleanup(self):
 
-        if self.server_thread.is_alive():
+        if self.server_thread is not None:
            print("Shut down server.")
            self.server_thread.stop()
 
