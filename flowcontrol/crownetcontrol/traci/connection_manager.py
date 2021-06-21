@@ -83,6 +83,8 @@ class TraCiManager:
         raise NotImplementedError
 
 
+
+
 class ClientModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9999, server_thread = None):
         self.server_thread : Thread = server_thread
@@ -168,9 +170,12 @@ class ClientModeConnection(TraCiManager):
 
     def _cleanup(self):
 
+        self._control_hdl.collect_data()
+
         if self.server_thread is not None:
            print("Shut down server.")
            self.server_thread.stop()
+
 
 
 

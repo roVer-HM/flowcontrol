@@ -36,6 +36,11 @@ from flowcontrol.crownetcontrol.traci.domains.VadereMiscAPI import VadereMiscAPI
 from flowcontrol.crownetcontrol.traci.domains.VadereSimulationAPI import (
     VadereSimulationAPI,
 )
+from flowcontrol.crownetcontrol.traci.domains.VaderePolygonAPI import (
+    VaderePolygonAPI,
+)
+
+
 from .domains.VadereControlDomain import VadereControlCommandApi
 from .exceptions import TraCIException, FatalTraCIError, TraCISimulationEnd
 from .storage import Storage
@@ -608,6 +613,7 @@ class DomainHandler:
         self.v_misc = VadereMiscAPI()
         self.v_sim = VadereSimulationAPI()
         self.v_ctrl = VadereControlCommandApi()
+        self.v_polygon = VaderePolygonAPI()
         self._registered = False
         self._cmd_domain_map = {}
 
@@ -634,6 +640,7 @@ class DomainHandler:
             self._register(self.v_person, connection)
             self._register(self.v_misc, connection)
             self._register(self.v_sim, connection)
+            self._register(self.v_polygon, connection)
             # ctrl has no subscriptions
             self.v_ctrl.register(connection, copy_domain=False)
             self._registered = True

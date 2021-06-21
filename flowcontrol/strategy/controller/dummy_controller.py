@@ -45,6 +45,10 @@ class Controller:
 
         return controllers[0]()
 
+    @abc.abstractmethod
+    def collect_data(self):
+        pass
+
 
 class TikTokController(Controller):
     def __init__(self):
