@@ -9,55 +9,77 @@ from flowcontrol.utils.misc import get_scenario_file
 
 import json
 
-class CorridorChoiceExample(Controller):
 
+class CorridorChoiceExample(Controller):
     def __init__(self):
         super().__init__()
         self.time_step = 0
         self.time_step_interval = 0.4
         self.controlModelName = "RouteChoice1"
         self.controlModelType = "RouteChoice"
-        self.reactionModelParameter = json.dumps({"isBernoulliParameterCertain" : False, "BernoulliParameter" : {"DistributionType" : "Uniform","DistributionParameters" : [0.5, 1.0]}})
+        self.reactionModelParameter = json.dumps(
+            {
+                "isBernoulliParameterCertain": False,
+                "BernoulliParameter": {
+                    "DistributionType": "Uniform",
+                    "DistributionParameters": [0.5, 1.0],
+                },
+            }
+        )
 
     def handle_sim_step(self, sim_time, sim_state):
 
         if sim_time <= 7.0:
-            p1 = [0.0,1.0]
+            p1 = [0.0, 1.0]
             print("Use target [3]")
         else:
-            p1 = [1.0,0.0]
+            p1 = [1.0, 0.0]
             print("Use target [2]")
 
-        command = {"targetIds" : [2,3] , "probability" : p1}
-        action = { "time" : sim_time+0.4, "space" : {"x" : 0.0, "y" : 0.0, "radius": 100}, "commandID" : self.commandID ,"command" : command}
+        command = {"targetIds": [2, 3], "probability": p1}
+        action = {
+            "time": sim_time + 0.4,
+            "space": {"x": 0.0, "y": 0.0, "radius": 100},
+            "commandID": self.commandID,
+            "command": command,
+        }
         action = json.dumps(action)
 
         print(f"TikTokController: {sim_time} apply control action ")
-        self.con_manager.domains.v_sim.send_control(message=action, model= self.controlModelName)
+        self.con_manager.domains.v_sim.send_control(
+            message=action, model=self.controlModelName
+        )
 
         self.commandID += 1
         self.time_step += self.time_step_interval
         self.con_manager.next_call_at(self.time_step)
 
-
     def handle_init(self, sim_time, sim_state):
         print("TikTokController: Add reaction behavior to control model.")
-        self.con_manager.domains.v_sim.init_control(self.controlModelName, self.controlModelType, self.reactionModelParameter)
+        self.con_manager.domains.v_sim.init_control(
+            self.controlModelName, self.controlModelType, self.reactionModelParameter
+        )
         self.con_manager.next_call_at(0.0)
 
 
 if __name__ == "__main__":
 
     if len(sys.argv) == 1:
-        settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--gui-mode"]
+        settings = [
+            "--port",
+            "9999",
+            "--host-name",
+            "localhost",
+            "--client-mode",
+            "--start-server",
+            "--gui-mode",
+            "--output-dir",
+            os.path.splitext(os.path.basename(__file__))[0],
+            "--download-jar-file",  # remove this if you prefer to build vadere locally
+
+        ]
     else:
         settings = sys.argv[1:]
-
-    scenario_file = get_scenario_file("scenarios/test001.scenario")
-    kwargs = {
-        "file_name": scenario_file,
-        "file_content": get_scenario_content(scenario_file),
-    }
 
     # Tutorial 3:
 
@@ -80,11 +102,10 @@ if __name__ == "__main__":
 
     controller = CorridorChoiceExample()
 
-
-
     controller = get_controller_from_args(
-        working_dir=os.getcwd(), args=settings, controller = controller
+        working_dir=os.getcwd(), args=settings, controller=controller
     )
 
+    kwargs = {"file_name": get_scenario_file("scenarios/test001.scenario")}
     controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)

@@ -1,13 +1,17 @@
 import logging
 import os
+import platform
 import signal
 import subprocess
 import threading
 import time
-from time import sleep
+from tempfile import NamedTemporaryFile
+from urllib.request import urlopen
 from xml.etree import ElementTree as xml
+import shutil
 
 import glob
+from zipfile import ZipFile
 
 from flowcontrol.crownetcontrol.traci.domains.VadereControlDomain import (
     VadereControlCommandApi,
@@ -56,7 +60,6 @@ class Runner(threading.Thread):
                 log_file.write(line.decode("utf-8"))
 
             if self.process.returncode is not None:
-
                 self._cleanup()
 
         finally:
@@ -66,7 +69,6 @@ class Runner(threading.Thread):
                     f"{self.thread_name}> subprocess returncode={self.process.returncode}"
                 )
                 ##TODO: fix
-
 
     def _cleanup(self):
         try:
@@ -85,34 +87,99 @@ class Runner(threading.Thread):
 
 class VadereServer:
     def __init__(
-        self, is_start_server=False, is_gui_mode=False, output_dir = "vadere-server-output"
+        self,
+        is_start_server=False,
+        is_gui_mode=False,
+        output_dir="vadere-server-output",
+        vadere_server_provider=None,
     ):
         self.server_thread = None
         self.is_start_server = is_start_server
         self.output_dir = output_dir
+
+        self.vadere_server_provider = vadere_server_provider
+
         self._start_server(is_start_server, is_gui_mode)
         self.domains = VadereControlCommandApi()
 
-    def _check_vadere_server_jar_available(self):
+    def _server_args(self):
+        cmd = ["--single-client"]
+        if self._is_gui_mode:
+            cmd.extend(["--gui-mode"])
+        cmd.extend(["--output-dir", self.output_dir])
+        return cmd
 
-        try:
-            vadere_path = os.environ["VADERE_PATH"]
-            vadere_man = os.path.join(vadere_path, "VadereManager/target/vadere-server.jar")
-        except:
-            raise ValueError("Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/")
+    def _start_server(self, is_start_server, is_gui_mode):
 
-        if os.path.isfile(vadere_man):
-            print(f"Found vadere-server.jar in {os.path.dirname(vadere_man)}.")
+        if is_start_server:
+
+            self._is_gui_mode = is_gui_mode
+
+            if is_start_server:
+                logging.info(
+                    f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
+                )
+
+            vadere_path = self.vadere_server_provider.get_jar_file()
+
+            vadere_server_cmd = [
+                "java",
+                "-jar",
+                vadere_path,
+            ]
+            vadere_server_cmd.extend(self._server_args())
+            self.server_thread = Runner(
+                command=vadere_server_cmd, thread_name="Server",
+            )
+            print("Start Server Thread...")
+            self.server_thread.start()
+
+    def get_server_thread(self):
+        return self.server_thread
+
+
+class VadereServerProvider:
+    def __init__(
+        self,
+        jar_file_path=None,
+        path_to_vadere_repo=None,
+        is_package_local=True,
+        ask_user=True,
+        download_dir=None,
+    ):
+        self.jar_file_path = jar_file_path
+        self.repo_path = path_to_vadere_repo
+        self.is_package_local = is_package_local
+        self.ask_user = ask_user
+        self.download_dir = download_dir
+
+    def get_jar_file(self):
+
+        if self.is_package_local:
+            self.package_vadere_local()
         else:
-            print(f"Could not find {vadere_man}.")
-            pom_file = os.path.join(vadere_path, "pom.xml")
+            self.download_vadere_jar_file()
 
-            self._package_vadere(pom_file)
-            if os.path.isfile(vadere_man) is False:
-                raise FileExistsError(f"Failed to generate {vadere_man}.")
-        return vadere_man
+        return self.jar_file_path
 
-    def _check_pom_file(self, pom_file):
+    def package_vadere_local(self,):
+
+        if not self.is_jar_provided_in_vadere_repo():
+
+            is_package_vadere = True
+
+            if self.ask_user:
+                is_package_vadere = query_yes_no(f"Package vadere in {self.repo_path}?")
+
+            if is_package_vadere:
+
+                self._package_vadere()
+            else:
+                exit("No vadere-server.jar available")
+
+    def _check_pom_file(self):
+
+        pom_file = self.get_pom_file_path()
 
         if os.path.isfile(pom_file):
             pom_file_content = xml.parse(pom_file)
@@ -126,84 +193,133 @@ class VadereServer:
                 )
         else:
             raise ValueError(
-                f"Pom file {pom_file} does not exist. Please check whether env var VADERE_PATH is set correctly."
+                f"Pom file {pom_file} does not exist. Please check whether path/to/vadere-repo is correct."
             )
 
         return True
 
-    def _package_vadere(self, pom_file):
+    def _package_vadere(self):
 
-        if self._check_pom_file(pom_file):
-            if query_yes_no("Create vadere-server.jar?"):
-                print(f"Start packaging vadere ... ")
-                try:
-                    command = ["mvn", "clean", "-f", pom_file]
-                    subprocess.check_call(
-                        command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                    )
-                    command = [
-                        "mvn",
-                        "package",
-                        "-f",
-                        pom_file,
-                        "-Dmaven.test.skip=true",
-                    ]
-                    subprocess.check_call(
-                        command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                    )
-                    print("Finished packaging vadere.")
-                except:
-                    print("Failed to package vadere.")
-            else:
-                exit("Please provide vadere-server.jar in vadere repo.")
-
-    def _server_args(self):
-        cmd = ["--single-client"]
-        if self._is_gui_mode:
-            cmd.extend(["--gui-mode"])
-        cmd.extend(["--output-dir", self.output_dir])
-        return cmd
-
-    def _start_server(self, is_start_server, is_gui_mode, vadere_path = None):
-
-        if is_start_server:
-
-            self._is_gui_mode = is_gui_mode
-
-            if is_start_server:
-                logging.info(
-                    f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
-                )
-            #TODO refactor
-            if vadere_path is None:
-                jar_files = [x for x in glob.glob(os.getcwd() + "/**/vadere-server.jar", recursive = True) if os.path.isfile(x)]
-                if len(jar_files) == 1:
-                    vadere_path = jar_files[0]
-                    print(f"Found vadere-server.jar in {vadere_path}.")
-                elif len(jar_files) == 0:
-                    print(f"Could not locate vadere-server jar.")
-                    if query_yes_no("Package vadere in local vadere-repository [Y] or download [n]?"):
-                        vadere_path = self._check_vadere_server_jar_available()
-                    else:
-                        print("Please run the download script 'download_vadere.py'")
-                        print("Then restart the script.")
-                        exit(0)
-
-            vadere_server_cmd = [
-                "java",
-                "-jar",
-                vadere_path,
-            ]
-            vadere_server_cmd.extend(self._server_args())
-            self.server_thread = Runner(
-                command=vadere_server_cmd, thread_name="Server",
+        pom_file = self.get_pom_file_path()
+        print(
+            "Start to package vadere. This can take several minutes depending on your system."
+        )
+        try:
+            command = ["mvn", "clean", "-f", pom_file]
+            subprocess.check_call(
+                command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
-            print("Start Server Thread...")
-            self.server_thread.start()
-            sleep(2.0)
+            command = [
+                "mvn",
+                "package",
+                "-f",
+                pom_file,
+                "-Dmaven.test.skip=true",
+            ]
+            subprocess.check_call(
+                command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            print("Finished packaging vadere.")
+        except:
+            print("Failed to package vadere.")
 
-    def get_server_thread(self):
-        return self.server_thread
+    def download_vadere_jar_file(self, zipurl=None):
+
+
+
+        if self.download_dir is None:
+            self.download_dir = os.getcwd()
+
+        working_dir = self.download_dir
+        jar_file = "vadere-server.jar"
+
+        if zipurl is None:
+            if platform.system() == "Linux":
+                zipurl = "http://www.vadere.org/builds/master/vadere.master.linux.zip"
+            elif platform.system() == "Windows":
+                zipurl = "http://www.vadere.org/builds/master/vadere.master.windows.zip"
+            else:
+                raise SystemError("Linux or Windows system required.")
+
+        jar_file_path = os.path.join(working_dir, jar_file)
+
+        if os.path.isfile(jar_file_path):
+            print(f"*.jar file found: {working_dir}/{jar_file}.")
+        else:
+            is_download = True
+
+            if self.ask_user:
+                is_download = query_yes_no("Download vadere?")
+
+            print(f"Download vadere-server.jar. Download link: {zipurl}")
+            print("Download started .. (this can take a couple of minutes)")
+            with urlopen(zipurl) as zipresp, NamedTemporaryFile() as tfile:
+                tfile.write(zipresp.read())
+                tfile.seek(0)
+
+                # Create a ZipFile Object and load sample.zip in it
+                with ZipFile(tfile.name, "r") as zipObj:
+                    # Get a list of all archived file names from the zip
+                    listOfFileNames = zipObj.namelist()
+                    # Iterate over the file names
+                    for fileName in listOfFileNames:
+                        # Check filename endswith csv
+                        if os.path.split(fileName)[-1] == jar_file:
+
+                            # Why not use: zipObj.extract(fileName, path=working_dir) ?
+                            # Because the directory structure remains -> we only want to extract the jar-file (not the subdirs)
+
+                            source = zipObj.open(fileName)
+                            target = open(
+                                os.path.join(working_dir, os.path.split(fileName)[-1]),
+                                "wb",
+                            )
+                            with source, target:
+                                shutil.copyfileobj(source, target)
+
+                            print(f"Saved {jar_file} to {os.path.dirname(jar_file_path)}.")
+
+        self.jar_file_path = jar_file_path
+
+    def is_jar_provided_in_vadere_repo(self):
+
+        if self.jar_file_path is not None:
+            return os.path.isfile(self.jar_file_path)
+
+        if self.jar_file_path is None and self.repo_path is None:
+
+            print(
+                "Neither a vadere-server.jar file nor a path to a local vadere repo is provided."
+            )
+            print(
+                "Check whether a path is defined in enviromental variable VADERE_PATH."
+            )
+            try:
+                self.repo_path = os.environ["VADERE_PATH"]
+                print(
+                    f"VADERE_PATH is provided. Use {self.repo_path} in the following."
+                )
+            except:
+                raise ValueError(
+                    "Add VADERE_PATH to your enviroment variables: VADERE_PATH = /path/to/vadere-repo/"
+                )
+
+        print("Check local vadere repo for vadere-server-jar.")
+        if self._check_pom_file():
+            self.jar_file_path = os.path.join(
+                self.repo_path, "VadereManager/target/vadere-server.jar"
+            )
+            return os.path.isfile(self.jar_file_path)
+
+        return False
+
+    def get_pom_file_path(self):
+        if self.repo_path is not None:
+            return os.path.join(self.repo_path, "pom.xml")
+        else:
+            raise ValueError(
+                "Please provide a path to vadere repo. Add VADERE_PATH to your your environmental variables"
+            )
 
 
 if __name__ == "__main__":

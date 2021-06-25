@@ -4,6 +4,8 @@ from threading import Thread
 
 from typing import Union
 
+from flowcontrol.crownetcontrol.setup.vadere import get_scenario_content
+
 from flowcontrol.crownetcontrol.state.state_listener import StateListener
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.connection import (
@@ -93,11 +95,19 @@ class ClientModeConnection(TraCiManager):
         self._set_connection(BaseTraCIConnection(create_client_socket()))
 
         startTime = time.time()
-        maxWaitingTime = 10.0
+        maxWaitingTime = 20.0
         connected = False
         while not connected and ((time.time() - startTime) < maxWaitingTime) is True:
-            self.traci.connect(host, port)
-            connected = True
+            try:
+                self.traci.connect(host, port)
+                connected = True
+            except ConnectionRefusedError as err:
+                print('Server not started yet. Wait ...')
+                time.sleep(0.2) #200ms
+
+        if not connected:
+            raise ConnectionRefusedError(f'Attempts to connect to the server: timeout ({maxWaitingTime}s) reached.')
+
 
     def _simulation_step(self, step=0.0):
         """
@@ -156,7 +166,7 @@ class ClientModeConnection(TraCiManager):
     def start(self, *kw, **kwargs):
 
         try:
-            self.domains.v_ctrl.send_file(kwargs["file_name"], kwargs["file_content"])
+            self.domains.v_ctrl.send_file(kwargs["file_name"], get_scenario_content(kwargs["file_name"]))
             self._init_sub_listener()
             self._initialize()
             self._running = True

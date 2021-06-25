@@ -7,6 +7,7 @@ from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.misc import get_scenario_file
 
+
 class PingPong(Controller):
     def __init__(self):
         super().__init__()
@@ -59,7 +60,6 @@ if __name__ == "__main__":
     # Vadere IDE: Run org.vadere.manager.Manager in debug mode.
     # In this IDE: Run this main (mode=debug/run).
 
-
     sub = VadereDefaultStateListener.with_vars(
         "persons",
         {"pos": tc.VAR_POSITION, "speed": tc.VAR_SPEED, "angle": tc.VAR_ANGLE},
@@ -67,15 +67,11 @@ if __name__ == "__main__":
     )
 
     controller = PingPong()
-    scenario_file = get_scenario_file("scenarios/test001.scenario")
 
     controller = get_controller_from_args(
         working_dir=os.getcwd(), args=settings, controller=controller
     )
 
-    kwargs = {
-        "file_name": scenario_file,
-        "file_content": get_scenario_content(scenario_file),
-    }
+    kwargs = {"file_name": get_scenario_file("scenarios/test001.scenario")}
     controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)

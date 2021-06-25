@@ -1,5 +1,6 @@
 log.out
 vadere-server-output/
+tutorial*/
 .idea
 .venv
 .venv_dev

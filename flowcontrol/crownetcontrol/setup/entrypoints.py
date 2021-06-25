@@ -1,6 +1,6 @@
 import argparse
 
-from flowcontrol.crownetcontrol.setup.vadere import VadereServer
+from flowcontrol.crownetcontrol.setup.vadere import VadereServer, VadereServerProvider
 from flowcontrol.crownetcontrol.traci.connection_manager import (
     ServerModeConnection,
     ClientModeConnection,
@@ -14,16 +14,31 @@ def get_controller_from_args(working_dir, args=None, controller=None):
     ns = parse_args_as_dict(args)
 
     if controller is None:
-        print("No controller found.")
+        print("Get controller type from settings/command line arguements.")
         controller = Controller.get(ns["controller_type"])
-
 
     if ns["port"] == 9999 and ns["is_in_client_mode"]:
 
-        vadere = VadereServer(is_start_server=ns["start_server"], is_gui_mode=ns["gui_mode"], output_dir = ns["output_dir"])
+        vadere_jar = VadereServerProvider(
+            jar_file_path=ns["jar_file_path"],
+            path_to_vadere_repo=ns["path_to_vadere_repo"],
+            is_package_local=ns["is_package_local"],
+            ask_user=ns["ask_user"],
+            download_dir=ns["download_dir"],
+        )
+
+        vadere = VadereServer(
+            is_start_server=ns["start_server"],
+            is_gui_mode=ns["gui_mode"],
+            output_dir=ns["output_dir"],
+            vadere_server_provider=vadere_jar,
+        )
 
         traci_manager = ClientModeConnection(
-            control_handler=controller, port=ns["port"], host=ns["host_name"], server_thread = vadere.get_server_thread()
+            control_handler=controller,
+            port=ns["port"],
+            host=ns["host_name"],
+            server_thread=vadere.get_server_thread(),
         )
     elif ns["port"] == 9997 and not ns["is_in_client_mode"]:  # TODO check port number
         traci_manager = ServerModeConnection(
@@ -87,11 +102,7 @@ def parse_args_as_dict(args=None):
         help="Only available when server is started automatically.",
     )
     parser.add_argument(
-        "-c",
-        "--controller-type",
-        dest="controller_type",
-        default="",
-        required=False,
+        "-c", "--controller-type", dest="controller_type", default="", required=False,
     )
 
     parser.add_argument(
@@ -99,6 +110,39 @@ def parse_args_as_dict(args=None):
         "--output-dir",
         dest="output_dir",
         default="vadere-server-output",
+        required=False,
+    )
+
+    parser.add_argument(
+        "-j", "--jar-file-path", dest="jar_file_path", default=None, required=False,
+    )
+
+    parser.add_argument(
+        "-vr",
+        "--path-to-vadere-repo",
+        dest="path_to_vadere_repo",
+        default=None,
+        required=False,
+    )
+
+    parser.add_argument(
+        "-pl",
+        "--download-jar-file",
+        dest="is_package_local",
+        action="store_false",
+        default=True,
+        required=False,
+    )
+
+    parser.add_argument(
+        "-dd", "--download-dir", dest="download_dir", default=None, required=False,
+    )
+
+    parser.add_argument(
+        "--suppress-prompts",
+        dest="ask_user",
+        action="store_false",
+        default=True,
         required=False,
     )
 
