@@ -1,11 +1,11 @@
 import os, sys
 
 from flowcontrol.crownetcontrol.setup.entrypoints import get_controller_from_args
-from flowcontrol.crownetcontrol.setup.vadere import get_scenario_content
 from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
 from flowcontrol.strategy.controller.dummy_controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.misc import get_scenario_file
+
 
 class PingPong(Controller):
     def __init__(self):
@@ -44,10 +44,22 @@ class PingPong(Controller):
 if __name__ == "__main__":
 
     if len(sys.argv) == 1:
-        settings = ["--port", "9999", "--host-name", "localhost", "--client-mode", "--start-server", "--controller-type", "PingPong", "--gui-mode"]
+        settings = [
+            "--port",
+            "9999",
+            "--host-name",
+            "localhost",
+            "--client-mode",
+            "--start-server",
+            "--controller-type",
+            "PingPong",
+            "--gui-mode",
+            "--output-dir",
+            os.path.splitext(os.path.basename(__file__))[0],
+            "--download-jar-file", # remove this if you prefer to build vadere locally
+        ]
     else:
         settings = sys.argv[1:]
-
 
     # Tutorial 1:
 
@@ -59,23 +71,14 @@ if __name__ == "__main__":
     # Take-away from this tutorial
     # - learn how to define a simple controller
 
-
     sub = VadereDefaultStateListener.with_vars(
         "persons",
         {"pos": tc.VAR_POSITION, "speed": tc.VAR_SPEED, "angle": tc.VAR_ANGLE},
         init_sub=True,
     )
 
-    scenario_file = get_scenario_file("scenarios/test001.scenario")
+    controller = get_controller_from_args(working_dir=os.getcwd(), args=settings)
 
-
-    controller = get_controller_from_args(
-        working_dir=os.getcwd(), args=settings
-    )
-
-    kwargs = {
-        "file_name": scenario_file,
-        "file_content": get_scenario_content(scenario_file),
-    }
+    kwargs = {"file_name": get_scenario_file("scenarios/test001.scenario")}
     controller.register_state_listener("default", sub, set_default=True)
     controller.start_controller(**kwargs)
