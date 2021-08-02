@@ -58,6 +58,13 @@ class Storage:
         }
         return status_dict
 
+    def read_payload_response(self):
+        payload_dict = {
+            "length": self.read_cmd_length(),
+            "payload": self.readStringList(),
+        }
+        return payload_dict
+
     def read(self, format):
         oldPos = self._pos
         self._pos += struct.calcsize(format)

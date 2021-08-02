@@ -102,25 +102,28 @@ class Connection(object):
             del self._socket
             raise FatalTraCIError("connection closed by SUMO")
         for command in self._queue:
-            status = result.read_status()
-            if status["result"] or status["err"]:
-                self._string = bytes()
-                self._queue = []
-                if status["err"] == "Simulation end reached.":
-                    raise TraCISimulationEnd(
-                        status["err"], status["cmd"], _RESULTS[status["result"]]
+            if command == tc.CMD_PAYLOAD_RESPONSE:
+                return result.read_payload_response()
+            else:
+                status = result.read_status()
+                if status["result"] or status["err"]:
+                    self._string = bytes()
+                    self._queue = []
+                    if status["err"] == "Simulation end reached.":
+                        raise TraCISimulationEnd(
+                            status["err"], status["cmd"], _RESULTS[status["result"]]
+                        )
+                    else:
+                        raise TraCIException(
+                            status["err"], status["cmd"], _RESULTS[status["result"]]
+                        )
+                elif status["cmd"] != command:
+                    raise FatalTraCIError(
+                        "Received answer %s for command %s." % (status["cmd"], command)
                     )
-                else:
-                    raise TraCIException(
-                        status["err"], status["cmd"], _RESULTS[status["result"]]
-                    )
-            elif status["cmd"] != command:
-                raise FatalTraCIError(
-                    "Received answer %s for command %s." % (status["cmd"], command)
-                )
-            elif status["cmd"] == tc.CMD_STOP:
-                length = result.read("!B")[0] - 1
-                result.read("!%sx" % length)
+                elif status["cmd"] == tc.CMD_STOP:
+                    length = result.read("!B")[0] - 1
+                    result.read("!%sx" % length)
         self._string = bytes()
         self._queue = []
         return result
@@ -273,6 +276,14 @@ class Connection(object):
     def send_cmd(self, cmd_id, var_id, obj_id, _format="", *values):
 
         self._queue.append(cmd_id)
+        packed = self.build_cmd(cmd_id, var_id, obj_id, _format, *values)
+
+        self._string += packed
+        return self._send_exact()
+
+    def send_cmd_payload(self, cmd_id, var_id, obj_id, _format="", *values):
+
+        self._queue.append(tc.CMD_PAYLOAD_RESPONSE)
         packed = self.build_cmd(cmd_id, var_id, obj_id, _format, *values)
 
         self._string += packed
@@ -541,6 +552,7 @@ class WrappedTraCIConnection(BaseTraCIConnection):
         self.ff_dispatcher = [
             lambda cmd, var: self.VADERE if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT_INIT else None,
             lambda cmd, var: self.OPP if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT else None,
+            lambda cmd, var: self.OPP if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_DENSITY_MAP else None,
             lambda cmd, var: self.VADERE
         ]
 
