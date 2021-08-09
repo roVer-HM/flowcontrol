@@ -1,9 +1,9 @@
 #
 # Generated source file. DO NOT CHANGE!
-import json
 
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
+from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
 
 
 class VadereSimulationAPI(Domain):
@@ -16,7 +16,7 @@ class VadereSimulationAPI(Domain):
             tc.CMD_SUBSCRIBE_V_SIM_VARIABLE,
             tc.RESPONSE_SUBSCRIBE_V_SIM_VARIABLE,
             tc.CMD_SUBSCRIBE_V_SIM_CONTEXT,
-            tc.RESPONSE_SUBSCRIBE_V_SIM_CONTEXT
+            tc.RESPONSE_SUBSCRIBE_V_SIM_CONTEXT,
         )
 
     def get_network_bound(self):
@@ -46,44 +46,30 @@ class VadereSimulationAPI(Domain):
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
 
-    def send_control(self, message, model, sending_node_id="-1", obj_id="-2"):
+    def send_control(self, message, model, sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
         """
 
-        # self._connection.send_cmd(cmd_id, var_id, obj_id, "s", json)
+        #self._connection.send_cmd(cmd_id, var_id, obj_id, "s", json)
         # send_cmd (defined in Connection [connection.py:159]) will call build_cmd. THIS function is different
         # between client and server mode!!!
         # Client: only has BaseTraCIConnection which does not override build_cmd from Connection (connection.py: 234)
         # Server: has WrappedTraCIConnection which OVERRIDES build_cmd (connection.py: 542) (self._wrap)
 
-        # TODO: add additional 4: number_mes (int), offset_time (double,s), freq (double, Hz), hop_count (int)
-        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model,
-                                  message)
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model , message)
 
-    def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id="-1"):
-        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT_INIT, obj_id, "tsss", controlModelName,
-                                  controlModelType, reactionModelParameter)
+    def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
 
-    def get_density_map(self):
-        print("ASKING FOR DENSITY MAP !!!")
-        sending_node = "misc[0].app[0]"
-        model = "RouteChoice"
-        command = {"targetIds": [3], "probability": [1.0]}
-        action = {"time": 50.0, "space": {"x": 0.0, "y": 0.0, "radius": 100}, "command": command}
-        action = json.dumps(action)
-        # self.con_manager.domains.v_sim.send_control(message=action, model=model, sending_node_id=sending_node)
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT_INIT, obj_id, "tsss", controlModelName, controlModelType, reactionModelParameter)
 
-        # self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model,
-        #                           message)
+    def get_density_map(self, sending_node):
+        result = self._setUniversal(tc.VAR_DENSITY_MAP, "-2", "ts", sending_node)
+        if result is None:
+            raise FatalTraCIError("Expected double list")
 
-        # self._connection.send_cmd(self._cmdSetID, tc.VAR_DENSITY_MAP, obj_id, "ts", "MISC(0).Up(o) | .gloablDensityMap")
+        # todo: create np.array shape (N,3)
+        # [[x, y, count], [x, y, count], ...]
+        print(result)
 
-        #funktionierend
-        # self._connection.send_cmd(self._cmdSetID,
-        #                           32,
-        #                           "-2",
-        #                           "ts",
-        #                           "DummyMessage")
-        payload = self._connection.send_cmd_payload(self._cmdSetID, tc.VAR_DENSITY_MAP, "-2", "ts", "globalDensityMap")
-        return [int(p) for p in payload["payload"]]
+        return result

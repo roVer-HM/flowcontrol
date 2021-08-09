@@ -32,6 +32,10 @@ class Storage:
         self._content = content
         self._pos = 0
 
+    @property
+    def empty(self):
+        return self._pos >= len(self._content)
+
     def check_number_bytes(self, length):
         if (self._pos + length) < len(self._content):
             raise RuntimeError(
@@ -57,13 +61,6 @@ class Storage:
             "err": self.readString(),
         }
         return status_dict
-
-    def read_payload_response(self):
-        payload_dict = {
-            "length": self.read_cmd_length(),
-            "payload": self.readStringList(),
-        }
-        return payload_dict
 
     def read(self, format):
         oldPos = self._pos
