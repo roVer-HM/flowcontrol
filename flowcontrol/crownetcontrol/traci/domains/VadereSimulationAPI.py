@@ -4,6 +4,7 @@
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
+import numpy as np
 
 
 class VadereSimulationAPI(Domain):
@@ -65,11 +66,7 @@ class VadereSimulationAPI(Domain):
 
     def get_density_map(self, sending_node):
         result = self._setUniversal(tc.VAR_DENSITY_MAP, "-2", "ts", sending_node)
-        if result is None:
-            raise FatalTraCIError("Expected double list")
-
-        # todo: create np.array shape (N,3)
-        # [[x, y, count], [x, y, count], ...]
-        print(result)
-
+        if result is None or len(result) % 3 != 0:
+            raise FatalTraCIError("Expected double list of shape (n/3 , 3)")
+        result = np.array(result).reshape(int(len(result) / 3), 3)
         return result
