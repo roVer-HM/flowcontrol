@@ -216,6 +216,20 @@ class Domain(BaseDomain):
             self._retValFunc, varID, self._getCmd(varID, objectID, format, *values)
         )
 
+    def _setUniversal(self, varID, objectID="", format="", *values):
+        if self._deprecatedFor:
+            warnings.warn(
+                "The domain %s is deprecated, use %s instead."
+                % (self.name, self._deprecatedFor)
+            )
+        result = self._setCmd(varID, objectID, format, *values)
+        if result.empty:
+            return None
+        else:
+            return _parse(
+                self._retValFunc, varID, result
+            )
+
     def _getCmd(self, varID, objID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
@@ -230,10 +244,22 @@ class Domain(BaseDomain):
             )
         return r
 
-    def _setCmd(self, varID, objectID, format="", *values):
+    def _setCmd(self, varID, objID, format="", *values):
         if self._connection is None:
             raise FatalTraCIError("Not connected.")
-        self._connection.send_cmd(self._cmdSetID, varID, objectID, format, *values)
+        r = self._connection.send_cmd(self._cmdSetID, varID, objID, format, *values)
+        if not r.empty:
+            r.readLength()
+            response, retVarID = r.read("!BB")
+            objectID = r.readString()
+            if response - self._cmdSetID != 16 or retVarID != varID or objectID != objID:
+                raise FatalTraCIError(
+                    "Received answer %s,%s,%s for command %s,%s,%s."
+                    % (response, retVarID, objectID, self._cmdGetID, varID, objID)
+                )
+            return r
+        else:
+            return r
 
     def getIDList(self):
         """getIDList() -> list(string)
