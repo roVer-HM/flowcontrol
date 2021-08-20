@@ -66,7 +66,13 @@ class VadereSimulationAPI(Domain):
 
     def get_density_map(self, sending_node):
         result = self._setUniversal(tc.VAR_DENSITY_MAP, "-2", "ts", sending_node)
+        cell_dim = result[0:2]
+        cell_size = result[2:4]
+        result = result[4:]
+        # coordinate is left lower corner
         if result is None or len(result) % 3 != 0:
             raise FatalTraCIError("Expected double list of shape (n/3 , 3)")
         result = np.array(result).reshape(int(len(result) / 3), 3)
-        return result
+        result[:, 0] = result[:, 0] * cell_size[0]
+        result[:, 1] = result[:, 1] * cell_size[1]
+        return cell_dim, result
