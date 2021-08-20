@@ -32,6 +32,10 @@ class Storage:
         self._content = content
         self._pos = 0
 
+    @property
+    def empty(self):
+        return self._pos >= len(self._content)
+
     def check_number_bytes(self, length):
         if (self._pos + length) < len(self._content):
             raise RuntimeError(

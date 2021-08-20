@@ -3,6 +3,8 @@
 
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
+from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
+import numpy as np
 
 
 class VadereSimulationAPI(Domain):
@@ -56,20 +58,21 @@ class VadereSimulationAPI(Domain):
         # Client: only has BaseTraCIConnection which does not override build_cmd from Connection (connection.py: 234)
         # Server: has WrappedTraCIConnection which OVERRIDES build_cmd (connection.py: 542) (self._wrap)
 
-        #TODO: add additional 4: number_mes (int), offset_time (double,s), freq (double, Hz), hop_count (int)
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model , message)
 
     def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
 
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT_INIT, obj_id, "tsss", controlModelName, controlModelType, reactionModelParameter)
 
-
-
-
-
-
-
-
-
-
-
+    def get_density_map(self, sending_node):
+        result = self._setUniversal(tc.VAR_DENSITY_MAP, "-2", "ts", sending_node)
+        cell_dim = result[0:2]
+        cell_size = result[2:4]
+        result = result[4:]
+        # coordinate is left lower corner
+        if result is None or len(result) % 3 != 0:
+            raise FatalTraCIError("Expected double list of shape (n/3 , 3)")
+        result = np.array(result).reshape(int(len(result) / 3), 3)
+        result[:, 0] = result[:, 0] * cell_size[0]
+        result[:, 1] = result[:, 1] * cell_size[1]
+        return cell_dim, result

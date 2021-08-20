@@ -541,6 +541,7 @@ class WrappedTraCIConnection(BaseTraCIConnection):
         self.ff_dispatcher = [
             lambda cmd, var: self.VADERE if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT_INIT else None,
             lambda cmd, var: self.OPP if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_EXTERNAL_INPUT else None,
+            lambda cmd, var: self.OPP if cmd == tc.CMD_SET_V_SIM_VARIABLE and var == tc.VAR_DENSITY_MAP else None,
             lambda cmd, var: self.VADERE
         ]
 
