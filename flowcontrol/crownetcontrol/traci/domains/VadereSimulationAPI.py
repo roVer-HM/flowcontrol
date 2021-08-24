@@ -75,4 +75,4 @@ class VadereSimulationAPI(Domain):
         result = np.array(result).reshape(int(len(result) / 3), 3)
         result[:, 0] = result[:, 0] * cell_size[0]
         result[:, 1] = result[:, 1] * cell_size[1]
-        return cell_dim, result
+        return cell_dim, cell_size, result
