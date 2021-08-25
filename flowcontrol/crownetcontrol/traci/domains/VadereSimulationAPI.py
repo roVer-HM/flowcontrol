@@ -47,6 +47,9 @@ class VadereSimulationAPI(Domain):
     def get_coordinate_reference(self, data):
         return self._getUniversal(tc.VAR_COORD_REF, "", data)
 
+    def get_output_directory(self):
+        return self._getUniversal(tc.VAR_OUTPUT_DIR, "")
+
     def send_control(self, message, model, sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
