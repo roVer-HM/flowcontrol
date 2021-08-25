@@ -79,7 +79,7 @@ class TraCiManager:
         pass
 
     def _cleanup(self):
-        pass
+        self._control_hdl.collect_data()
 
     def start(self, *kw, **kwargs):
         raise NotImplementedError
