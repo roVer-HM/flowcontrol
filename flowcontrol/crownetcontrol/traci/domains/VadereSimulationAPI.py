@@ -71,11 +71,16 @@ class VadereSimulationAPI(Domain):
         result = self._setUniversal(tc.VAR_DENSITY_MAP, "-2", "ts", sending_node)
         cell_dim = result[0:2]
         cell_size = result[2:4]
+        if len(result) == 4:
+            print("No counts provided.")
+            return cell_dim, cell_size, None
+
         result = result[4:]
-        # coordinate is left lower corner
-        if result is None or len(result) % 3 != 0:
+        if len(result) % 3 == 0:
+            result = np.array(result).reshape(int(len(result) / 3), 3)
+            result[:, 0] = result[:, 0] * cell_size[0] # x-coordinate of left lower corner
+            result[:, 1] = result[:, 1] * cell_size[1] # y-coordinate of left lower corner
+        else:
             raise FatalTraCIError("Expected double list of shape (n/3 , 3)")
-        result = np.array(result).reshape(int(len(result) / 3), 3)
-        result[:, 0] = result[:, 0] * cell_size[0]
-        result[:, 1] = result[:, 1] * cell_size[1]
+
         return cell_dim, cell_size, result
