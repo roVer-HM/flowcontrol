@@ -1,6 +1,6 @@
 #
 # Generated source file. DO NOT CHANGE!
-
+import json
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 
@@ -56,3 +56,6 @@ class VaderePolygonAPI(Domain):
 
     def get_image_angle(self, element_id):
         return self._getUniversal(tc.VAR_ANGLE, element_id)
+
+
+

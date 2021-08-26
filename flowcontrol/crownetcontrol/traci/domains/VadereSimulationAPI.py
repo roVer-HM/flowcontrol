@@ -5,6 +5,7 @@ from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
 import numpy as np
+import json
 
 
 class VadereSimulationAPI(Domain):
@@ -50,6 +51,9 @@ class VadereSimulationAPI(Domain):
     def get_output_directory(self):
         return self._getUniversal(tc.VAR_OUTPUT_DIR, "")
 
+    def get_sim_config(self):
+        return self._getUniversal(tc.VAR_SIM_CONFIG, "")
+
     def send_control(self, message, model, sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
@@ -84,3 +88,7 @@ class VadereSimulationAPI(Domain):
             raise FatalTraCIError("Expected double list of shape (n/3 , 3)")
 
         return cell_dim, cell_size, result
+
+    def get_obstacles(self):
+        obstacles = self._getUniversal(tc.VAR_OBSTACLES, "")
+        return json.loads(obstacles)
