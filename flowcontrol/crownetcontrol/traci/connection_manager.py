@@ -79,7 +79,7 @@ class TraCiManager:
         pass
 
     def _cleanup(self):
-        self._control_hdl.collect_data()
+        self._control_hdl.postprocess_sim_results()
 
     def start(self, *kw, **kwargs):
         raise NotImplementedError
@@ -180,7 +180,7 @@ class ClientModeConnection(TraCiManager):
 
     def _cleanup(self):
 
-        self._control_hdl.collect_data()
+        self._control_hdl.postprocess_sim_results()
 
         if self.server_thread is not None:
            print("Shut down server.")

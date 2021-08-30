@@ -45,8 +45,14 @@ class Controller:
 
         return controllers[0]()
 
-    @abc.abstractmethod
-    def collect_data(self):
+    def postprocess_sim_results(self):
+        self.write_data()
+        self.plot_data()
+
+    def write_data(self):
+        pass
+
+    def plot_data(self):
         pass
 
 
