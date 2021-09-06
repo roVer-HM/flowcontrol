@@ -40,7 +40,7 @@ class CorridorChoiceExample(Controller):
         action = {
             "time": sim_time + 0.4,
             "space": {"x": 0.0, "y": 0.0, "radius": 100},
-            "commandID": self.commandID,
+            "commandId": self.commandID,
             "command": command,
         }
         action = json.dumps(action)
