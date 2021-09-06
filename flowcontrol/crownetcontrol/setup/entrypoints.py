@@ -1,9 +1,10 @@
 import argparse
+import os.path
 
 from flowcontrol.crownetcontrol.setup.vadere import VadereServer, VadereServerProvider
 from flowcontrol.crownetcontrol.traci.connection_manager import (
     ServerModeConnection,
-    ClientModeConnection,
+    ClientModeConnection, SimulationConfig,
 )
 
 from flowcontrol.strategy.controller.dummy_controller import Controller
@@ -34,11 +35,18 @@ def get_controller_from_args(working_dir, args=None, controller=None):
             vadere_server_provider=vadere_jar,
         )
 
+        sim_config = SimulationConfig(scenario_file= ns["scenario_file"],
+                                      rootDir = ns["output_dir"],
+                                      experimentLabel = ns["experiment_label"],
+                                      ControllerConfig = ns["controller_type"],
+                                      )
+
         traci_manager = ClientModeConnection(
             control_handler=controller,
             port=ns["port"],
             host=ns["host_name"],
             server_thread=vadere.get_server_thread(),
+            sim_cfg= sim_config
         )
     elif ns["port"] == 9997 and not ns["is_in_client_mode"]:  # TODO check port number
         traci_manager = ServerModeConnection(
@@ -101,15 +109,12 @@ def parse_args_as_dict(args=None):
         required=False,
         help="Only available when server is started automatically.",
     )
-    parser.add_argument(
-        "-c", "--controller-type", dest="controller_type", default="", required=False,
-    )
 
     parser.add_argument(
         "-o",
         "--output-dir",
         dest="output_dir",
-        default="vadere-server-output",
+        default="./vadere-server-output",
         required=False,
     )
 
@@ -146,6 +151,33 @@ def parse_args_as_dict(args=None):
         required=False,
     )
 
+    parser.add_argument(
+        "-sf",
+        "--scenario-file",
+        dest="scenario_file",
+        default=None,
+        required=False,
+        help="Scenario file path (../../*.scenario) required in ClientModeConnection mode."
+    )
+
+    parser.add_argument(
+        "-el",
+        "--experiment-label",
+        dest="experiment_label",
+        default="sim",
+        required=False,
+        help="Experiment label can be defined in ClientModeConnection mode."
+    )
+    parser.add_argument(
+        "-c",
+        "--controller-type",
+        dest="controller_type",
+        default="Control",
+        required=True,
+        help="Controller type needs to be defined via command line."
+    )
+
+
     if args is None:
         ns = vars(parser.parse_args())
     else:
@@ -159,6 +191,11 @@ def parse_args_as_dict(args=None):
     if ns["start_server"] is False and ns["gui_mode"] is True:
         raise ValueError(
             "Gui mode is only available if the server is started automatically. Set --start-server option."
+        )
+
+    if ns["is_in_client_mode"] is True and ns["scenario_file"] is None:
+        raise ValueError(
+            f"Scenario file in client mode required. No scenario file provided. Set --scenario-file."
         )
 
     return ns

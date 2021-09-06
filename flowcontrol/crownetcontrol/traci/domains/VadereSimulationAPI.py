@@ -44,7 +44,7 @@ class VadereSimulationAPI(Domain):
                        seed=0,
                        useVadereSeed = 1):
         if dateTime is None:
-            dateTime = time.time()
+            dateTime = str(time.time())
 
         if resultRootDir is None:
             resultRootDir = os.getcwd()

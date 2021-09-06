@@ -1,4 +1,5 @@
 import logging
+import os.path
 import time
 from threading import Thread
 
@@ -19,6 +20,7 @@ from flowcontrol.crownetcontrol.traci.exceptions import (
     TraCISimulationEnd,
     FatalTraCIError,
 )
+from flowcontrol.utils.misc import get_scenario_file
 
 
 class TraCiManager:
@@ -85,10 +87,36 @@ class TraCiManager:
         raise NotImplementedError
 
 
+class SimulationConfig:
+    def __init__(self, scenario_file, rootDir, experimentLabel, ControllerConfig, omnetppConfig = ""):
+        self.scenario_file = scenario_file
+        self.root_dir = rootDir
+        self.experimentLabel = experimentLabel
+        self.omnetppConfig = omnetppConfig
+        self.controller_config = ControllerConfig
+
+    def get_scenario_file(self):
+        return get_scenario_file(self.scenario_file)
+
+    def get_root_dir(self):
+        return self.root_dir
+
+    def getExperimetnLabel(self):
+        return  self.experimentLabel
+
+    def getScenarioFileContent(self):
+        return get_scenario_content(self.get_scenario_file())
+
+    def getOmnetppConfid(self):
+        return self.omnetppConfig
+
+    def getControllerCOnfig(self):
+        return self.controller_config
 
 
 class ClientModeConnection(TraCiManager):
-    def __init__(self, control_handler, host="127.0.0.1", port=9999, server_thread = None):
+    def __init__(self, control_handler, host="127.0.0.1", port=9999, server_thread = None, sim_cfg : SimulationConfig = None ):
+        self.sim_cfg = sim_cfg
         self.server_thread : Thread = server_thread
 
         super().__init__(host, port, control_handler)
@@ -166,8 +194,14 @@ class ClientModeConnection(TraCiManager):
     def start(self, *kw, **kwargs):
 
         try:
-            self.domains.v_sim.set_sim_config(resultRootDir=kwargs["rootDir"], experiment=kwargs["experiment_label"], dateTime=kwargs["time"])
-            self.domains.v_ctrl.send_file(kwargs["file_name"], get_scenario_content(kwargs["file_name"]))
+            #TODO manage seed
+            self.domains.v_sim.set_sim_config(
+                configName= self.sim_cfg.getOmnetppConfid(),
+                resultRootDir=self.sim_cfg.get_root_dir(),
+                experiment=self.sim_cfg.getExperimetnLabel(),
+                dateTime=time.time(),
+            )
+            self.domains.v_ctrl.send_file(self.sim_cfg.get_scenario_file(), self.sim_cfg.getScenarioFileContent())
             self._init_sub_listener()
             self._initialize()
             self._running = True

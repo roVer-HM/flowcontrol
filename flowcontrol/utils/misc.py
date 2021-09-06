@@ -44,6 +44,11 @@ def get_abs_path(scenario_name):
         if len(scenario_files) == 0:
             raise ValueError(f"Scenario file {scenario_name} not found.")
         elif len(scenario_files) > 1:
+            for f in scenario_files:
+                dir1 = os.path.dirname(f)
+                dir2 = os.path.dirname(dir1)
+                if os.path.basename(dir1) == "scenarios" and os.path.basename(dir2) == "vadere":
+                    return f
             raise ValueError(f"Multiple scenario files found: {scenario_files}")
         return scenario_files[0]
 
