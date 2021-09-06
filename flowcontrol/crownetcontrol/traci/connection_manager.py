@@ -194,12 +194,14 @@ class ClientModeConnection(TraCiManager):
     def start(self, *kw, **kwargs):
 
         try:
+
             #TODO manage seed
             self.domains.v_sim.set_sim_config(
                 configName= self.sim_cfg.getOmnetppConfid(),
                 resultRootDir=self.sim_cfg.get_root_dir(),
-                experiment=self.sim_cfg.getExperimetnLabel(),
-                dateTime=time.time(),
+                experiment=self.sim_cfg.getExperimetnLabel(), #info: label must contain current time if necessary
+                dateTime=time.time(), #TODO timeStamp is currenlty nor processed in Vadere -> move it to
+
             )
             self.domains.v_ctrl.send_file(self.sim_cfg.get_scenario_file(), self.sim_cfg.getScenarioFileContent())
             self._init_sub_listener()
