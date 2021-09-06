@@ -79,7 +79,7 @@ class TraCiManager:
         pass
 
     def _cleanup(self):
-        self._control_hdl.collect_data()
+        self._control_hdl.postprocess_sim_results()
 
     def start(self, *kw, **kwargs):
         raise NotImplementedError
@@ -166,6 +166,7 @@ class ClientModeConnection(TraCiManager):
     def start(self, *kw, **kwargs):
 
         try:
+            self.domains.v_sim.set_sim_config(resultRootDir=kwargs["rootDir"], experiment=kwargs["experiment_label"], dateTime=kwargs["time"])
             self.domains.v_ctrl.send_file(kwargs["file_name"], get_scenario_content(kwargs["file_name"]))
             self._init_sub_listener()
             self._initialize()
@@ -180,7 +181,7 @@ class ClientModeConnection(TraCiManager):
 
     def _cleanup(self):
 
-        self._control_hdl.collect_data()
+        self._control_hdl.postprocess_sim_results()
 
         if self.server_thread is not None:
            print("Shut down server.")

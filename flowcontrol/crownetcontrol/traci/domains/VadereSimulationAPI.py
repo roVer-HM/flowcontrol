@@ -1,5 +1,7 @@
 #
 # Generated source file. DO NOT CHANGE!
+import os
+import time
 
 from flowcontrol.crownetcontrol.traci.domains.domain import Domain
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
@@ -30,8 +32,25 @@ class VadereSimulationAPI(Domain):
     def get_sim_ste(self):
         return self._getUniversal(tc.VAR_DELTA_T, "")
 
-    def set_sim_config(self):
-        self._setCmd(tc.VAR_SIM_CONFIG, "", "Error", None)
+    def set_sim_config(self,
+                       configName = "",
+                       experiment = "Experiment",
+                       dateTime = None,
+                       resultRootDir = None,
+                       iterationVariables = "1",
+                       repetition = "1",
+                       outputScalarFile="",
+                       outputVecFile= "",
+                       seed=0,
+                       useVadereSeed = 1):
+        if dateTime is None:
+            dateTime = time.time()
+
+        if resultRootDir is None:
+            resultRootDir = os.getcwd()
+
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_SIM_CONFIG, "-1", "tssssssssiB", configName, experiment, dateTime, resultRootDir, iterationVariables, repetition, outputScalarFile, outputVecFile, seed, useVadereSeed)
+
 
     def get_hash(self, data):
         return self._getUniversal(tc.VAR_CACHE_HASH, "", data)
@@ -50,6 +69,11 @@ class VadereSimulationAPI(Domain):
 
     def get_output_directory(self):
         return self._getUniversal(tc.VAR_OUTPUT_DIR, "")
+
+    def set_output_directory(self, output_directory_path = "./vadere-server-output"):
+        self._connection.send_cmd(self._cmdSetID, tc.VAR_OUTPUT_DIR, "-1", "s", output_directory_path)
+
+
 
     def get_sim_config(self):
         return self._getUniversal(tc.VAR_SIM_CONFIG, "")
@@ -92,3 +116,6 @@ class VadereSimulationAPI(Domain):
     def get_obstacles(self):
         obstacles = self._getUniversal(tc.VAR_OBSTACLES, "")
         return json.loads(obstacles)
+
+
+
