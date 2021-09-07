@@ -136,12 +136,6 @@ class Storage:
         length = self.readLength()
         return tuple([self.read("!dd") for i in range(length)])
 
-    def readCompound(self, expectedSize=None):
-        t, s = self.read("!Bi")
-        assert t == tc.TYPE_COMPOUND
-        assert expectedSize is None or s == expectedSize
-        return s
-
     def ready(self):
         return self._pos < len(self._content)
 

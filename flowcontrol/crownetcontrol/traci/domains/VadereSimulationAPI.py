@@ -70,6 +70,11 @@ class VadereSimulationAPI(Domain):
     def get_output_directory(self):
         return self._getUniversal(tc.VAR_OUTPUT_DIR, "")
 
+    def get_data_processor_value(self, processor_id):
+
+        test = self._getUniversal(tc.VAR_PROCESSOR, str(processor_id))
+        return test
+
     def set_output_directory(self, output_directory_path = "./vadere-server-output"):
         self._connection.send_cmd(self._cmdSetID, tc.VAR_OUTPUT_DIR, "-1", "s", output_directory_path)
 

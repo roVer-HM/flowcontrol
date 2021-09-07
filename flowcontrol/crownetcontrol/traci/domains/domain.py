@@ -62,6 +62,13 @@ def _parse(valueFunc, varID, data):
         return data.readStringList()
     if varType == tc.TYPE_DOUBLELIST:
         return data.readDoubleList()
+    if varType == tc.TYPE_COMPOUND:
+        nr_components = data.read("!i")[0]
+        result = list()
+        for x in range(nr_components):
+            res = _parse(valueFunc, varID, data)
+            result.append(res)
+        return result
 
     if varType == tc.TYPE_COLOR:
         return data.read("!BBBB")
