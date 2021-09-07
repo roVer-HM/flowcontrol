@@ -1,9 +1,11 @@
 import abc
 import io
+import os.path
 from typing import List, Union
 import numpy as np
 
 import pandas as pd
+import time
 #
 # class Writer:
 #
@@ -117,6 +119,39 @@ class DensityMeasurements(Processor):
         super().__init__(file_name, is_use_buffer=is_use_buffer, user_defined_header=user_defined_header)
 
 
+#TODO remove this class -> functionality might be better handeled in other simulator
+class PostProcessor:
+
+    def __init__(self, result_file_name, output_dir, needed_files:dict):
+        self.result_file_name = result_file_name
+        self.output_dir = os.path.abspath(output_dir)
+        self.needed_files = self.needed_files
+        self.dataframe = pd.DataFrame()
+
+    def is_needed_files_provided(self):
+        for f in self.needed_files:
+            nr_attempts = 0
+            file_path = os.path.join(self.output_dir, self.result_file_name)
+            while os.path.isfile(file_path) is False and nr_attempts < 20:
+                time.sleep(1)
+                nr_attempts += 1
+            if nr_attempts == 20:
+                raise ValueError(f"File {f} is not provided in {self.output_dir}.Make sure that the file is written to the disk.")
+
+
+    @abc.abstractmethod
+    def computeDerivedResult(self):
+        pass
+
+    def write(self):
+        self.dataframe.to_csv(self.result_file_name, sep = " ")
+
+
+
+class DisseminationTimes(PostProcessor):
+
+    def computeDerivedResult(self):
+        self.is_needed_files_provided()
 
 
 
@@ -125,6 +160,7 @@ class Manager:
 
     def __init__(self, simulation_step_size = 0.4):
         self.processor = dict()
+        self.postprocessors = dict()
         self.sim_time_step_size = simulation_step_size
 
     def update_sim_time(self, sim_time = None):
@@ -141,6 +177,9 @@ class Manager:
         pc.write(*data)
 
     def registerProcessor(self, key, w: Processor):
+        self.processor[key] = w
+
+    def registerProcessor(self, key, w: PostProcessor):
         self.processor[key] = w
 
     def finish(self):

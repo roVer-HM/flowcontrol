@@ -18,7 +18,6 @@ class DataProcessors(TestCase):
         is_ = pd.read_csv(file, sep=" ", header=[0])
         should_ = pd.read_csv("testRessources/output_2.txt", sep=" ", header=[0])
         os.remove(file)
-
         assert is_.equals(should_)
 
 
