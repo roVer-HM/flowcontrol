@@ -8,6 +8,7 @@ from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.crownetcontrol.traci.exceptions import FatalTraCIError
 import numpy as np
 import json
+import pandas as pd
 
 
 class VadereSimulationAPI(Domain):
@@ -74,6 +75,20 @@ class VadereSimulationAPI(Domain):
 
         test = self._getUniversal(tc.VAR_PROCESSOR, str(processor_id))
         return test
+
+    def get_density_for_measurement_area(self, processor_id):
+        measurement_id, time_step, density = self._getUniversal(tc.VAR_PROCESSOR, str(processor_id))
+        return density
+
+    def get_received_command_ids(self, processor_id):
+        time_step, pedestrian_ids, command_ids = self._getUniversal(tc.VAR_PROCESSOR, str(processor_id))
+        frame = pd.DataFrame(data = [pedestrian_ids, command_ids])
+        frame = frame.transpose()
+        frame.set_index([0], inplace=True)
+        frame.index.name = "pedestrianId"
+        frame.columns = ["commandId"]
+        frame["timeStep"] = time_step
+        return frame
 
     def set_output_directory(self, output_directory_path = "./vadere-server-output"):
         self._connection.send_cmd(self._cmdSetID, tc.VAR_OUTPUT_DIR, "-1", "s", output_directory_path)

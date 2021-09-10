@@ -35,6 +35,7 @@ class Writer:
         buffer_config=None
         if write_to_buffer:
             buffer_config = 1 # line buffering (only usable in text mode), and an integer > 1 to indicate the size of a fixed-size chunk buffer.
+        self.file_path = file_path
         self._file = open(file_path, mode="w", encoding="utf_8", buffering=buffer_config)
         self._is_write_header = True
 
@@ -45,27 +46,47 @@ class Writer:
     def finish(self):
         self._file.close()
 
+    def get_file_path(self):
+        return self.file_path
+
 
 class Processor:
 
-    def __init__(self, file_name, is_use_buffer = True, user_defined_header = None):
-        self.writer = Writer(file_name, is_use_buffer)
+    def __init__(self, writer: Writer = None, user_defined_header = None, is_store_data = True):
+        self.writer = writer
         self.indices = list()
         self.current_time_step = 0
         self.user_defined_header = user_defined_header
+        self.is_store_data = is_store_data
+        self.storage = None
 
     def is_valid_state(self, data_frame):
         return self.is_index_valid(data_frame)
-
+    
+    def get_values(self):
+        if self.storage is None:
+            raise ValueError("Only available if is_store_data is set to True.")
+        return self.storage
+    
     def update_time_step(self, time_step):
         self.current_time_step = time_step
+        
+    def append_data(self, *data):
+        if self.storage is None:
+            self.storage = self.format_data(*data)
+        else:
+            data_frame = self.format_data(*data)
+            self.storage = pd.concat([self.storage, data_frame])
 
     def write(self, *data):
         data_frame = self.format_data(*data)
         if self.is_valid_state(data_frame):
-            self.writer.write(data_frame)
+            if self.writer is not None:
+                self.writer.write(data_frame)
+            if self.is_store_data:
+                self.append_data(*data)
 
-    def finish(self):
+    def finish(self, *args):
         self.writer.finish()
 
     def format_data(self, *data):
@@ -89,11 +110,14 @@ class Processor:
     def get_col_names(self, param):
         pass
 
+    def post_loop(self, param):
+        pass
+
 
 class ControlActionCmdId(Processor):
 
-    def __init__(self, file_name, is_use_buffer = True):
-        super().__init__(file_name, is_use_buffer= is_use_buffer)
+    def __init__(self, writer: Writer = None):
+        super().__init__(writer)
 
     def get_col_names(self, param):
         return ["commandId"]
@@ -106,8 +130,8 @@ class ControlActionCmdId(Processor):
 
 class CorridorRecommendation(Processor):
 
-    def __init__(self, file_name, is_use_buffer=True):
-        super().__init__(file_name, is_use_buffer=is_use_buffer)
+    def __init__(self, writer : Writer = None):
+        super().__init__(writer)
 
     def get_col_names(self, param):
         return ["corridorRecommended"]
@@ -115,45 +139,38 @@ class CorridorRecommendation(Processor):
 
 class DensityMeasurements(Processor):
 
-    def __init__(self, file_name, user_defined_header, is_use_buffer=True):
-        super().__init__(file_name, is_use_buffer=is_use_buffer, user_defined_header=user_defined_header)
+    def __init__(self, writer : Writer, user_defined_header):
+        super().__init__(writer, user_defined_header=user_defined_header)
 
 
-#TODO remove this class -> functionality might be better handeled in other simulator
-class PostProcessor:
+class SendingTimes(Processor):
+    def __init__(self, writer : Writer = None):
+        super().__init__(writer)
 
-    def __init__(self, result_file_name, output_dir, needed_files:dict):
-        self.result_file_name = result_file_name
-        self.output_dir = os.path.abspath(output_dir)
-        self.needed_files = self.needed_files
-        self.dataframe = pd.DataFrame()
+    def write(self, *data):
+        if self.is_valid_storage_data():
+            if self.storage is None:
+                self.storage = data[0]
+            else:
+                self.storage = pd.concat([self.storage, data[0]])
 
-    def is_needed_files_provided(self):
-        for f in self.needed_files:
-            nr_attempts = 0
-            file_path = os.path.join(self.output_dir, self.result_file_name)
-            while os.path.isfile(file_path) is False and nr_attempts < 20:
-                time.sleep(1)
-                nr_attempts += 1
-            if nr_attempts == 20:
-                raise ValueError(f"File {f} is not provided in {self.output_dir}.Make sure that the file is written to the disk.")
+    def post_loop(self, commandIds : pd.DataFrame):
+        self.commandIds = commandIds
 
+    def finish(self, *args):
 
-    @abc.abstractmethod
-    def computeDerivedResult(self):
-        pass
+        sending_times = self.compute_sending_times()
+        file_name = self.writer.get_file_path()
+        sending_times.to_csv(file_name, sep= " ")
 
-    def write(self):
-        self.dataframe.to_csv(self.result_file_name, sep = " ")
+    def compute_sending_times(self):
+        commandIdsSent = self.commandIds
+        commandIdsReceived = self.storage
+        #TODO compute sending times
+        return pd.DataFrame()
 
-
-
-class DisseminationTimes(PostProcessor):
-
-    def computeDerivedResult(self):
-        self.is_needed_files_provided()
-
-
+    def is_valid_storage_data(self, *data):
+        return True
 
 
 class Manager:
@@ -164,6 +181,7 @@ class Manager:
         self.sim_time_step_size = simulation_step_size
 
     def update_sim_time(self, sim_time = None):
+        print(sim_time)
         step = int(np.round(sim_time / self.sim_time_step_size))
         self.update_time_step(step)
 
@@ -176,14 +194,20 @@ class Manager:
         pc : Processor = self.processor[key]
         pc.write(*data)
 
-    def registerProcessor(self, key, w: Processor):
-        self.processor[key] = w
+    def post_loop(self, key, *data):
+        # [a, b, c, e, f]
+        pc : Processor = self.processor[key]
+        pc.post_loop(*data)
 
-    def registerProcessor(self, key, w: PostProcessor):
+    def registerProcessor(self, key, w: Processor):
         self.processor[key] = w
 
     def finish(self):
         [f.finish() for f in self.processor.values()]
+
+    def get_processor_values(self, key):
+        pc: Processor = self.processor[key]
+        return pc.get_values()
 
 
 
