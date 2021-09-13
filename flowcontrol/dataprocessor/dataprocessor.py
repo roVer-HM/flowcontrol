@@ -60,6 +60,9 @@ class Processor:
         self.is_store_data = is_store_data
         self.storage = None
 
+    def set_output_dir_path(self, output_dir):
+        self.output_dir = output_dir
+
     def is_valid_state(self, data_frame):
         return self.is_index_valid(data_frame)
     
@@ -166,14 +169,28 @@ class SendingTimes(Processor):
     def compute_sending_times(self):
         commandIdsSent = self.commandIds
         commandIdsReceived = self.storage
-        #TODO compute sending times
-        return pd.DataFrame()
+
+        statistics = None
+        for time_step, commandId in commandIdsSent.iterrows():
+            times = commandIdsReceived[commandIdsReceived["commandId"] == commandId.values[0]]
+            times["timeStep"] = times["timeStep"] - time_step
+            times.reset_index(inplace=True)
+            times.set_index('commandId', inplace=True)
+            pd.DataFrame(times["timeStep"].describe().transpose())
+            stats = pd.DataFrame(times["timeStep"].describe()).rename(columns={"timeStep": time_step}).transpose()
+            stats.index.name = "timeStep"
+            if statistics is None:
+                statistics = stats
+            else:
+                statistics = pd.concat([statistics, stats], axis=0)
+        return statistics
 
     def is_valid_storage_data(self, *data):
         return True
 
 
 class Manager:
+
 
     def __init__(self, simulation_step_size = 0.4):
         self.processor = dict()
@@ -182,7 +199,7 @@ class Manager:
 
     def update_sim_time(self, sim_time = None):
         print(sim_time)
-        step = int(np.round(sim_time / self.sim_time_step_size))
+        step = int(np.round(sim_time / self.sim_time_step_size)) + 1 # +1 is necessary because 0.0s -> timeStep 1
         self.update_time_step(step)
 
     def update_time_step(self, time_step = None):
@@ -208,6 +225,10 @@ class Manager:
     def get_processor_values(self, key):
         pc: Processor = self.processor[key]
         return pc.get_values()
+
+    def set_output_dir(self, output_dir_path):
+        for proc in self.processor.values():
+            proc.set_output_dir_path(output_dir_path)
 
 
 

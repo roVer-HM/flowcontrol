@@ -143,6 +143,7 @@ class ClientModeConnection(TraCiManager):
         If the given value is 0 or absent, exactly one step is performed.
         Values smaller than or equal to the current sim time result in no action.
         """
+        print(f"simulate until step {step}")
         result = self.domains.v_ctrl.sim_step(step)
         self.traci.parse_subscription_result(result)
         self.traci.notify_subscription_listener()
@@ -168,9 +169,9 @@ class ClientModeConnection(TraCiManager):
 
     def _run(self):
         while self._running:
-            self._simulation_step(self._sim_until)
-            # no response required for ClientModeConnection
             self._handle_sim_step()
+            # no response required for ClientModeConnection
+            self._simulation_step(self._sim_until)
             # clear connection state (for ClientModeConnection _con == _base_client)
             self.traci.clear()
 

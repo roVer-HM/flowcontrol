@@ -88,6 +88,7 @@ class VadereSimulationAPI(Domain):
         frame.index.name = "pedestrianId"
         frame.columns = ["commandId"]
         frame["timeStep"] = time_step
+        frame = frame.astype(int)
         return frame
 
     def set_output_directory(self, output_directory_path = "./vadere-server-output"):
