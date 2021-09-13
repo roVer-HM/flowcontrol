@@ -33,7 +33,11 @@ class Controller:
 
     def set_simulation_config_dynamically(self):
         self.set_output_dir(os.path.dirname(self.con_manager.domains.v_sim.get_output_directory()))
+        self.set_stepping_behavior()
+
+    def set_stepping_behavior(self):
         self.sensor_time_step_size = self.con_manager.domains.v_sim.get_sim_ste()
+        print(f"Synchronize every {self.sensor_time_step_size}s")
 
     def set_next_step_time(self):
         if self.next_call is None:
@@ -41,6 +45,7 @@ class Controller:
         else:
             self.next_call += self.sensor_time_step_size
         self.con_manager.next_call_at(self.next_call)
+        print(f"Set next call to {self.next_call}.")
 
     @abc.abstractmethod
     def handle_sim_step(self, sim_time, sim_state):
@@ -79,6 +84,7 @@ class Controller:
         else:
             raise ValueError("Output directory structure not provided.")
         self.output_dir = output_dir
+        print(f"Set flowcontrol output directory to {self.output_dir}")
 
 
 class TikTokController(Controller):

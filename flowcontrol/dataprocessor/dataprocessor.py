@@ -198,7 +198,6 @@ class Manager:
         self.sim_time_step_size = simulation_step_size
 
     def update_sim_time(self, sim_time = None):
-        print(sim_time)
         step = int(np.round(sim_time / self.sim_time_step_size)) + 1 # +1 is necessary because 0.0s -> timeStep 1
         self.update_time_step(step)
 

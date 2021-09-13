@@ -241,7 +241,7 @@ class ServerModeConnection(TraCiManager):
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(
-            tc.CMD_CONTROLLER, tc.VAR_INIT, "", "d", self._sim_until
+           tc.CMD_CONTROLLER, tc.VAR_INIT, "", "d", 0.0
         )
 
     def _handle_sim_step(self, *arg, **kwargs):
@@ -280,6 +280,7 @@ class ServerModeConnection(TraCiManager):
                 self.traci.notify_subscription_listener()
                 # response: : next sim time at which to call controller
                 response = self._handle_sim_step(sim_time=rcv["simTime"])
+
             else:
                 raise FatalTraCIError("unknown command")
 

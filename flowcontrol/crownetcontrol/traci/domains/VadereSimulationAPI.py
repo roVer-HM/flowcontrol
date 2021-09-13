@@ -89,6 +89,7 @@ class VadereSimulationAPI(Domain):
         frame.columns = ["commandId"]
         frame["timeStep"] = time_step
         frame = frame.astype(int)
+        print(f"Vadere timestep: {time_step} = {time_step*0.4-0.4}s")
         return frame
 
     def set_output_directory(self, output_directory_path = "./vadere-server-output"):

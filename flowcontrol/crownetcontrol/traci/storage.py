@@ -144,6 +144,13 @@ class Storage:
             for char in self._content[self._pos :]:
                 print("%03i %02x %s" % (ord(char), ord(char), char))
 
+    def readCompound(self, expectedSize=None):
+        #TODO: ask Stefan why this was necessary
+        t, s = self.read("!Bi")
+        assert t == tc.TYPE_COMPOUND
+        assert expectedSize is None or s == expectedSize
+        return s
+
 
 class SingleCommand(Storage):
     def __init__(self, content):
