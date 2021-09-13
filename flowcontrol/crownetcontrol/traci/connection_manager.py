@@ -39,6 +39,7 @@ class TraCiManager:
         self._traci = connection
         self.domains.register(self.traci)
 
+
     @property
     def traci(self):
         if self._traci is None:
@@ -164,6 +165,8 @@ class ClientModeConnection(TraCiManager):
             self._default_sub.update_pedestrian_subscription(self.domains.v_person)
         self.traci.notify_subscription_listener()
 
+        self._control_hdl.set_simulation_config_dynamically()
+
         # call controller callback
         self._control_hdl.handle_init(self._default_sub.time, self.sub_listener)
 
@@ -171,6 +174,8 @@ class ClientModeConnection(TraCiManager):
         while self._running:
             self._handle_sim_step()
             # no response required for ClientModeConnection
+            self._control_hdl.set_next_step_time()
+
             self._simulation_step(self._sim_until)
             # clear connection state (for ClientModeConnection _con == _base_client)
             self.traci.clear()
@@ -195,14 +200,12 @@ class ClientModeConnection(TraCiManager):
     def start(self, *kw, **kwargs):
 
         try:
-
             #TODO manage seed
             self.domains.v_sim.set_sim_config(
                 configName= self.sim_cfg.getOmnetppConfid(),
                 resultRootDir=self.sim_cfg.get_root_dir(),
                 experiment=self.sim_cfg.getExperimetnLabel(), #info: label must contain current time if necessary
                 dateTime=time.time(), #TODO timeStamp is currenlty nor processed in Vadere -> move it to
-
             )
             self.domains.v_ctrl.send_file(self.sim_cfg.get_scenario_file(), self.sim_cfg.getScenarioFileContent())
             self._init_sub_listener()
@@ -226,13 +229,14 @@ class ClientModeConnection(TraCiManager):
 
 
 
-
 class ServerModeConnection(TraCiManager):
     def __init__(self, control_handler, host="127.0.0.1", port=9997):
         super().__init__(host, port, control_handler)
         self.server_port = -1
 
     def _initialize(self, *arg, **kwargs):
+
+        self._control_hdl.set_simulation_config_dynamically()
         self._control_hdl.handle_init(kwargs["sim_time"], self.sub_listener)
 
         # send raw command  with next time_step expected
@@ -248,6 +252,8 @@ class ServerModeConnection(TraCiManager):
 
         # self.sub_listener contains state for controller
         self._control_hdl.handle_sim_step(kwargs["sim_time"], self.sub_listener)
+
+        self._control_hdl.set_next_step_time()
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(

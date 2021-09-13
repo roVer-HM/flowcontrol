@@ -1,15 +1,23 @@
 import abc
 import pprint
 import sys
+import os
+import shutil
 
+from flowcontrol.dataprocessor.dataprocessor import Manager
 
 
 class Controller:
     __metaclass__ = abc.ABCMeta
 
+
     def __init__(self):
         self.commandID = 0
         self.con_manager = None
+        self.sensor_time_step_size = None
+        self.processor_manager = Manager()
+        self.output_dir = None
+        self.next_call = None
 
     def initialize_connection(self, con_manager):
         self.con_manager = con_manager
@@ -22,6 +30,17 @@ class Controller:
     def register_state_listener(self, name, listener, set_default=False):
         # set_default = True if omnet is present
         self.con_manager.register_state_listener(name, listener, set_default)
+
+    def set_simulation_config_dynamically(self):
+        self.set_output_dir(os.path.dirname(self.con_manager.domains.v_sim.get_output_directory()))
+        self.sensor_time_step_size = self.con_manager.domains.v_sim.get_sim_ste()
+
+    def set_next_step_time(self):
+        if self.next_call is None:
+            self.next_call = self.sensor_time_step_size
+        else:
+            self.next_call += self.sensor_time_step_size
+        self.con_manager.next_call_at(self.next_call)
 
     @abc.abstractmethod
     def handle_sim_step(self, sim_time, sim_state):
@@ -47,13 +66,19 @@ class Controller:
 
     def postprocess_sim_results(self):
         self.write_data()
-        self.plot_data()
 
     def write_data(self):
         pass
 
-    def plot_data(self):
-        pass
+    def set_output_dir(self, parent_folder):
+        if os.path.isdir(parent_folder):
+            output_dir = os.path.join(parent_folder, "flowcontrol.d")
+            if os.path.isdir(output_dir):
+                shutil.rmtree(output_dir, ignore_errors=True)
+            os.mkdir(output_dir)
+        else:
+            raise ValueError("Output directory structure not provided.")
+        self.output_dir = output_dir
 
 
 class TikTokController(Controller):
