@@ -173,7 +173,7 @@ def parse_args_as_dict(args=None):
         "--controller-type",
         dest="controller_type",
         default="Control",
-        required=True,
+        required=False,
         help="Controller type needs to be defined via command line."
     )
 
