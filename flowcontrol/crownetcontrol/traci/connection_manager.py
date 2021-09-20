@@ -46,6 +46,9 @@ class TraCiManager:
             raise RuntimeError("traci connection not set yet!")
         return self._traci
 
+    def print_handle_message(self, time):
+        print(f"Handle sim step at vadere simulation time {time}s.")
+
     def next_call_in(self, step=-1):
         if step <= 0:
             self._sim_until = -1
@@ -172,11 +175,10 @@ class ClientModeConnection(TraCiManager):
 
     def _run(self):
         while self._running:
-            self._handle_sim_step()
             # no response required for ClientModeConnection
             self._control_hdl.set_next_step_time()
-
             self._simulation_step(self._sim_until)
+            self._handle_sim_step()
             # clear connection state (for ClientModeConnection _con == _base_client)
             self.traci.clear()
 
@@ -192,6 +194,7 @@ class ClientModeConnection(TraCiManager):
         self.current_time = self._default_sub.time
 
         # self.sub_listener contains state for controller
+        self.print_handle_message(self._default_sub.time)
         self._control_hdl.handle_sim_step(self._default_sub.time, self.sub_listener)
 
         # no result expected. Controller should use base_client to trigger control action
@@ -251,7 +254,8 @@ class ServerModeConnection(TraCiManager):
         self.current_time = kwargs["sim_time"]
 
         # self.sub_listener contains state for controller
-        self._control_hdl.handle_sim_step(kwargs["sim_time"], self.sub_listener)
+        self.print_handle_message(self.vadere_sim_time)
+        self._control_hdl.handle_sim_step(self.vadere_sim_time, self.sub_listener)
 
         self._control_hdl.set_next_step_time()
 
@@ -278,6 +282,7 @@ class ServerModeConnection(TraCiManager):
                 state = self.domains.v_ctrl.sim_state(rcv["simTime"])
                 self.traci.parse_subscription_result(state)
                 self.traci.notify_subscription_listener()
+                self.set_vadere_time(rcv["simTime"])
                 # response: : next sim time at which to call controller
                 response = self._handle_sim_step(sim_time=rcv["simTime"])
 
@@ -311,3 +316,6 @@ class ServerModeConnection(TraCiManager):
             print(e)
         finally:
             self._cleanup()
+
+    def set_vadere_time(self, omnetpp_sim_time):
+        self.vadere_sim_time = omnetpp_sim_time + self._control_hdl.sensor_time_step_size

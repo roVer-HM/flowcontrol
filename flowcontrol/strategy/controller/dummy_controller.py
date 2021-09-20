@@ -45,7 +45,6 @@ class Controller:
         else:
             self.next_call += self.sensor_time_step_size
         self.con_manager.next_call_at(self.next_call)
-        print(f"Set next call to {self.next_call}.")
 
     @abc.abstractmethod
     def handle_sim_step(self, sim_time, sim_state):
