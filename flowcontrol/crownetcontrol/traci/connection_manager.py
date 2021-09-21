@@ -247,6 +247,9 @@ class ServerModeConnection(TraCiManager):
            tc.CMD_CONTROLLER, tc.VAR_INIT, "", "d", 0.0
         )
 
+    def print_handle_message(self, time):
+        print(f"Handle sim step at omnetpp simulation time {self.current_time:.1f}s (=vadere simulation time {time:.1f}s).")
+
     def _handle_sim_step(self, *arg, **kwargs):
         # no default subscription update. Is handled by opp client
 
