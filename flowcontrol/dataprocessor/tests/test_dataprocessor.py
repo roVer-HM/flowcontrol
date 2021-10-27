@@ -2,7 +2,7 @@ import os
 from unittest import TestCase, main
 import numpy as np
 import pandas as pd
-from flowcontrol.dataprocessor.dataprocessor import Processor, Writer, Manager, ControlActionCmdId, DensityMeasurements
+from flowcontrol.dataprocessor.dataprocessor import Writer, Manager, ControlActionCmdId, DensityMeasurements
 
 
 class DataProcessors(TestCase):
@@ -22,7 +22,7 @@ class DataProcessors(TestCase):
 
 
     def test__Manager(self):
-        file = "commandId.txt"
+        file = Writer("commandId.txt")
 
         mg = Manager()
         mg.registerProcessor("commandIdProcessor", ControlActionCmdId(file))
@@ -32,22 +32,22 @@ class DataProcessors(TestCase):
         mg.write("commandIdProcessor", 4)
         mg.finish()
 
-        is_ = pd.read_csv(file, sep=" ", header=[0])
+        is_ = pd.read_csv(file.file_path, sep=" ", header=[0])
         should_ = pd.read_csv("testRessources/commandId_2.txt", sep=" ", header=[0])
-        os.remove(file)
+        os.remove(file.file_path)
         assert is_.equals(should_)
 
 
     def test__DensityMeasurements(self):
-        file = "densities.txt"
+        file = Writer("densities.txt")
         dens = DensityMeasurements(file, ["area1", "area2"])
         dens.update_time_step(5)
         dens.write(*[1.0,2.2])
         dens.finish()
 
-        is_ = pd.read_csv(file, sep=" ", header=[0])
+        is_ = pd.read_csv(file.file_path, sep=" ", header=[0])
         should_ = pd.read_csv("testRessources/densities_2.txt", sep=" ", header=[0])
-        os.remove(file)
+        os.remove(file.file_path)
         assert is_.equals(should_)
 
 
