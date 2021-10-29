@@ -27,7 +27,6 @@ integrationtest:
     - source ./venv/bin/activate
     - python3 setup.py install
     - cd tutorials
-    - python3 tutorial__app_and_reaction_behavior.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__app_and_reaction_behavior --download-jar-file --suppress-prompts
     - python3 tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
     - python3 tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --controller-type PingPong --output-dir tutorial__set_targets --download-jar-file --suppress-prompts
   allow_failure: false

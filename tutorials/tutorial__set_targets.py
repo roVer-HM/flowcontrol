@@ -11,7 +11,6 @@ class PingPong(Controller):
     def __init__(self):
         super().__init__()
         self.control = [
-            (0, ["2"]),
             (5.0, ["3"]),
             (10, ["2"]),
             (15, ["3"]),
@@ -22,7 +21,7 @@ class PingPong(Controller):
         self.count = 0
 
     def handle_sim_step(self, sim_time, sim_state):
-        if self.count >= len(self.control):
+        if self.count > len(self.control)-1:
             return
         print(f"TikTokController: {sim_time} handle_sim_step evaluate control...")
 
@@ -32,13 +31,15 @@ class PingPong(Controller):
                 str(ped_id), self.control[self.count][1]
             )
 
-        self.con_manager.next_call_at(self.control[self.count][0])
         self.count += 1
 
-    def handle_init(self, sim_time, sim_state):
-        print("TikTokController: handle_init")
-        self.con_manager.next_call_at(0.0)
-        print(sim_state)
+    def set_next_step_time(self):
+        if self.count <= len(self.control) - 1:
+            self.con_manager.next_call_at(self.control[self.count][0])
+        else:
+            self.con_manager.next_call_at(100) # simulation end
+
+
 
 
 if __name__ == "__main__":
@@ -56,10 +57,12 @@ if __name__ == "__main__":
             "--gui-mode",
             "--output-dir",
             os.path.splitext(os.path.basename(__file__))[0],
-            "--download-jar-file", # remove this if you prefer to build vadere locally
+            #"--download-jar-file", # remove this if you prefer to build vadere locally
         ]
     else:
         settings = sys.argv[1:]
+
+    settings.extend(["--scenario-file", get_scenario_file("scenarios/test001.scenario")])
 
     # Tutorial 1:
 
@@ -79,6 +82,5 @@ if __name__ == "__main__":
 
     controller = get_controller_from_args(working_dir=os.getcwd(), args=settings)
 
-    kwargs = {"file_name": get_scenario_file("scenarios/test001.scenario")}
     controller.register_state_listener("default", sub, set_default=True)
-    controller.start_controller(**kwargs)
+    controller.start_controller()

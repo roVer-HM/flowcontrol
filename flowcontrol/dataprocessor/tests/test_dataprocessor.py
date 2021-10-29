@@ -16,7 +16,7 @@ class DataProcessors(TestCase):
             list_writer.write(frame)
         list_writer.finish()
         is_ = pd.read_csv(file, sep=" ", header=[0])
-        should_ = pd.read_csv("testRessources/output_2.txt", sep=" ", header=[0])
+        should_ = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),"testRessources/output_2.txt"), sep=" ", header=[0])
         os.remove(file)
         assert is_.equals(should_)
 
@@ -33,7 +33,7 @@ class DataProcessors(TestCase):
         mg.finish()
 
         is_ = pd.read_csv(file.file_path, sep=" ", header=[0])
-        should_ = pd.read_csv("testRessources/commandId_2.txt", sep=" ", header=[0])
+        should_ = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),"testRessources/commandId_2.txt"), sep=" ", header=[0])
         os.remove(file.file_path)
         assert is_.equals(should_)
 
@@ -46,7 +46,7 @@ class DataProcessors(TestCase):
         dens.finish()
 
         is_ = pd.read_csv(file.file_path, sep=" ", header=[0])
-        should_ = pd.read_csv("testRessources/densities_2.txt", sep=" ", header=[0])
+        should_ = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)),"testRessources/densities_2.txt"), sep=" ", header=[0])
         os.remove(file.file_path)
         assert is_.equals(should_)
 
