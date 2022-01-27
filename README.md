@@ -85,7 +85,7 @@ See requirements.txt
 
 We strongly recommend to work with a virtual environment.
 
-## Quick start
+## Quick start into testing guiding strategies
 Clone the repository
 
 `git clone https://sam-dev.cs.hm.edu/rover/flowcontrol.git`
@@ -93,22 +93,22 @@ Clone the repository
 Install flowcontrol in virtual environment 
 
 `python3.8 -m venv .venv`
+
 `source ./venv/bin/activate`
+
 `python3 setup.py install`
 
 Change to the tutorials folder
 
 `cd tutorials`
 
-We recommend to leave out the information dissemination part at the beginning. Hence, we only the Vadere simulator. Download Vadere:
+We recommend to leave out the information dissemination part at the beginning. Hence, we only need the Vadere simulator. Download Vadere:
 
 `python3 download_vadere.py`
 
 Run your first tutorial
 
 `python3 tutorial__set_targets.py`
-
-Analyse the results
 
 
 
