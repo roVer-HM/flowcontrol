@@ -6,9 +6,9 @@ FlowControl provides different strategies and models to control pedestrian flow.
 The basic idea is to reroute agents to adjust the pedestrian flow in distinct areas.
 
 The flow control model consists of four sub-models that define
-1. how agents move (autonoumous system) (mobility model)
+1. how agents move (mobility/locomotion model)
 2. how the autonomous system needs to be intervened to achieve a certain goal (controller)
-3. how inform agents get informed about the rerouting measure (information dissemination model)
+3. how agents get informed about the rerouting measure (information dissemination model)
 4. how agents react to the rerouting measure (reaction model)
 
 ### Mobility model 
@@ -39,7 +39,6 @@ Characteristic for the sign model is that agents can only be controlled at speci
 In the control loop:
 * Control action: if agents recognize the sign, change their target.
 
-
 Inform agents using text messages
 Characteristic for the text message model is that it takes some time until agents recieve the text message.
 
@@ -48,12 +47,11 @@ Characteristic for the text message model is that it takes some time until agent
 For case 2, the coupled simulator crownet can be used.
 
 ### Reaction model
-It depends on the perception and the mooed whether agents react to rerouting measure.
+It depends on many factors whether agents react to rerouting measure.
 Even if the information about the rerouting is transmitted succesfully, some agents might not react.
 
 We model this with a simplified model:
-* time-delay: we define a random variable for the reaction time from which we draw randomly.
-* reacitvity: we define a random variable for the reactivity from which we draw randomly.
+* reactivity: we define a random variable for the reactivity from which we draw randomly.
 
 ## System requirements
 Python >= 3.7 required. 
@@ -67,7 +65,7 @@ Python >= 3.7 required.
 | ------ | ------ |
 | Vadere  | CrowNet²  |
 
-²ncessray if the information dissemination needs to be modelled realistically.
+²necessray if the information dissemination needs to be modelled realistically.
 
 If the simplified information dissemination model is used, it is possible to include the Vadere repository only.
 
@@ -80,16 +78,30 @@ Make sure that the environmental variable CROWNET_HOME points to the crownet rep
 ```
 echo $CROWNET_HOME
 ```
-Create a config file to make CROWNET_HOME available to FlowControl:
-```
-echo $CROWNET_HOME > ~/.flowcontrolconfig
-```
 
 ## Python dependencies
 
 See requirements.txt
 
 We strongly recommend to work with a virtual environment.
+
+## Quick start
+Clone the repository
+`git clone https://sam-dev.cs.hm.edu/rover/flowcontrol.git`
+
+Install the requirements (we recommend to use a virtual environment)
+`pip3 install -r requirements.txt`
+
+Change to the tutorials folder
+`cd tutorials`
+
+We recommend to leave out the information dissemination part at the beginning. Hence, we only the Vadere simulator. Download Vadere:
+`python3 download_vadere.py`
+
+Run your first tutorial
+`python3 tutorial__set_targets.py`
+
+Analyse the results
 
 
 
