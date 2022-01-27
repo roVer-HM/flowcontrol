@@ -54,7 +54,7 @@ We model this with a simplified model:
 * reactivity: we define a random variable for the reactivity from which we draw randomly.
 
 ## System requirements
-Python >= 3.7 required. 
+Python >= 3.8 required. 
 
 
 ## Dependencies
@@ -87,18 +87,25 @@ We strongly recommend to work with a virtual environment.
 
 ## Quick start
 Clone the repository
+
 `git clone https://sam-dev.cs.hm.edu/rover/flowcontrol.git`
 
-Install the requirements (we recommend to use a virtual environment)
-`pip3 install -r requirements.txt`
+Install flowcontrol in virtual environment 
+
+`python3.8 -m venv .venv`
+`source ./venv/bin/activate`
+`python3 setup.py install`
 
 Change to the tutorials folder
+
 `cd tutorials`
 
 We recommend to leave out the information dissemination part at the beginning. Hence, we only the Vadere simulator. Download Vadere:
+
 `python3 download_vadere.py`
 
 Run your first tutorial
+
 `python3 tutorial__set_targets.py`
 
 Analyse the results
