@@ -57,7 +57,8 @@ if __name__ == "__main__":
             "--gui-mode",
             "--output-dir",
             os.path.splitext(os.path.basename(__file__))[0],
-            #"--download-jar-file", # remove this if you prefer to build vadere locally
+            "-j",
+            "vadere-server.jar" # run download_vadere.py first
         ]
     else:
         settings = sys.argv[1:]

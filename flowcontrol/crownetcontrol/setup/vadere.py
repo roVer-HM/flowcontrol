@@ -223,15 +223,12 @@ class VadereServerProvider:
         except:
             print("Failed to package vadere.")
 
-    def download_vadere_jar_file(self, zipurl=None):
-
-
+    def download_vadere_jar_file(self, zipurl=None, jar_file = "vadere-server.jar"):
 
         if self.download_dir is None:
             self.download_dir = os.getcwd()
 
         working_dir = self.download_dir
-        jar_file = "vadere-server.jar"
 
         if zipurl is None:
             if platform.system() == "Linux":
@@ -244,14 +241,14 @@ class VadereServerProvider:
         jar_file_path = os.path.join(working_dir, jar_file)
 
         if os.path.isfile(jar_file_path):
-            print(f"*.jar file found: {working_dir}/{jar_file}.")
+            print(f"{jar_file} file found: {working_dir}/{jar_file}.")
         else:
             is_download = True
 
             if self.ask_user:
                 is_download = query_yes_no("Download vadere?")
 
-            print(f"Download vadere-server.jar. Download link: {zipurl}")
+            print(f"Download {jar_file}. Download link: {zipurl}")
             print("Download started .. (this can take a couple of minutes)")
             with urlopen(zipurl) as zipresp, NamedTemporaryFile() as tfile:
                 tfile.write(zipresp.read())
