@@ -265,6 +265,8 @@ class ServerModeConnection(TraCiManager):
     def _initialize(self, *arg, **kwargs):
 
         self._control_hdl.set_simulation_config_dynamically()
+        self.sim_step_size = self.domains.v_sim.get_sim_step_size()
+
         self._control_hdl.handle_init(kwargs["sim_time"], self.sub_listener)
 
         # send raw command  with next time_step expected
@@ -346,4 +348,4 @@ class ServerModeConnection(TraCiManager):
             self._cleanup()
 
     def set_vadere_time(self, omnetpp_sim_time):
-        self.vadere_sim_time = omnetpp_sim_time + self._control_hdl.sensor_time_step_size
+        self.vadere_sim_time = omnetpp_sim_time + self.sim_step_size
