@@ -2,50 +2,42 @@ import os, sys
 
 from flowcontrol.crownetcontrol.setup.entrypoints import get_controller_from_args
 from flowcontrol.crownetcontrol.state.state_listener import VadereDefaultStateListener
-from flowcontrol.strategy.controller.dummy_controller import Controller
+from flowcontrol.crownetcontrol.controller import Controller
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 from flowcontrol.utils.misc import get_scenario_file
 
-import json
+from flowcontrol.strategy.controlaction import InformationStimulus, Circle, StimulusInfo, Location, Rectangle
+
+from flowcontrol.strategy.timestepping.timestepping import FixedTimeStepper
+
+
 
 
 class CorridorChoiceExample(Controller):
     def __init__(self):
-        super().__init__()
-        self.time_step = 0
-        self.time_step_interval = 0.4
-        self.controlModelName = "RouteChoice1"
-        self.controlModelType = "RouteChoice"
+        self.redirection_area = Circle(radius=100) #
+        self.current_target = 3
+        super().__init__(time_stepper=FixedTimeStepper(start_time=4.0, end_time=4.0))
+
+
+    def get_stimulus_info(self, target):
+
+        location = Location(areas=self.redirection_area)
+        recommendation = InformationStimulus(f"use target [{target}]")
+        s = StimulusInfo(location=location, stimuli=recommendation)
+        return s
 
 
     def handle_sim_step(self, sim_time, sim_state):
 
-        if sim_time == 4.0:
-            p1 = [0.0, 1.0]
-            print("Use target [2]")
-
-            command = {"targetIds": [2, 3], "probability": p1}
-            action = {
-                "space": {"x": 0.0, "y": 0.0, "radius": 100},
-                "commandId": self.commandID,
-                "stimulusId": -400,
-                "command": command,
-            }
-            action = json.dumps(action)
-
-            print(f"TikTokController: {sim_time} apply control action ")
-            self.con_manager.domains.v_sim.send_control(
-                message=action, model=self.controlModelName
-            )
-
-            self.commandID += 1
+        s = self.get_stimulus_info(target=3)
+        print(s.toJSON())
+        self.con_manager.domains.v_sim.send_control(message=s.toJSON())
+        self.time_stepper.forward_time()
 
     def handle_init(self, sim_time, sim_state):
         super().handle_init(sim_time, sim_state)
-        #TODO remove reaction model from python code and vadere code!
-        self.con_manager.domains.v_sim.init_control(
-            self.controlModelName, self.controlModelType, json.dumps({})
-        )
+        self.con_manager.domains.v_sim.init_control()
 
 
 if __name__ == "__main__":
@@ -57,11 +49,11 @@ if __name__ == "__main__":
             "--host-name",
             "localhost",
             "--client-mode",
-            #"--start-server",
-            #"--gui-mode",
-            #"--output-dir",
-            #os.path.splitext(os.path.basename(__file__))[0],
-            #"--download-jar-file",  # remove this if you prefer to build vadere locally
+            "--start-server",
+            "--gui-mode",
+            "--output-dir",
+            os.path.splitext(os.path.basename(__file__))[0],
+            "--download-jar-file",  # remove this if you prefer to build vadere locally
         ]
     else:
         settings = sys.argv[1:]

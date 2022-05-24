@@ -22,6 +22,7 @@ from flowcontrol.crownetcontrol.traci.exceptions import (
 )
 from flowcontrol.utils.misc import get_scenario_file
 
+import numpy as np
 
 class TraCiManager:
     def __init__(self, host, port, control_handler):
@@ -31,13 +32,32 @@ class TraCiManager:
         self._control_hdl = control_handler
         self.domains: DomainHandler = DomainHandler()
         self.sub_listener = {}
-        self.current_time = -1
-        self._sim_until = -1
+        self.current_time = 0.0
+        self._sim_until = 0.0
         self._default_sub: Union[None, StateListener] = None
+        self.sim_time_end_max = 10**5 # assume that no simulation is longer than secs
+        self.is_control_active = True
 
     def _set_connection(self, connection):
         self._traci = connection
         self.domains.register(self.traci)
+
+    def get_next_simulation_time(self):
+        next_time_step = self._control_hdl.time_stepper.get_time()
+
+        if next_time_step == np.inf:
+            print("Stopped control. Finish simulation without control.")
+            next_time_step = self.sim_time_end_max
+            self.is_control_active = False
+
+        if next_time_step <= self._sim_until:
+            if next_time_step == 0.0:
+                raise RuntimeError("Start time step 0.0 not allowed.")
+            else:
+                raise RuntimeError(f"Time step is not forwarded. Old time step: {self._sim_until}. Next time step: {next_time_step}.")
+
+
+        return next_time_step
 
 
     @property
@@ -147,8 +167,10 @@ class ClientModeConnection(TraCiManager):
         If the given value is 0 or absent, exactly one step is performed.
         Values smaller than or equal to the current sim time result in no action.
         """
-        print(f"simulate until step {step}")
-        result = self.domains.v_ctrl.sim_step(step)
+        if self.is_control_active:
+            print(f"Simulate until time={step}")
+
+        result = self.domains.v_ctrl.sim_step(step + self.sim_step_size)
         self.traci.parse_subscription_result(result)
         self.traci.notify_subscription_listener()
 
@@ -169,6 +191,7 @@ class ClientModeConnection(TraCiManager):
         self.traci.notify_subscription_listener()
 
         self._control_hdl.set_simulation_config_dynamically()
+        self.sim_step_size = self.domains.v_sim.get_sim_step_size()
 
         # call controller callback
         self._control_hdl.handle_init(self._default_sub.time, self.sub_listener)
@@ -176,11 +199,13 @@ class ClientModeConnection(TraCiManager):
     def _run(self):
         while self._running:
             # no response required for ClientModeConnection
-            self._control_hdl.set_next_step_time()
+            self._sim_until = self.get_next_simulation_time()
             self._simulation_step(self._sim_until)
+
             self._handle_sim_step()
             # clear connection state (for ClientModeConnection _con == _base_client)
             self.traci.clear()
+
 
 
     def _handle_sim_step(self):
@@ -260,7 +285,7 @@ class ServerModeConnection(TraCiManager):
         self.print_handle_message(self.vadere_sim_time)
         self._control_hdl.handle_sim_step(self.vadere_sim_time, self.sub_listener)
 
-        self._control_hdl.set_next_step_time()
+        self._sim_until = self.get_next_simulation_time()
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(

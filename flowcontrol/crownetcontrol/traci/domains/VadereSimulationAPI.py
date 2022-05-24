@@ -30,7 +30,7 @@ class VadereSimulationAPI(Domain):
     def get_time(self):
         return self._getUniversal(tc.VAR_TIME, "")
 
-    def get_sim_ste(self):
+    def get_sim_step_size(self):
         return self._getUniversal(tc.VAR_DELTA_T, "")
 
     def set_sim_config(self,
@@ -100,7 +100,7 @@ class VadereSimulationAPI(Domain):
     def get_sim_config(self):
         return self._getUniversal(tc.VAR_SIM_CONFIG, "")
 
-    def send_control(self, message, model, sending_node_id="-1", obj_id = "-2"):
+    def send_control(self, message, model="", sending_node_id="-1", obj_id = "-2"):
         """
         message: a json string
         """
@@ -113,7 +113,7 @@ class VadereSimulationAPI(Domain):
 
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT, obj_id, "tsss", sending_node_id, model , message)
 
-    def init_control(self, controlModelName, controlModelType, reactionModelParameter, obj_id = "-1"):
+    def init_control(self, controlModelName="", controlModelType="", reactionModelParameter="", obj_id = "-1"):
 
         self._connection.send_cmd(self._cmdSetID, tc.VAR_EXTERNAL_INPUT_INIT, obj_id, "tsss", controlModelName, controlModelType, reactionModelParameter)
 
