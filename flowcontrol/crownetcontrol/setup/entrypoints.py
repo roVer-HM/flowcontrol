@@ -1,5 +1,4 @@
 import argparse
-import os.path
 
 from flowcontrol.crownetcontrol.setup.vadere import VadereServer, VadereServerProvider
 from flowcontrol.crownetcontrol.traci.connection_manager import (
@@ -7,7 +6,7 @@ from flowcontrol.crownetcontrol.traci.connection_manager import (
     ClientModeConnection, SimulationConfig,
 )
 
-from flowcontrol.strategy.controller.dummy_controller import Controller
+from flowcontrol.crownetcontrol.controller import Controller
 
 
 def get_controller_from_args(working_dir, args=None, controller=None):

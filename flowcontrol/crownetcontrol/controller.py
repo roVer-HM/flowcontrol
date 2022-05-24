@@ -1,23 +1,27 @@
 import abc
-import pprint
-import sys
 import os
 import shutil
+import sys
 
 from flowcontrol.dataprocessor.dataprocessor import Manager
+from flowcontrol.strategy.controller.control_algorithm import ControlAlgorithm
+from flowcontrol.strategy.timestepping.timestepping import TimeStepper
 
 
 class Controller:
-    __metaclass__ = abc.ABCMeta
 
-
-    def __init__(self):
-        self.commandID = 0
+    def __init__(self,
+                 control_algorithm : ControlAlgorithm = None,
+                 time_stepper : TimeStepper = None,
+                 processor_manager : Manager = None,
+                 ):
         self.con_manager = None
-        self.sensor_time_step_size = None
-        self.processor_manager = Manager()
         self.output_dir = None
         self.next_call = None
+        self.processor_manager = processor_manager
+        self.control_algorithm = control_algorithm
+        self.time_stepper = time_stepper
+        self.commandID = 0
 
     def initialize_connection(self, con_manager):
         self.con_manager = con_manager
@@ -36,15 +40,23 @@ class Controller:
         self.set_stepping_behavior()
 
     def set_stepping_behavior(self):
-        self.sensor_time_step_size = self.con_manager.domains.v_sim.get_sim_ste()
-        print(f"Synchronize every {self.sensor_time_step_size}s")
+        #TODO check here
+        step_size = self.con_manager.domains.v_sim.get_time()
 
-    def set_next_step_time(self):
-        if self.next_call is None:
-            self.next_call = self.sensor_time_step_size
-        else:
-            self.next_call += self.sensor_time_step_size
-        self.con_manager.next_call_at(self.next_call)
+
+
+        #if self.time_stepper.get_time() < start_time:
+            #
+        #pass
+            #raise ValueError(f"Start time of the time stepper must be > step size = {start_time}s.")
+        print()
+
+
+    def set_next_step_time(self, *args):
+
+        next_call = self.time_stepper.get_time()
+        self.time_stepper.forward_time(*args)
+        self.con_manager.next_call_at(next_call)
 
     @abc.abstractmethod
     def handle_sim_step(self, sim_time, sim_state):
@@ -85,40 +97,6 @@ class Controller:
         self.output_dir = output_dir
         print(f"Set flowcontrol output directory to {self.output_dir}")
 
-
-class TikTokController(Controller):
-    def __init__(self):
-        super().__init__()
-        self.control = [
-            (0, ["2"]),
-            (5.0, ["3"]),
-            (10, ["2"]),
-            (15, ["3"]),
-            (20, ["2"]),
-            (25, ["3"]),
-            (30, ["2"]),
-        ]
-        self.count = 0
-
-    def initialize_connection(self, con_manager):
-        self.con_manager = con_manager
-
-    def handle_sim_step(self, sim_time, sim_state):
-        if self.count >= len(self.control):
-            return
-        print(f"TikTokController: {sim_time} handle_sim_step evaluate control...")
-
-        print(f"TikTokController: {sim_time} apply control action ")
-        for ped_id in ["1", "2", "3", "4"]:
-            self.con_manager.domains.v_person.set_target_list(
-                str(ped_id), self.control[self.count][1]
-            )
-        # read if listeners are used
-
-        self.con_manager.next_call_at(self.control[self.count][0])
-        self.count += 1
-
-    def handle_init(self, sim_time, sim_state):
-        print("TikTokController: handle_init")
-        self.con_manager.next_call_at(0.0)
-        pprint.pprint(sim_state)
+    def set_step_xyv(self, *args):
+        time = self.time_stepper.get_next_time(args)
+        self.con_manager.next_call_at(time)

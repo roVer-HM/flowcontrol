@@ -1,4 +1,5 @@
-from flowcontrol.strategy.controller.dummy_controller import TikTokController
+from flowcontrol.crownetcontrol import Controller
+from flowcontrol.strategy.controller.control_algorithm import AlternateTargetAlgorithm
 from flowcontrol.crownetcontrol.traci import constants_vadere as tc
 import logging
 
@@ -31,7 +32,7 @@ def client_mode(host = "vadere", **kwargs):
         {"pos": tc.VAR_POSITION, "target_list": tc.VAR_TARGET_LIST},
         init_sub=True,
     )
-    controller = TikTokController()
+    controller = Controller()
     traci_manager = ClientModeConnection(
         control_handler=controller, host=host, port=9999
     )
@@ -47,7 +48,7 @@ def server_mode():
         init_sub=True,
     )
 
-    controller = TikTokController()
+    controller = Controller()
     traci_manager = ServerModeConnection(
         control_handler=controller, host="0.0.0.0", port=9997
     )
