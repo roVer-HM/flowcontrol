@@ -116,6 +116,9 @@ class FixedTimeStepper(TimeStepper):
         self.time_step_size = self.round_to_time_discretization_step_size(time_step_size)
 
     def forward_time(self, *args):
+        if self.time == None:
+            self.time = self.get_time()
+
         self.time += self.time_step_size
         if self.time >= self.end_time:
             self.time = np.inf # assume the simulation end is

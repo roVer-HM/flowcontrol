@@ -284,10 +284,13 @@ class ServerModeConnection(TraCiManager):
         self.current_time = kwargs["sim_time"]
 
         # self.sub_listener contains state for controller
-        self.print_handle_message(self.vadere_sim_time)
-        self._control_hdl.handle_sim_step(self.vadere_sim_time, self.sub_listener)
+
+        if self.current_time > 0.0:
+            self.print_handle_message(self.vadere_sim_time)
+            self._control_hdl.handle_sim_step(self.vadere_sim_time, self.sub_listener)
 
         self._sim_until = self.get_next_simulation_time()
+
 
         # send raw command  with next time_step expected
         return self.traci.build_cmd_raw(
@@ -315,7 +318,6 @@ class ServerModeConnection(TraCiManager):
                 self.set_vadere_time(rcv["simTime"])
                 # response: : next sim time at which to call controller
                 response = self._handle_sim_step(sim_time=rcv["simTime"])
-
             else:
                 raise FatalTraCIError("unknown command")
 
