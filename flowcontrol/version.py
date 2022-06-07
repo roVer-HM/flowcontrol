@@ -13,7 +13,7 @@ class Version:
     ###### TO UPDATE -- START
     major_version: int = 1  # making incompatible API changes,
     minor_version: int = 1  # adding functionality in a backwards-compatible manner
-    patch: int = 2  # for backwards-compatible bug fixes
+    patch: int = 3  # for backwards-compatible bug fixes
 
     # Set date of release for longer version numbers.
     year: int = 2021
