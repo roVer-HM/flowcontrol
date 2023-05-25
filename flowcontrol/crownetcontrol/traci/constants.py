@@ -877,8 +877,10 @@ VAR_MINGAP = 0x4C
 #  width (get: vehicle types, lanes, polygons, poi)
 VAR_WIDTH = 0x4D
 
-#  shape (get: polygons)
-VAR_SHAPE = 0x4E
+#  shape
+VAR_SHAPE = 0x4E # (get: polygons)
+VAR_MEASUREMENT_AREA_SHAPE = 0x63 # get measurement areas
+VAR_OBSTACLE_SHAPE = 0x64 # get obstables
 
 #  type id (get: vehicles, polygons, pois)
 VAR_TYPE = 0x4F
@@ -1005,10 +1007,10 @@ VAR_COEMISSION = 0x61
 VAR_HCEMISSION = 0x62
 
 #  current PMx emission of a node (get: vehicle, lane, edge)
-VAR_PMXEMISSION = 0x63
+#VAR_PMXEMISSION = 0x63 #used for shape
 
 #  current NOx emission of a node (get: vehicle, lane, edge)
-VAR_NOXEMISSION = 0x64
+#VAR_NOXEMISSION = 0x64 #used for shape
 
 #  current fuel consumption of a node (get: vehicle, lane, edge)
 VAR_FUELCONSUMPTION = 0x65

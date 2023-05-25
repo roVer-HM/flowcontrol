@@ -123,8 +123,8 @@ class DensityMapper:
 
         index = 0
 
-        for x_coor in np.arange(0, self.cell_dimensions[0])*delta_x:
-            for y_coor in np.arange(0, self.cell_dimensions[1])*delta_y:
+        for x_coor in np.arange(0, self.cell_dimensions[0],delta_x):
+            for y_coor in np.arange(0, self.cell_dimensions[1],delta_y):
                 lower_left_corner = [x_coor,y_coor]
                 lower_right_corner = [x_coor+delta_x, y_coor]
                 upper_right_corner = [x_coor+delta_x, y_coor+delta_y]

@@ -33,6 +33,12 @@ class VaderePolygonAPI(Domain):
     def get_shape(self, element_id):
         return self._getUniversal(tc.VAR_SHAPE, element_id)
 
+    def get_measurement_area_shape(self, element_id):
+        return self._getUniversal(tc.VAR_MEASUREMENT_AREA_SHAPE, element_id)
+
+    def get_obstacle_shape(self, element_id):
+        return self._getUniversal(tc.VAR_OBSTACLE_SHAPE, element_id)
+
     def get_centroid(self, element_id):
         return self._getUniversal(tc.VAR_CENTROID, element_id)
 
