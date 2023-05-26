@@ -18,6 +18,9 @@ class RouteRecommenderAlgorithm(ControlAlgorithm):
             raise ValueError(f"Duplicate targets found: {targets}.")
         self.targets = targets
 
+    def get_next_target(self, *args):
+        raise NotImplementedError("Implement child class")
+
 
 
 class AlternateTargetAlgorithm(RouteRecommenderAlgorithm):
@@ -40,6 +43,7 @@ class AlternateTargetAlgorithm(RouteRecommenderAlgorithm):
             self.iterate_through_targets()
         return self.targets[self.count]
 
+
 class MinimalDensityAlgorithm(RouteRecommenderAlgorithm):
 
     def __init__(self, alternate_targets, is_prefer_short_routes = True):
@@ -47,8 +51,8 @@ class MinimalDensityAlgorithm(RouteRecommenderAlgorithm):
         self.is_prefer_short_routes = is_prefer_short_routes
         super().__init__(alternate_targets)
 
-
     def get_next_target(self, densities : Union[List[float], np.ndarray, float]):
+
 
         if isinstance(densities, float):
             densities = [densities]
@@ -56,6 +60,8 @@ class MinimalDensityAlgorithm(RouteRecommenderAlgorithm):
             densities = np.array(densities)
 
         self.check_densities(densities)
+
+
 
         indices = np.argwhere(densities == densities.min()).ravel()
         route_index = self.get_index(indices)
@@ -87,3 +93,19 @@ class MinimalDensityAlgorithm(RouteRecommenderAlgorithm):
 
         if densities.min() < 0.0:
             raise ValueError(f"Density must not be smaller zero. Got densities: {densities}.")
+
+
+class AvoidCongestion(RouteRecommenderAlgorithm):
+
+    def __init__(self, alternative_route_id ):
+        # alternate targets: list of routes in ascending route length
+        super().__init__(alternate_targets = [alternative_route_id])
+
+
+    def get_next_target(self, density_congested_route : float, density_alternate_route : float):
+
+        if density_congested_route > density_alternate_route:
+            return self.targets[0]
+        else:
+            return None
+
