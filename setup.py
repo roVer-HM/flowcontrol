@@ -59,7 +59,6 @@ setup(
     # taken from list: https://pypi.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         "Intended Audience :: Science/Research",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: Unix",
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Scientific/Engineering",
