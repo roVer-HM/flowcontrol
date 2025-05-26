@@ -3,7 +3,7 @@
 import argparse
 import logging
 import os
-
+import sys
 
 def parse_args_as_dict(args=None):
 	# parse arguments
@@ -60,7 +60,10 @@ if __name__ == "__main__":
 		# use arguments from command line
 		config = parse_args_as_dict(sys.argv)
 
-	strategy = Strategy.get_from_config(config=config)
-	start_server(strategy=strategy)
+	# TODO: check if startup via crownetctl is required - work in progress
+	# strategy = Strategy.get_from_config(config=config)
+	# start_server(strategy=strategy)
+
+	print("crownetctl: start via __main__ currently not supported. Terminating.")
 
 	print()
