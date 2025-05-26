@@ -17,7 +17,7 @@ class TestVelocityBasedStepSize(TestCase):
         f = 2.0
         velocity = 1.5
         velocity_based_alg = VelocityBasedStepSize(min_step_size=0.0,
-                                                   max_step_size=np.Inf,
+                                                   max_step_size=np.inf,
                                                    factor=f)
 
         step_size = velocity_based_alg.get_next_step_size(velocity)

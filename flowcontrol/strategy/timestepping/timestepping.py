@@ -16,7 +16,7 @@ class TimeStepper(abc.ABC):
         if start_time == None:
             start_time = 0.0
         if end_time == None:
-            end_time = np.Inf
+            end_time = np.inf
 
         self.time_discretization_step_size = time_discretization_step_size
         self.is_round_to_discretization_step_size = is_round_to_discretization_step_size
