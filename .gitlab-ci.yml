@@ -8,7 +8,9 @@ cache:
     - ./venv
 
 before_script:
-  - python3.8 -m venv --system-site-packages ./venv
+  - PYBIN=$(command -v python3.8 || command -v python3.9 || command -v python3 || command -v python)
+  - echo "Using $PYBIN"
+  - $PYBIN -m venv --system-site-packages ./venv
   - source ./venv/bin/activate
   - pip3 install -q -I -r requirements.txt
 
