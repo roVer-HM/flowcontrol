@@ -92,10 +92,12 @@ class VadereServer:
         is_gui_mode=False,
         output_dir="vadere-server-output",
         vadere_server_provider=None,
+        port=9999,
     ):
         self.server_thread = None
         self.is_start_server = is_start_server
         self.output_dir = output_dir
+        self.port = port
 
         self.vadere_server_provider = vadere_server_provider
 
@@ -107,6 +109,7 @@ class VadereServer:
         if self._is_gui_mode:
             cmd.extend(["--gui-mode"])
         cmd.extend(["--output-dir", self.output_dir])
+        cmd.extend(["--port", str(self.port)])
         return cmd
 
     def _start_server(self, is_start_server, is_gui_mode):

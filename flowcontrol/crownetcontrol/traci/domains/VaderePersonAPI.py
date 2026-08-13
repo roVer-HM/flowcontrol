@@ -78,11 +78,32 @@ class VaderePersonAPI(Domain):
     def get_target_list(self, element_id):
         return self._getUniversal(tc.VAR_TARGET_LIST, element_id)
 
+    def get_source_id(self, element_id):
+        return self._getUniversal(tc.VAR_SOURCE_ID, element_id)
+
+    def get_perceived_risk(self, element_id):
+        return self._getUniversal(tc.VAR_PERCEIVED_RISK, element_id)
+
+    def get_shared_social_identity(self, element_id):
+        return self._getUniversal(tc.VAR_SHARED_SOCIAL_IDENTITY, element_id)
+
+    def is_adhering(self, element_id):
+        return self._getUniversal(tc.VAR_IS_ADHERING, element_id)
+
+    def is_infectious(self, element_id):
+        return self._getUniversal(tc.VAR_IS_INFECTIOUS, element_id)
+
+    def get_adherence_probability(self, element_id):
+        return self._getUniversal(tc.VAR_ADHERENCE_PROBABILITY, element_id)
+
     def set_information(self, element_id):
         self._setCmd(tc.VAR_INFORMATION_ITEM, element_id, "Error", None)
 
     def set_target_list(self, element_id, data):
         self._setCmd(tc.VAR_TARGET_LIST, element_id, "l", data)
+
+    def set_adherence_probability(self, element_id, data):
+        self._setCmd(tc.VAR_ADHERENCE_PROBABILITY, element_id, "d", data)
 
     def create_new(self, data):
         self._setCmd(tc.VAR_ADD, "", "s", data)

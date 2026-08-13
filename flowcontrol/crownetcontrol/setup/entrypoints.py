@@ -17,7 +17,7 @@ def get_controller_from_args(working_dir, args=None, controller=None):
         print("Get controller type from settings/command line arguements.")
         controller = Controller.get(ns["controller_type"])
 
-    if ns["port"] == 9999 and ns["is_in_client_mode"]:
+    if ns["port"] >= 9999 and ns["is_in_client_mode"]:
 
         vadere_jar = VadereServerProvider(
             jar_file_path=ns["jar_file_path"],
@@ -32,6 +32,7 @@ def get_controller_from_args(working_dir, args=None, controller=None):
             is_gui_mode=ns["gui_mode"],
             output_dir=ns["output_dir"],
             vadere_server_provider=vadere_jar,
+            port=ns["port"],
         )
 
         sim_config = SimulationConfig(scenario_file= ns["scenario_file"],
