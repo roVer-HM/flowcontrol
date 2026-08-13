@@ -29,18 +29,22 @@ def get_scenario_content(scenario):
 
 
 class Runner(threading.Thread):
-    def __init__(self, command, thread_name, log_location=None, use_stdout=False):
+    def __init__(self, command, thread_name, log_location=None, use_stdout=True):
         threading.Thread.__init__(self)
+        self.daemon = True  # Don't block Python exit if connection fails
         self.command = command
         self.log_location = log_location
         self.use_stdout = use_stdout
         self.thread_name = thread_name
         self.log = logging.getLogger()
+        self.process = None
+        self.error = None
 
     def stop(self):
         self._cleanup()
 
     def run(self):
+        log_file = None
         try:
             if self.log_location is None:
                 self.log_location = os.devnull
@@ -59,18 +63,26 @@ class Runner(threading.Thread):
                     print(f"{self.thread_name}> {line.decode('utf-8')}", end="")
                 log_file.write(line.decode("utf-8"))
 
-            if self.process.returncode is not None:
-                self._cleanup()
-
-        finally:
-            log_file.close()
-            if self.process is not None:
-                print(
-                    f"{self.thread_name}> subprocess returncode={self.process.returncode}"
+            self.process.wait()
+            expected_codes = {0, -signal.SIGTERM, 128 + signal.SIGTERM}
+            if self.process.returncode not in expected_codes:
+                self.error = RuntimeError(
+                    f"Server process exited with code {self.process.returncode}"
                 )
-                ##TODO: fix
+                self.log.error(str(self.error))
+
+        except Exception as e:
+            self.error = e
+            self.log.error(f"Server thread error: {e}")
+        finally:
+            if log_file is not None:
+                log_file.close()
+            if self.process is not None:
+                print(f"{self.thread_name}> subprocess returncode={self.process.returncode}")
 
     def _cleanup(self):
+        if self.process is None:
+            return
         try:
             os.kill(self.process.pid, signal.SIGTERM)
             self.process.wait(timeout=5)

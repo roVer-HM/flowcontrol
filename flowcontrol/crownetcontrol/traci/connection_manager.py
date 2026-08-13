@@ -150,14 +150,21 @@ class ClientModeConnection(TraCiManager):
         maxWaitingTime = 20.0
         connected = False
         while not connected and ((time.time() - startTime) < maxWaitingTime) is True:
+            if server_thread is not None and not server_thread.is_alive():
+                err_msg = str(server_thread.error) if server_thread.error else "unknown error"
+                raise ConnectionRefusedError(
+                    f'Server process died before connection was established: {err_msg}'
+                )
             try:
                 self.traci.connect(host, port)
                 connected = True
-            except ConnectionRefusedError as err:
+            except ConnectionRefusedError:
                 print('Server not started yet. Wait ...')
-                time.sleep(0.2) #200ms
+                time.sleep(0.2)
 
         if not connected:
+            if server_thread is not None and server_thread.is_alive():
+                server_thread.stop()
             raise ConnectionRefusedError(f'Attempts to connect to the server: timeout ({maxWaitingTime}s) reached.')
 
 
