@@ -8,10 +8,9 @@ cache:
     - ./venv
 
 before_script:
-  - virtualenv --system-site-packages --python py38 ./venv
+  - python3.8 -m venv --system-site-packages ./venv
   - source ./venv/bin/activate
   - pip3 install -q -I -r requirements.txt
-
 
 unittests:
   stage: unit_test
@@ -20,10 +19,9 @@ unittests:
     - python3 -m unittest discover -v
   timeout: 20m
 
-
 integrationtest:
   stage: integration_test
-  script: 
+  script:
     - source ./venv/bin/activate
     - python3 setup.py install
     - cd tutorials
