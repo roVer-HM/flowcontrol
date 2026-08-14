@@ -24,8 +24,17 @@ unittests:
 integrationtest:
   stage: integration_test
   script:
-    - apt-get update -q && apt-get install -y -q --no-install-recommends default-jre-headless
+    - rm -rf jre
+    - echo "Downloading portable JRE..."
+    - wget -q -O jre.tar.gz "https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jre/hotspot/normal/eclipse"
+    - mkdir -p jre
+    - tar -xzf jre.tar.gz -C jre --strip-components=1
+    - rm jre.tar.gz
+    - chmod +x $CI_PROJECT_DIR/jre/bin/java
     - source ./venv/bin/activate
+    - ln -sf $CI_PROJECT_DIR/jre/bin/java $VIRTUAL_ENV/bin/java
+    - which java
+    - java -version
     - python3 setup.py install
     - cd tutorials
     - python3 tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
