@@ -1,5 +1,3 @@
-image: python:3.12
-
 stages:
   - unit_test
   - integration_test
@@ -8,27 +6,38 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - ./venv
+    - ./jre
 
 before_script:
-  - apt-get update -q && apt-get install -y -q --no-install-recommends default-jre-headless
-  - python -m venv ./venv
+  - PYBIN=$(command -v python3.8 || command -v python3.9 || command -v python3 || command -v python)
+  - echo "Using $PYBIN"
+  - $PYBIN -m venv --system-site-packages ./venv
   - source ./venv/bin/activate
-  - pip install -q -I -r requirements.txt
+  - pip3 install -q -I -r requirements.txt
 
 unittests:
   stage: unit_test
   script:
     - source ./venv/bin/activate
-    - python -m unittest discover -v
+    - python3 -m unittest discover -v
   timeout: 20m
 
 integrationtest:
   stage: integration_test
   script:
+    - |
+      if [ ! -d "jre/bin" ]; then
+        echo "Downloading portable JRE..."
+        wget -q -O jre.tar.gz "https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jre/hotspot/normal/eclipse"
+        mkdir -p jre
+        tar -xzf jre.tar.gz -C jre --strip-components=1
+        rm jre.tar.gz
+      fi
+    - export PATH=$PWD/jre/bin:$PATH
     - java -version
     - source ./venv/bin/activate
-    - python setup.py install
+    - python3 setup.py install
     - cd tutorials
-    - python tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
-    - python tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --controller-type PingPong --output-dir tutorial__set_targets --download-jar-file --suppress-prompts
+    - python3 tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
+    - python3 tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --controller-type PingPong --output-dir tutorial__set_targets --download-jar-file --suppress-prompts
   allow_failure: false
