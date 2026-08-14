@@ -24,7 +24,8 @@ unittests:
 integrationtest:
   stage: integration_test
   script:
-    - apt-get update -q && apt-get install -y -q --no-install-recommends default-jre-headless
+    - sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends default-jre-headless
+    - java -version
     - source ./venv/bin/activate
     - python3 setup.py install
     - cd tutorials
