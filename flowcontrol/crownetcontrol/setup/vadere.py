@@ -130,10 +130,12 @@ class VadereServer:
 
             self._is_gui_mode = is_gui_mode
 
-            if is_start_server:
-                logging.info(
-                    f"Start vadere server automatically. Gui-mode: {is_gui_mode}."
+            if shutil.which("java") is None:
+                raise RuntimeError(
+                    "Java not found. Please install a JRE (e.g. 'apt-get install default-jre-headless')."
                 )
+
+            logging.info(f"Start vadere server automatically. Gui-mode: {is_gui_mode}.")
 
             vadere_path = self.vadere_server_provider.get_jar_file()
 
