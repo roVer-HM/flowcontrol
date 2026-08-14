@@ -1,3 +1,5 @@
+image: python:3.12
+
 stages:
   - unit_test
   - integration_test
@@ -8,27 +10,25 @@ cache:
     - ./venv
 
 before_script:
-  - PYBIN=$(command -v python3.8 || command -v python3.9 || command -v python3 || command -v python)
-  - echo "Using $PYBIN"
-  - $PYBIN -m venv --system-site-packages ./venv
+  - apt-get update -q && apt-get install -y -q --no-install-recommends default-jre-headless
+  - python -m venv ./venv
   - source ./venv/bin/activate
-  - pip3 install -q -I -r requirements.txt
+  - pip install -q -I -r requirements.txt
 
 unittests:
   stage: unit_test
   script:
     - source ./venv/bin/activate
-    - python3 -m unittest discover -v
+    - python -m unittest discover -v
   timeout: 20m
 
 integrationtest:
   stage: integration_test
   script:
-    - sudo apt-get update -q && sudo apt-get install -y -q --no-install-recommends default-jre-headless
     - java -version
     - source ./venv/bin/activate
-    - python3 setup.py install
+    - python setup.py install
     - cd tutorials
-    - python3 tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
-    - python3 tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --controller-type PingPong --output-dir tutorial__set_targets --download-jar-file --suppress-prompts
+    - python tutorial__set_targets_with_app.py --port 9999 --host-name localhost --client-mode --start-server --output-dir tutorial__set_targets_with_app --download-jar-file --suppress-prompts
+    - python tutorial__set_targets.py --port 9999 --host-name localhost --client-mode --start-server --controller-type PingPong --output-dir tutorial__set_targets --download-jar-file --suppress-prompts
   allow_failure: false
