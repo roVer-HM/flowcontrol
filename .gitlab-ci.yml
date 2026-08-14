@@ -6,7 +6,6 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - ./venv
-    # Removed ./jre from cache for now to ensure a 100% clean download
 
 before_script:
   - PYBIN=$(command -v python3.8 || command -v python3.9 || command -v python3 || command -v python)
