@@ -81,9 +81,6 @@ class VaderePersonAPI(Domain):
     def get_source_id(self, element_id):
         return self._getUniversal(tc.VAR_SOURCE_ID, element_id)
 
-    def get_perceived_risk(self, element_id):
-        return self._getUniversal(tc.VAR_PERCEIVED_RISK, element_id)
-
     def get_shared_social_identity(self, element_id):
         return self._getUniversal(tc.VAR_SHARED_SOCIAL_IDENTITY, element_id)
 
