@@ -102,6 +102,9 @@ class VaderePersonAPI(Domain):
     def set_adherence_probability(self, element_id, data):
         self._setCmd(tc.VAR_ADHERENCE_PROBABILITY, element_id, "d", data)
 
+    def set_pre_movement_time(self, element_id, data):
+        self._setCmd(tc.VAR_PRE_MOVEMENT_TIME, element_id, "d", data)
+
     def create_new(self, data):
         self._setCmd(tc.VAR_ADD, "", "s", data)
 
